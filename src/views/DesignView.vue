@@ -1,5 +1,5 @@
 <script setup>
-import Design from '../components/Design.vue'
+import Design from '../components/design/Design.vue'
 </script>
 
 <template>

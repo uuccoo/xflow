@@ -18,6 +18,11 @@ let defaultActive = ref('basicSettings')
       <el-button size="mini" type="primary" @click="publish">发布</el-button>
     </div>
   </header>
+  <el-container>
+    <el-main>
+      <router-view />
+    </el-main>
+  </el-container>
 </template>
 
 <style scoped lang="scss">
