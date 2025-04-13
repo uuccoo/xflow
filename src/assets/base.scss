@@ -1,0 +1,8 @@
+// 定义全局的 SCSS 变量和样式
+$primary-color: #42b983;
+$font-stack: 'Helvetica Neue', Arial, sans-serif;
+
+body {
+  font-family: $font-stack;
+  color: $primary-color;
+}
