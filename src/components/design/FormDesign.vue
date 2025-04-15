@@ -2,8 +2,9 @@
   <el-container class="form-design-container">
     <!-- 左侧组件面板 -->
     <el-aside width="280px" class="component-panel">
-      <h3>表单组件</h3>
-      <el-divider></el-divider>
+      <div class="component-header">
+        <h3>表单组件</h3>
+      </div>
 
       <!-- 动态渲染组件类别和内容 -->
       <div class="component-list">
@@ -28,16 +29,15 @@
     <!-- 中间设计区域 -->
     <el-main class="design-area">
       <div class="design-header">
-        <h2>表单设计</h2>
-        <el-button type="primary" size="small">预览</el-button>
+        <h3>表单设计</h3>
       </div>
       <div class="design-canvas">
         <div class="phone-frame">
-          <div v-if="formItems.length === 0" class="empty-tip">
-            拖拽左侧组件到此处进行表单设计
-          </div>
-          <draggable v-model="formItems" group="components" item-key="id" class="form-container" @start="dragStart"
+          <draggable :list="formItems" group="components" item-key="id" class="form-container" @start="dragStart"
             @end="dragEnd" handle=".drag-handle">
+            <div v-if="formItems.length === 0" class="empty-tip">
+              拖拽左侧组件到此处进行表单设计
+            </div>
             <div class="form-item-wrapper" :class="{ active: activeItem && activeItem.id === element.id }"
               v-for="(element, index) in formItems" :key="element.id" @click="selectItem(element, index)">
               <div class="drag-handle">
@@ -62,8 +62,10 @@
 
     <!-- 右侧属性配置面板 -->
     <el-aside width="280px" class="property-panel">
-      <h3>属性设置</h3>
-      <el-divider></el-divider>
+      <div class="property-header">
+        <h3>属性设置</h3>
+      </div>
+
       <el-form v-if="activeItem" label-position="top" size="small" class="property-form">
         <el-form-item label="字段标题">
           <el-input v-model="activeItem.title" placeholder="请输入标题"></el-input>
@@ -239,12 +241,17 @@ const ComponentRenderer = defineComponent({
 .component-panel {
   background-color: #ffffff;
   border-right: 1px solid #ebeef5;
-  padding: 15px 0;
 }
 
-.component-panel h3 {
-  padding-left: 20px;
-  margin-top: 0;
+.component-header {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.component-header h3 {
+  margin-left: 20px;
   color: #606266;
 }
 
@@ -307,20 +314,21 @@ const ComponentRenderer = defineComponent({
   background-color: #f7f7f7;
   display: flex;
   flex-direction: column;
+  padding: 0px;
 }
 
 .design-header {
-  padding: 15px 20px;
+  background-color: #fff;
+  height: 50px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #ebeef5;
 }
 
-.design-header h2 {
-  margin: 0;
-  font-weight: 500;
-  color: #303133;
+.design-header h3 {
+  margin-left: 20px;
+  color: #606266;
 }
 
 .design-canvas {
@@ -331,7 +339,7 @@ const ComponentRenderer = defineComponent({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  overflow: auto;
 }
 
 .phone-frame {
@@ -346,6 +354,7 @@ const ComponentRenderer = defineComponent({
   display: flex;
   flex-direction: column;
   padding: 10px;
+  color: #333;
 }
 
 .empty-tip {
@@ -358,11 +367,17 @@ const ComponentRenderer = defineComponent({
 .property-panel {
   background-color: #ffffff;
   border-left: 1px solid #ebeef5;
-  padding: 15px;
 }
 
-.property-panel h3 {
-  margin-top: 0;
+.property-header {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.property-header h3 {
+  margin-left: 15px;
   color: #606266;
 }
 
