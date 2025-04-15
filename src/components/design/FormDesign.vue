@@ -13,7 +13,8 @@
           <div class="component-grid">
             <draggable :list="category.items" :group="{ name: 'components', pull: 'clone', put: false }"
               :clone="cloneComponent" item-key="type" :sort="false" class="drag-area">
-              <div class="component-item" v-for="element in category.items" :key="element.type">
+              <div class="component-item" v-for="element in category.items" :key="element.type"
+                @click="addComponent(element)">
                 <el-icon>
                   <component :is="element.icon" />
                 </el-icon>
@@ -42,7 +43,7 @@
               v-for="(element, index) in formItems" :key="element.id" @click="selectItem(element, index)">
               <div class="drag-handle">
                 <el-icon>
-                  <DArrowLeft />
+                  <Rank />
                 </el-icon>
               </div>
               <div class="form-item-content">
@@ -96,8 +97,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, defineComponent, h } from 'vue'
+import { ref, reactive } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
+import ComponentRenderer from './ComponentRenderer.vue'
 
 // 合并基础组件和高级组件为一个变量components，并将类别信息加入到变量中
 const components = reactive([
@@ -129,9 +131,14 @@ const cloneComponent = (component) => {
   return { ...component, id: Date.now(), title: component.label, field: component.type + Date.now() }
 }
 
+// 添加组件
+const addComponent = (component) => {
+  formItems.value.push(cloneComponent(component))
+}
+
 // 选中组件
 const selectItem = (item, index) => {
-  activeItem.value = { ...item, index }
+  activeItem.value = item
 }
 
 // 删除组件
@@ -149,87 +156,6 @@ const dragStart = () => {
 
 // 拖拽结束
 const dragEnd = () => { }
-
-// 组件渲染器
-const ComponentRenderer = defineComponent({
-  name: 'ComponentRenderer',
-  props: {
-    component: {
-      type: Object,
-      required: true
-    }
-  },
-  render() {
-    const component = this.component
-    const renderField = () => {
-      switch (component.type) {
-        case 'input':
-          return h('el-input', {
-            placeholder: '请输入' + component.title,
-            modelValue: component.defaultValue,
-            disabled: true
-          })
-        case 'textarea':
-          return h('el-input', {
-            type: 'textarea',
-            placeholder: '请输入' + component.title,
-            modelValue: component.defaultValue,
-            disabled: true
-          })
-        case 'radio':
-          return h('el-radio-group', { modelValue: component.defaultValue, disabled: true },
-            component.options.map(option =>
-              h('el-radio', { label: option.value, disabled: true }, { default: () => option.label })
-            )
-          )
-        case 'checkbox':
-          return h('el-checkbox-group', { modelValue: component.defaultValue, disabled: true },
-            component.options.map(option =>
-              h('el-checkbox', { label: option.value, disabled: true }, { default: () => option.label })
-            )
-          )
-        case 'date':
-          return h('el-date-picker', {
-            type: 'date',
-            placeholder: '请选择日期',
-            modelValue: component.defaultValue,
-            disabled: true
-          })
-        case 'upload':
-          return h('el-upload', {
-            action: '#',
-            disabled: true,
-            autoUpload: false,
-            accept: 'image/*'
-          }, {
-            default: () => h('el-button', { disabled: true }, { default: () => '点击上传' })
-          })
-        case 'image':
-          return h('el-upload', {
-            action: '#',
-            disabled: true,
-            listType: 'picture-card',
-            autoUpload: false,
-            accept: 'image/*'
-          }, {
-            default: () => h('el-icon', {}, { default: () => h('Plus') })
-          })
-        default:
-          return h('div', {}, '未知组件类型')
-      }
-    }
-
-    return h('div', { class: 'form-item' }, [
-      h('div', { class: 'form-item-label' }, [
-        component.title,
-        component.required ? h('span', { class: 'required' }, '*') : null
-      ]),
-      h('div', { class: 'form-item-control' }, [
-        renderField()
-      ])
-    ])
-  }
-})
 </script>
 
 <style scoped>
