@@ -39,16 +39,12 @@
             <div v-if="formItems.length === 0" class="empty-tip">
               拖拽左侧组件到此处进行表单设计
             </div>
-            <div class="form-item-wrapper" :class="{ active: activeItem && activeItem.id === element.id }"
+            <div class="drag-handle form-item-wrapper" :class="{ active: activeItem && activeItem.id === element.id }"
               v-for="(element, index) in formItems" :key="element.id" @click="selectItem(element, index)">
-              <div class="drag-handle">
-                <el-icon>
-                  <Rank />
-                </el-icon>
-              </div>
               <div class="form-item-content">
                 <!-- 动态组件渲染 -->
-                <component-renderer :component="element" />
+                <component-renderer :component="element" @selectNestedItem="selectNestedItem"
+                  @deleteNestedItem="deleteNestedItem" />
               </div>
               <div class="form-item-actions">
                 <el-icon @click.stop="deleteItem(index)">
@@ -68,26 +64,48 @@
       </div>
 
       <el-form v-if="activeItem" label-position="top" size="small" class="property-form">
-        <el-form-item label="字段标题">
-          <el-input v-model="activeItem.title" placeholder="请输入标题"></el-input>
-        </el-form-item>
-        <el-form-item label="字段名称">
-          <el-input v-model="activeItem.field" placeholder="请输入字段名"></el-input>
-        </el-form-item>
-        <el-form-item label="是否必填">
-          <el-switch v-model="activeItem.required"></el-switch>
-        </el-form-item>
-        <el-form-item label="校验规则">
-          <el-select v-model="activeItem.validator" placeholder="请选择校验规则" style="width: 100%">
-            <el-option label="无" value="none"></el-option>
-            <el-option label="邮箱" value="email"></el-option>
-            <el-option label="手机号" value="phone"></el-option>
-            <el-option label="身份证" value="id"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="默认值">
-          <el-input v-model="activeItem.defaultValue" placeholder="请输入默认值"></el-input>
-        </el-form-item>
+        <!-- 分栏组件属性设置 -->
+        <template v-if="activeItem.type === 'columns'">
+          <el-form-item label="栏目布局">
+            <el-select v-model="activeColumnLayout" @change="updateColumnsLayout" style="width: 100%">
+              <el-option label="两等分" value="1:1"></el-option>
+              <el-option label="三等分" value="1:1:1"></el-option>
+              <el-option label="左窄右宽" value="1:2"></el-option>
+              <el-option label="左宽右窄" value="2:1"></el-option>
+              <el-option label="左窄中宽右窄" value="1:2:1"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item v-for="(column, index) in activeItem.columns" :key="index" :label="`列 ${index + 1} 宽度`">
+            <el-input-number v-model="column.width" :min="10" :max="90" @change="normalizeColumnsWidth"
+              style="width: 100%" />
+          </el-form-item>
+        </template>
+        <!-- 普通组件属性设置 -->
+        <template v-else>
+          <el-form-item label="标题">
+            <el-input v-model="activeItem.title" placeholder="请输入标题"></el-input>
+          </el-form-item>
+          <el-form-item label="编码">
+            <el-input v-model="activeItem.field" placeholder="请输入字段名"></el-input>
+          </el-form-item>
+          <el-form-item label="提示文字">
+            <el-input v-model="activeItem.placeholder" placeholder="请输入提示文字"></el-input>
+          </el-form-item>
+          <el-form-item label="是否必填">
+            <el-switch v-model="activeItem.required"></el-switch>
+          </el-form-item>
+          <el-form-item label="校验规则">
+            <el-select v-model="activeItem.validator" placeholder="请选择校验规则" style="width: 100%">
+              <el-option label="无" value="none"></el-option>
+              <el-option label="邮箱" value="email"></el-option>
+              <el-option label="手机号" value="phone"></el-option>
+              <el-option label="身份证" value="id"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="默认值">
+            <el-input v-model="activeItem.defaultValue" placeholder="请输入默认值"></el-input>
+          </el-form-item>
+        </template>
       </el-form>
       <div v-else class="empty-tip">
         请选择一个组件进行配置
@@ -97,25 +115,31 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from './ComponentRenderer.vue'
+import { Delete } from '@element-plus/icons-vue'
 
-// 合并基础组件和高级组件为一个变量components，并将类别信息加入到变量中
+// 合并基础组件、布局组件和高级组件为一个变量components，并将类别信息加入到变量中
 const components = reactive([
   {
+    category: '布局组件', items: [
+      { type: 'columns', icon: 'Cellphone', label: '分栏容器', columns: [] }
+    ]
+  },
+  {
     category: '基础组件', items: [
-      { type: 'input', icon: 'Document', label: '单行文本', field: '', title: '', required: false, validator: '', defaultValue: '' },
-      { type: 'textarea', icon: 'DocumentCopy', label: '多行文本', field: '', title: '', required: false, validator: '', defaultValue: '' },
-      { type: 'radio', icon: 'Check', label: '单选框', field: '', title: '', required: false, options: [{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }], defaultValue: '' },
-      { type: 'checkbox', icon: 'Select', label: '多选框', field: '', title: '', required: false, options: [{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }], defaultValue: [] }
+      { type: 'input', icon: 'Document', label: '单行文本', field: '', title: '', placeholder: '请输入', required: false, validator: '', defaultValue: '' },
+      { type: 'textarea', icon: 'DocumentCopy', label: '多行文本', field: '', title: '', placeholder: '请输入', required: false, validator: '', defaultValue: '' },
+      { type: 'radio', icon: 'Check', label: '单选框', field: '', title: '', placeholder: '请输入', required: false, options: [{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }], defaultValue: '' },
+      { type: 'checkbox', icon: 'Select', label: '多选框', field: '', title: '', placeholder: '请输入', required: false, options: [{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }], defaultValue: [] }
     ]
   },
   {
     category: '高级组件', items: [
-      { type: 'date', icon: 'Calendar', label: '日期选择', field: '', title: '', required: false, defaultValue: '' },
-      { type: 'upload', icon: 'Upload', label: '文件上传', field: '', title: '', required: false, defaultValue: [] },
-      { type: 'image', icon: 'Picture', label: '图片上传', field: '', title: '', required: false, defaultValue: [] }
+      { type: 'date', icon: 'Calendar', label: '日期选择', field: '', title: '', placeholder: '请输入', required: false, defaultValue: '' },
+      { type: 'upload', icon: 'Upload', label: '文件上传', field: '', title: '', placeholder: '请输入', required: false, defaultValue: [] },
+      { type: 'image', icon: 'Picture', label: '图片上传', field: '', title: '', placeholder: '请输入', required: false, defaultValue: [] }
     ]
   }
 ]);
@@ -126,9 +150,29 @@ const formItems = ref([])
 // 当前选中的组件
 const activeItem = ref(null)
 
+// 当前选中的分栏布局
+const activeColumnLayout = ref('1:1')
+
 // 克隆组件
 const cloneComponent = (component) => {
-  return { ...component, id: Date.now(), title: component.label, field: component.type + Date.now() }
+  if (component.type === 'columns') {
+    // 创建分栏容器时，默认创建两个等宽的列
+    return {
+      ...component,
+      id: Date.now(),
+      columns: [
+        { width: 50, children: [] },
+        { width: 50, children: [] }
+      ]
+    }
+  }
+  return {
+    ...component,
+    id: Date.now(),
+    title: component.label,
+    field: component.type + Date.now(),
+    placeholder: component.placeholder || ''
+  }
 }
 
 // 添加组件
@@ -139,13 +183,94 @@ const addComponent = (component) => {
 // 选中组件
 const selectItem = (item, index) => {
   activeItem.value = item
+
+  // 如果选中的是分栏组件，根据当前列数设置activeColumnLayout
+  if (item.type === 'columns') {
+    if (item.columns.length === 2) {
+      if (item.columns[0].width === 50 && item.columns[1].width === 50) {
+        activeColumnLayout.value = '1:1'
+      } else if (item.columns[0].width === 33 && item.columns[1].width === 67) {
+        activeColumnLayout.value = '1:2'
+      } else if (item.columns[0].width === 67 && item.columns[1].width === 33) {
+        activeColumnLayout.value = '2:1'
+      }
+    } else if (item.columns.length === 3) {
+      if (item.columns[0].width === 33 && item.columns[1].width === 34 && item.columns[2].width === 33) {
+        activeColumnLayout.value = '1:1:1'
+      } else if (item.columns[0].width === 25 && item.columns[1].width === 50 && item.columns[2].width === 25) {
+        activeColumnLayout.value = '1:2:1'
+      }
+    }
+  }
+}
+
+// 选中嵌套组件（分栏内的组件）
+const selectNestedItem = (item, parentComponent, parentColumn, columnIndex, itemIndex) => {
+  activeItem.value = item
+}
+
+// 删除嵌套组件
+const deleteNestedItem = (parentComponent, parentColumn, columnIndex, itemIndex) => {
+  parentColumn.children.splice(itemIndex, 1)
 }
 
 // 删除组件
 const deleteItem = (index) => {
   formItems.value.splice(index, 1)
-  if (activeItem.value && activeItem.value.index === index) {
+  if (activeItem.value && activeItem.value === formItems.value[index]) {
     activeItem.value = null
+  }
+}
+
+// 更新分栏布局
+const updateColumnsLayout = (layout) => {
+  if (!activeItem.value || activeItem.value.type !== 'columns') return
+
+  const columns = activeItem.value.columns
+  const widths = layout.split(':').map(Number)
+  const total = widths.reduce((sum, w) => sum + w, 0)
+
+  // 计算每个分栏的宽度百分比
+  const percentages = widths.map(w => Math.round((w / total) * 100))
+
+  // 如果列数不一致，需要调整列数
+  if (columns.length !== widths.length) {
+    // 保留原有子元素
+    const existingChildren = columns.flatMap(col => col.children || [])
+
+    // 创建新的列结构
+    activeItem.value.columns = widths.map((_, index) => {
+      return {
+        width: percentages[index],
+        children: index === 0 ? existingChildren : [] // 所有子元素都放在第一列
+      }
+    })
+  } else {
+    // 只更新宽度
+    columns.forEach((col, index) => {
+      col.width = percentages[index]
+    })
+  }
+}
+
+// 归一化列宽，确保总和为100%
+const normalizeColumnsWidth = () => {
+  if (!activeItem.value || activeItem.value.type !== 'columns') return
+
+  const columns = activeItem.value.columns
+  const total = columns.reduce((sum, col) => sum + col.width, 0)
+
+  if (total !== 100) {
+    const factor = 100 / total
+    columns.forEach(col => {
+      col.width = Math.round(col.width * factor)
+    })
+
+    // 处理舍入误差，调整最后一列
+    const newTotal = columns.reduce((sum, col) => sum + col.width, 0)
+    if (newTotal !== 100) {
+      columns[columns.length - 1].width += (100 - newTotal)
+    }
   }
 }
 
@@ -309,6 +434,7 @@ const dragEnd = () => { }
 
 .property-form {
   margin-top: 15px;
+  padding: 0 15px;
 }
 
 .form-container {
@@ -337,9 +463,7 @@ const dragEnd = () => { }
 }
 
 .drag-handle {
-  margin-right: 10px;
   cursor: move;
-  color: #909399;
 }
 
 .form-item-content {
