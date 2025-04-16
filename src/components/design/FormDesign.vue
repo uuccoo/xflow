@@ -75,10 +75,6 @@
               <el-option label="左窄中宽右窄" value="1:2:1"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item v-for="(column, index) in activeItem.columns" :key="index" :label="`列 ${index + 1} 宽度`">
-            <el-input-number v-model="column.width" :min="10" :max="90" @change="normalizeColumnsWidth"
-              style="width: 100%" />
-          </el-form-item>
         </template>
         <!-- 普通组件属性设置 -->
         <template v-else>
@@ -235,42 +231,60 @@ const updateColumnsLayout = (layout) => {
 
   // 如果列数不一致，需要调整列数
   if (columns.length !== widths.length) {
-    // 保留原有子元素
-    const existingChildren = columns.flatMap(col => col.children || [])
+    if (widths.length > columns.length) {
+      // 增加栏数的情况（例如从2栏到3栏）
+      const newColumns = []
 
-    // 创建新的列结构
-    activeItem.value.columns = widths.map((_, index) => {
-      return {
-        width: percentages[index],
-        children: index === 0 ? existingChildren : [] // 所有子元素都放在第一列
+      // 保留原有栏目及其子组件
+      for (let i = 0; i < columns.length; i++) {
+        newColumns.push({
+          width: percentages[i],
+          children: [...columns[i].children] // 保留原有子组件
+        })
       }
-    })
+
+      // 添加新的空栏目
+      for (let i = columns.length; i < widths.length; i++) {
+        newColumns.push({
+          width: percentages[i],
+          children: [] // 新栏目没有子组件
+        })
+      }
+
+      activeItem.value.columns = newColumns
+    } else {
+      // 减少栏数的情况（例如从3栏到2栏）
+      // 收集被移除栏中的所有子组件
+      const orphanedChildren = []
+      for (let i = widths.length; i < columns.length; i++) {
+        orphanedChildren.push(...columns[i].children)
+      }
+
+      // 创建新的栏结构
+      const newColumns = []
+      for (let i = 0; i < widths.length; i++) {
+        newColumns.push({
+          width: percentages[i],
+          children: [...columns[i].children] // 保留现有栏的子组件
+        })
+      }
+
+      // 将孤立的子组件均匀分配到剩余的栏中
+      if (orphanedChildren.length > 0) {
+        orphanedChildren.forEach((child, index) => {
+          // 按照余数决定放入哪一栏
+          const targetColumnIndex = index % widths.length
+          newColumns[targetColumnIndex].children.push(child)
+        })
+      }
+
+      activeItem.value.columns = newColumns
+    }
   } else {
     // 只更新宽度
     columns.forEach((col, index) => {
       col.width = percentages[index]
     })
-  }
-}
-
-// 归一化列宽，确保总和为100%
-const normalizeColumnsWidth = () => {
-  if (!activeItem.value || activeItem.value.type !== 'columns') return
-
-  const columns = activeItem.value.columns
-  const total = columns.reduce((sum, col) => sum + col.width, 0)
-
-  if (total !== 100) {
-    const factor = 100 / total
-    columns.forEach(col => {
-      col.width = Math.round(col.width * factor)
-    })
-
-    // 处理舍入误差，调整最后一列
-    const newTotal = columns.reduce((sum, col) => sum + col.width, 0)
-    if (newTotal !== 100) {
-      columns[columns.length - 1].width += (100 - newTotal)
-    }
   }
 }
 
