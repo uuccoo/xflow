@@ -1,38 +1,51 @@
 <template>
-  <!-- 分栏容器组件 -->
-  <div v-if="component.type === 'columns'" class="form-item column-container">
-    <div class="form-item-control columns-grid">
-      <div class="column-item" v-for="(column, index) in component.columns" :key="index"
-        :style="{ flexBasis: `${column.width}%`, maxWidth: `${column.width}%` }">
-        <draggable :list="column.children" group="components" item-key="id" class="column-drop-area"
-          handle=".drag-handle">
-          <div v-if="column.children.length === 0" class="empty-column-tip">
-            拖拽组件到此处
-          </div>
-          <div class="drag-handle form-item-wrapper nested-item" v-for="(element, idx) in column.children"
-            :key="element.id" @click.stop="$emit('selectNestedItem', element, component, column, index, idx)">
-            <div class="form-item-content">
-              <component-renderer :component="element" @selectNestedItem="$emit('selectNestedItem', ...arguments)" />
+  <!-- 包装器 - 包含组件内容和操作按钮 -->
+  <div class="form-item-wrapper-outer">
+    <!-- 分栏容器组件 -->
+    <div v-if="component.type === 'columns'" class="form-item column-container">
+      <div class="form-item-control columns-grid">
+        <div class="column-item" v-for="(column, index) in component.columns" :key="index"
+          :style="{ flexBasis: `${column.width}%`, maxWidth: `${column.width}%` }">
+          <draggable :list="column.children" group="components" item-key="id" class="column-drop-area"
+            handle=".drag-handle" :animation="300" ghost-class="ghost-item" chosen-class="chosen-item"
+            drag-class="dragging-item">
+            <div v-if="column.children.length === 0" class="empty-column-tip">
+              拖拽组件到此处
             </div>
-            <div class="form-item-actions">
-              <el-icon @click.stop="$emit('deleteNestedItem', component, column, index, idx)">
-                <Delete />
-              </el-icon>
+            <div class="drag-handle form-item-wrapper nested-item"
+              :class="{ 'active': activeItem && activeItem.id === element.id }"
+              v-for="(element, idx) in column.children" :key="element.id"
+              @click.stop="handleSelect(element, { parentComponent: component, parentColumn: column, columnIndex: index, itemIndex: idx })">
+              <div class="form-item-content">
+                <component-renderer :component="element" :showActions="showActions" :isNested="true"
+                  :parentInfo="{ parentComponent: component, parentColumn: column, columnIndex: index, itemIndex: idx }"
+                  :isActive="activeItem && activeItem.id === element.id" :activeItem="activeItem"
+                  @selectComponent="handleSelect" @copyComponent="handleCopy" @deleteComponent="handleDelete" />
+              </div>
             </div>
-          </div>
-        </draggable>
+          </draggable>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- 普通表单组件 -->
-  <div v-else class="form-item">
-    <div class="form-item-label">
-      {{ component.title }}
-      <span v-if="component.required" class="required">*</span>
+    <!-- 普通表单组件 -->
+    <div v-else class="form-item">
+      <div class="form-item-label">
+        {{ component.title }}
+        <span v-if="component.required" class="required">*</span>
+      </div>
+      <div class="form-item-control">
+        <component :is="renderField()" />
+      </div>
     </div>
-    <div class="form-item-control">
-      <component :is="renderField()" />
+
+    <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
+    <div v-if="showActions && isActive" class="form-item-actions">
+      <el-icon @click.stop="handleCopy(component, parentInfo)">
+        <CopyDocument />
+      </el-icon>
+      <el-icon @click.stop="handleDelete(component, parentInfo)" class="delete-button">
+        <Delete class="delete-icon" />
+      </el-icon>
     </div>
   </div>
 </template>
@@ -52,7 +65,7 @@ import {
 } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
-import { Delete } from '@element-plus/icons-vue';
+import { Delete, CopyDocument } from '@element-plus/icons-vue';
 
 // 自引用组件（递归组件）
 const ComponentRenderer = defineAsyncComponent(() => import('./ComponentRenderer.vue'));
@@ -61,11 +74,46 @@ const props = defineProps({
   component: {
     type: Object,
     required: true
+  },
+  showActions: {
+    type: Boolean,
+    default: true
+  },
+  isNested: {
+    type: Boolean,
+    default: false
+  },
+  parentInfo: {
+    type: Object,
+    default: () => null
+  },
+  isActive: {
+    type: Boolean,
+    default: false
+  },
+  activeItem: {
+    type: Object,
+    default: null
   }
 });
 
 // 定义事件
-defineEmits(['selectNestedItem', 'deleteNestedItem']);
+const emit = defineEmits(['selectComponent', 'copyComponent', 'deleteComponent']);
+
+// 处理选择组件事件
+const handleSelect = (component, parentInfo = null) => {
+  emit('selectComponent', component, parentInfo);
+};
+
+// 处理复制组件事件
+const handleCopy = (component, parentInfo = null) => {
+  emit('copyComponent', component, parentInfo);
+};
+
+// 处理删除组件事件
+const handleDelete = (component, parentInfo = null) => {
+  emit('deleteComponent', component, parentInfo);
+};
 
 const renderField = () => {
   switch (props.component.type) {
@@ -126,8 +174,14 @@ const renderField = () => {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .form-item {
+  width: 100%;
+}
+
+.form-item-wrapper-outer {
+  display: flex;
+  align-items: center;
   width: 100%;
 }
 
@@ -138,23 +192,15 @@ const renderField = () => {
   font-weight: 500;
   display: flex;
   align-items: center;
-}
 
-.form-item-label .required {
-  color: #f56c6c;
-  margin-left: 4px;
+  .required {
+    color: #f56c6c;
+    margin-left: 4px;
+  }
 }
 
 .form-item-control {
   width: 100%;
-}
-
-/* 分栏容器样式 */
-.column-container {
-  border: 1px dashed #a0cfff;
-  padding: 8px;
-  background-color: rgba(236, 245, 255, 0.4);
-  border-radius: 4px;
 }
 
 .columns-grid {
@@ -165,10 +211,10 @@ const renderField = () => {
 
 .column-item {
   flex: 1;
-  border: 1px dashed #c0c4cc;
+  border: 1px dashed #a0cfff;
   border-radius: 4px;
   padding: 5px;
-  background-color: rgba(245, 245, 245, 0.5);
+  background-color: rgba(236, 245, 255, 0.4);
   min-height: 80px;
 }
 
@@ -186,7 +232,83 @@ const renderField = () => {
   padding: 10px;
 }
 
+/* 修改嵌套项样式，添加边框和背景色 */
 .nested-item {
   margin-bottom: 0;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+/* 选中样式 - 与主表单区域保持一致 */
+.form-item-wrapper.active {
+  border-color: #409eff;
+  background-color: #f0faff;
+}
+
+.form-item-actions {
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .el-icon {
+    cursor: pointer;
+    color: #606266;
+    border-radius: 4px;
+    transition: all 0.3s;
+    font-size: 18px;
+
+    &:hover {
+      color: #409EFF;
+      background-color: #ecf5ff;
+    }
+
+    &:has(.delete-icon) {
+      &:hover {
+        color: #F56C6C;
+        background-color: #fef0f0;
+      }
+    }
+  }
+}
+
+/* 拖动动画相关样式 */
+.ghost-item {
+  opacity: 0.5;
+  background: linear-gradient(135deg, #c8ebfb 0%, #a0cfff 100%) !important;
+  border: 2px dashed #409EFF !important;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+.chosen-item {
+  background: linear-gradient(135deg, #f0faff 0%, #d8f0ff 100%) !important;
+  border: 2px solid #409EFF !important;
+  box-shadow: 0 0 10px rgba(64, 158, 255, 0.3) !important;
+  animation: pulse 1.5s infinite;
+}
+
+.dragging-item {
+  background: #fff !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  transform: rotate(3deg) scale(1.03) !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  z-index: 100 !important;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(64, 158, 255, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
+  }
 }
 </style>

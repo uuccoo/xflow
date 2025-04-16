@@ -35,22 +35,18 @@
       <div class="design-canvas">
         <div class="phone-frame">
           <draggable :list="formItems" group="components" item-key="id" class="form-container" @start="dragStart"
-            @end="dragEnd" handle=".drag-handle">
+            @end="dragEnd" handle=".drag-handle" :animation="300" ghost-class="ghost-item" chosen-class="chosen-item"
+            drag-class="dragging-item">
             <div v-if="formItems.length === 0" class="empty-tip">
               拖拽左侧组件到此处进行表单设计
             </div>
             <div class="drag-handle form-item-wrapper" :class="{ active: activeItem && activeItem.id === element.id }"
-              v-for="(element, index) in formItems" :key="element.id" @click="selectItem(element, index)">
-              <div class="form-item-content">
-                <!-- 动态组件渲染 -->
-                <component-renderer :component="element" @selectNestedItem="selectNestedItem"
-                  @deleteNestedItem="deleteNestedItem" />
-              </div>
-              <div class="form-item-actions">
-                <el-icon @click.stop="deleteItem(index)">
-                  <Delete />
-                </el-icon>
-              </div>
+              v-for="(element, index) in formItems" :key="element.id" @click="selectItem(element)">
+              <!-- 动态组件渲染 - 组件本身已提供复制和删除按钮 -->
+              <component-renderer :component="element" :showActions="true" :isNested="false" :parentInfo="{ index }"
+                :isActive="activeItem && activeItem.id === element.id" :activeItem="activeItem"
+                @selectComponent="handleSelectComponent" @copyComponent="handleCopyComponent"
+                @deleteComponent="handleDeleteComponent" />
             </div>
           </draggable>
         </div>
@@ -114,7 +110,7 @@
 import { ref, reactive, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from './ComponentRenderer.vue'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, CopyDocument } from '@element-plus/icons-vue'
 
 // 合并基础组件、布局组件和高级组件为一个变量components，并将类别信息加入到变量中
 const components = reactive([
@@ -200,21 +196,47 @@ const selectItem = (item, index) => {
   }
 }
 
-// 选中嵌套组件（分栏内的组件）
-const selectNestedItem = (item, parentComponent, parentColumn, columnIndex, itemIndex) => {
-  activeItem.value = item
-}
-
-// 删除嵌套组件
-const deleteNestedItem = (parentComponent, parentColumn, columnIndex, itemIndex) => {
-  parentColumn.children.splice(itemIndex, 1)
-}
-
 // 删除组件
 const deleteItem = (index) => {
   formItems.value.splice(index, 1)
   if (activeItem.value && activeItem.value === formItems.value[index]) {
     activeItem.value = null
+  }
+}
+
+// 复制组件
+const copyItem = (index) => {
+  const sourceItem = formItems.value[index]
+  // 深拷贝组件
+  const newItem = JSON.parse(JSON.stringify(sourceItem))
+
+  // 递归更新组件和所有子组件的ID和编码
+  updateComponentIds(newItem)
+
+  // 将复制的组件插入到原组件后面
+  formItems.value.splice(index + 1, 0, newItem)
+}
+
+// 递归更新组件和所有子组件的ID和编码
+const updateComponentIds = (component) => {
+  // 为当前组件生成新的ID
+  component.id = Date.now() + Math.floor(Math.random() * 1000)
+
+  // 更新不同类型组件的编码
+  if (component.type !== 'columns') {
+    // 保持类型不变，但生成新的编码
+    component.field = component.type + component.id
+  }
+
+  // 如果是分栏容器，递归处理其中的子组件
+  if (component.type === 'columns' && component.columns) {
+    for (const column of component.columns) {
+      if (column.children && column.children.length > 0) {
+        for (const childComponent of column.children) {
+          updateComponentIds(childComponent)
+        }
+      }
+    }
   }
 }
 
@@ -295,9 +317,37 @@ const dragStart = () => {
 
 // 拖拽结束
 const dragEnd = () => { }
+
+// 处理组件选择事件
+const handleSelectComponent = (component, parentInfo) => {
+  if (parentInfo) {
+    // 处理嵌套组件的选择
+    if (parentInfo.parentColumn && parentInfo.columnIndex !== undefined && parentInfo.itemIndex !== undefined) {
+      // 这是分栏内的嵌套组件
+      activeItem.value = component;
+    }
+  } else {
+    // 处理顶层组件的选择
+    activeItem.value = component;
+  }
+}
+
+// 处理组件复制事件
+const handleCopyComponent = (component, parentInfo) => {
+  if (parentInfo && parentInfo.index !== undefined) {
+    copyItem(parentInfo.index);
+  }
+};
+
+// 处理组件删除事件
+const handleDeleteComponent = (component, parentInfo) => {
+  if (parentInfo && parentInfo.index !== undefined) {
+    deleteItem(parentInfo.index);
+  }
+};
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .form-design-container {
   height: calc(100vh - 60px);
   overflow: hidden;
@@ -306,73 +356,73 @@ const dragEnd = () => { }
 .component-panel {
   background-color: #ffffff;
   border-right: 1px solid #ebeef5;
-}
 
-.component-header {
-  display: flex;
-  align-items: center;
-  height: 50px;
-  border-bottom: 1px solid #ebeef5;
-}
+  .component-header {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    border-bottom: 1px solid #ebeef5;
 
-.component-header h3 {
-  margin-left: 20px;
-  color: #606266;
-}
+    h3 {
+      margin-left: 20px;
+      color: #606266;
+    }
+  }
 
-.component-list {
-  padding: 0 10px;
-}
+  .component-list {
+    padding: 0 10px;
 
-.component-category {
-  margin-bottom: 15px;
-}
+    .component-category {
+      margin-bottom: 15px;
 
-.component-category h4 {
-  margin: 10px 0;
-  color: #909399;
-  font-size: 14px;
-  font-weight: normal;
-}
+      h4 {
+        margin: 10px 0;
+        color: #909399;
+        font-size: 14px;
+        font-weight: normal;
+      }
 
-.component-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+      .component-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
 
-.drag-area {
-  display: contents;
-}
+        .drag-area {
+          display: contents;
+        }
 
-.component-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background-color: #fff;
-  cursor: pointer;
-  transition: all 0.3s;
-}
+        .component-item {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+          border: 1px solid #dcdfe6;
+          border-radius: 6px;
+          padding: 6px 10px;
+          background-color: #fff;
+          cursor: pointer;
+          transition: all 0.3s;
 
-.component-item:hover {
-  background-color: #f0f5ff;
-  border-color: #a0cfff;
-}
+          &:hover {
+            background-color: #f0f5ff;
+            border-color: #a0cfff;
+          }
 
-.component-item .el-icon {
-  font-size: 16px;
-  margin-right: 8px;
-  color: #409eff;
-}
+          .el-icon {
+            font-size: 16px;
+            margin-right: 8px;
+            color: #409eff;
+          }
 
-.component-item span {
-  font-size: 12px;
-  color: #606266;
-  font-weight: 500;
+          span {
+            font-size: 12px;
+            color: #606266;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
 }
 
 .design-area {
@@ -380,46 +430,46 @@ const dragEnd = () => { }
   display: flex;
   flex-direction: column;
   padding: 0px;
-}
 
-.design-header {
-  background-color: #fff;
-  height: 50px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ebeef5;
-}
+  .design-header {
+    background-color: #fff;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ebeef5;
 
-.design-header h3 {
-  margin-left: 20px;
-  color: #606266;
-}
+    h3 {
+      margin-left: 20px;
+      color: #606266;
+    }
+  }
 
-.design-canvas {
-  flex: 1;
-  padding: 20px;
-  background-color: #fafafa;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
-}
+  .design-canvas {
+    flex: 1;
+    padding: 20px;
+    background-color: #fafafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
 
-.phone-frame {
-  width: 375px;
-  height: 667px;
-  border: 10px solid #fff;
-  border-radius: 20px;
-  background-color: #eee;
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-  position: relative;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  color: #333;
+    .phone-frame {
+      width: 375px;
+      height: 667px;
+      border: 10px solid #fff;
+      border-radius: 20px;
+      background-color: #eee;
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      color: #333;
+    }
+  }
 }
 
 .empty-tip {
@@ -432,23 +482,23 @@ const dragEnd = () => { }
 .property-panel {
   background-color: #ffffff;
   border-left: 1px solid #ebeef5;
-}
 
-.property-header {
-  display: flex;
-  align-items: center;
-  height: 50px;
-  border-bottom: 1px solid #ebeef5;
-}
+  .property-header {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    border-bottom: 1px solid #ebeef5;
 
-.property-header h3 {
-  margin-left: 15px;
-  color: #606266;
-}
+    h3 {
+      margin-left: 15px;
+      color: #606266;
+    }
+  }
 
-.property-form {
-  margin-top: 15px;
-  padding: 0 15px;
+  .property-form {
+    margin-top: 15px;
+    padding: 0 15px;
+  }
 }
 
 .form-container {
@@ -469,11 +519,11 @@ const dragEnd = () => { }
   background-color: #fff;
   cursor: pointer;
   transition: all 0.3s;
-}
 
-.form-item-wrapper.active {
-  border-color: #409eff;
-  background-color: #f0faff;
+  &.active {
+    border-color: #409eff;
+    background-color: #f0faff;
+  }
 }
 
 .drag-handle {
@@ -486,12 +536,21 @@ const dragEnd = () => { }
 
 .form-item-actions {
   margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   cursor: pointer;
   color: #909399;
-}
 
-.form-item-actions .el-icon:hover {
-  color: #f56c6c;
+  .el-icon {
+    &:first-child:hover {
+      color: #409EFF;
+    }
+
+    &:last-child:hover {
+      color: #F56C6C;
+    }
+  }
 }
 
 .form-item {
@@ -505,14 +564,50 @@ const dragEnd = () => { }
   font-weight: 500;
   display: flex;
   align-items: center;
-}
 
-.form-item-label .required {
-  color: #f56c6c;
-  margin-left: 4px;
+  .required {
+    color: #f56c6c;
+    margin-left: 4px;
+  }
 }
 
 .form-item-control {
   width: 100%;
+}
+
+/* 拖动动画相关样式 */
+.ghost-item {
+  opacity: 0.5;
+  background: linear-gradient(135deg, #c8ebfb 0%, #a0cfff 100%) !important;
+  border: 2px dashed #409EFF !important;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+.chosen-item {
+  background: linear-gradient(135deg, #f0faff 0%, #d8f0ff 100%) !important;
+  border: 2px solid #409EFF !important;
+  box-shadow: 0 0 10px rgba(64, 158, 255, 0.3) !important;
+  animation: pulse 1.5s infinite;
+}
+
+.dragging-item {
+  background: #fff !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  transform: rotate(3deg) scale(1.03) !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  z-index: 100 !important;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(64, 158, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
+  }
 }
 </style>
