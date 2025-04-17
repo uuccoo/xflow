@@ -22,33 +22,9 @@
         </div>
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
-        <div class="node-add-btn">
-          <el-popover placement="right-start" :width="280" trigger="click" :hide-after="0" :show-arrow="true"
-            :offset="12" popper-class="node-popover" v-model:visible="popoverVisibleMap[0]" @show="handlePopoverShow(0)"
-            @hide="handlePopoverHide(0)">
-            <template #reference>
-              <el-button circle class="add-btn">
-                <el-icon>
-                  <Plus />
-                </el-icon>
-              </el-button>
-            </template>
-            <template #default>
-              <div class="menu-title">添加流程节点</div>
-              <div class="node-options">
-                <div class="node-option-item" v-for="option in nodeOptions" :key="option.type"
-                  @click="addNode(option.type, 0)">
-                  <div class="option-icon" :style="{ backgroundColor: option.color }">
-                    <el-icon>
-                      <component :is="option.icon" />
-                    </el-icon>
-                  </div>
-                  <span class="option-name">{{ option.label }}</span>
-                </div>
-              </div>
-            </template>
-          </el-popover>
-        </div>
+        <NodeAddButton :position="0" :nodeOptions="nodeOptions" :visible="popoverVisibleMap[0]"
+          @update:visible="val => popoverVisibleMap[0] = val" @add="handleAddNode" @show="handlePopoverShow"
+          @hide="handlePopoverHide" />
 
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in mainFlowNodes" :key="node.id">
@@ -59,19 +35,9 @@
                   <User />
                 </el-icon></span>
               <span class="node-title">{{ node.name }}</span>
-              <el-dropdown trigger="click">
-                <span class="el-dropdown-link">
-                  <el-icon>
-                    <More />
-                  </el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="editNode(node)">编辑节点</el-dropdown-item>
-                    <el-dropdown-item @click="deleteNode(node, index)">删除节点</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+              <el-icon class="node-delete" @click="deleteNode(node, index)">
+                <Delete />
+              </el-icon>
             </div>
             <div class="node-content">
               <div class="node-item" @click="selectApprovers(node)">
@@ -90,19 +56,9 @@
                   <Document />
                 </el-icon></span>
               <span class="node-title">{{ node.name }}</span>
-              <el-dropdown trigger="click">
-                <span class="el-dropdown-link">
-                  <el-icon>
-                    <More />
-                  </el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="editNode(node)">编辑节点</el-dropdown-item>
-                    <el-dropdown-item @click="deleteNode(node, index)">删除节点</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+              <el-icon class="node-delete" @click="deleteNode(node, index)">
+                <Delete />
+              </el-icon>
             </div>
             <div class="node-content">
               <div class="node-item" @click="selectUsers(node)">
@@ -121,19 +77,9 @@
                   <Edit />
                 </el-icon></span>
               <span class="node-title">{{ node.name }}</span>
-              <el-dropdown trigger="click">
-                <span class="el-dropdown-link">
-                  <el-icon>
-                    <More />
-                  </el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="editNode(node)">编辑节点</el-dropdown-item>
-                    <el-dropdown-item @click="deleteNode(node, index)">删除节点</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+              <el-icon class="node-delete" @click="deleteNode(node, index)">
+                <Delete />
+              </el-icon>
             </div>
             <div class="node-content">
               <div class="node-item" @click="selectProcessors(node)">
@@ -145,6 +91,37 @@
             </div>
           </div>
 
+          <!-- 渲染条件分支节点 -->
+          <div v-else-if="node.type === 'condition'" class="flow-branch-container">
+            <!-- 条件分支顶部按钮 -->
+            <div class="condition-add-btn">
+              <el-button size="small" type="primary" plain round @click="addCondition(node)">添加条件</el-button>
+            </div>
+
+            <!-- 条件分支直接渲染，不需要外层框 -->
+            <div class="flow-branch">
+              <div class="branch-item" v-for="(condition, condIndex) in node.props.conditions" :key="condIndex">
+                <div class="branch-header">
+                  {{ condition.name }} <span class="priority-tag">优先级{{ condition.priority }}</span>
+                </div>
+                <div class="flow-node condition-branch">
+                  <div class="node-content condition-content">
+                    <span v-if="condition.priority === 2">其他条件进入此流程</span>
+                    <span v-else>请设置条件</span>
+                  </div>
+                </div>
+
+                <!-- 为每个条件分支添加节点按钮 -->
+                <NodeAddButton :position="`${index}-${condIndex}`" :nodeOptions="nodeOptions"
+                  :visible="getConditionPopoverVisible(index, condIndex)"
+                  @update:visible="val => setConditionPopoverVisible(index, condIndex, val)"
+                  @add="payload => handleAddNodeToCondition(payload, node, condition)"
+                  @show="position => handlePopoverShow(`${index}-${condIndex}`)"
+                  @hide="position => handlePopoverHide(`${index}-${condIndex}`)" />
+              </div>
+            </div>
+          </div>
+
           <!-- 其他类型的节点可以按需添加 -->
           <div v-else class="flow-node generic" :style="getNodeStyle(node)">
             <div class="node-header" :style="getNodeHeaderStyle(node)">
@@ -152,19 +129,9 @@
                   <component :is="getNodeIcon(node.type)" />
                 </el-icon></span>
               <span class="node-title">{{ node.name }}</span>
-              <el-dropdown trigger="click">
-                <span class="el-dropdown-link">
-                  <el-icon>
-                    <More />
-                  </el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="editNode(node)">编辑节点</el-dropdown-item>
-                    <el-dropdown-item @click="deleteNode(node, index)">删除节点</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+              <el-icon class="node-delete" @click="deleteNode(node, index)">
+                <Delete />
+              </el-icon>
             </div>
             <div class="node-content">
               <div class="node-item" @click="configureNode(node)">
@@ -177,33 +144,9 @@
           </div>
 
           <!-- 每个节点后面都有一个添加按钮 -->
-          <div class="node-add-btn">
-            <el-popover placement="right" :width="280" trigger="click" :hide-after="0" :show-arrow="true" :offset="12"
-              popper-class="node-popover" v-model:visible="popoverVisibleMap[index + 1]"
-              @show="handlePopoverShow(index + 1)" @hide="handlePopoverHide(index + 1)">
-              <template #reference>
-                <el-button circle class="add-btn">
-                  <el-icon>
-                    <Plus />
-                  </el-icon>
-                </el-button>
-              </template>
-              <template #default>
-                <div class="menu-title">添加流程节点</div>
-                <div class="node-options">
-                  <div class="node-option-item" v-for="option in nodeOptions" :key="option.type"
-                    @click="addNode(option.type, index + 1)">
-                    <div class="option-icon" :style="{ backgroundColor: option.color }">
-                      <el-icon>
-                        <component :is="option.icon" />
-                      </el-icon>
-                    </div>
-                    <span class="option-name">{{ option.label }}</span>
-                  </div>
-                </div>
-              </template>
-            </el-popover>
-          </div>
+          <NodeAddButton :position="index + 1" :nodeOptions="nodeOptions" :visible="popoverVisibleMap[index + 1]"
+            @update:visible="val => popoverVisibleMap[index + 1] = val" @add="handleAddNode" @show="handlePopoverShow"
+            @hide="handlePopoverHide" />
         </template>
 
         <!-- 结束节点 -->
@@ -219,6 +162,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import {
   User,
   ArrowRight,
@@ -231,8 +175,10 @@ import {
   Sort,
   TurnOff,
   Setting,
-  Money
+  Money,
+  Delete
 } from '@element-plus/icons-vue'
+import NodeAddButton from './NodeAddButton.vue'
 
 // 发起人信息
 const initiator = ref('zc企业')
@@ -253,22 +199,36 @@ const flowNodes = reactive([
 const mainFlowNodes = reactive([])
 
 // 使用对象来跟踪每个位置的 Popover 显示状态
-const popoverVisibleMap = reactive({})
+const popoverVisibleMap = reactive({
+  0: false // 为初始位置显式添加一个值
+});
+
+// 条件分支的弹窗状态管理
+const getConditionPopoverVisible = (nodeIndex, condIndex) => {
+  const key = `${nodeIndex}-${condIndex}`;
+  return popoverVisibleMap[key] || false;
+}
+
+const setConditionPopoverVisible = (nodeIndex, condIndex, value) => {
+  const key = `${nodeIndex}-${condIndex}`;
+  popoverVisibleMap[key] = value;
+}
 
 // 保存当前活跃的 Popover 位置
-const activePopoverPosition = ref(null)
+const activePopoverPosition = ref(null);
 
 // 处理 Popover 显示事件
 const handlePopoverShow = (position) => {
+  console.log('显示弹窗，位置:', position);
   // 记录当前活跃的位置
-  activePopoverPosition.value = position
+  activePopoverPosition.value = position;
 
   // 关闭其他所有 Popover
   Object.keys(popoverVisibleMap).forEach(key => {
-    if (parseInt(key) !== position) {
-      popoverVisibleMap[key] = false
+    if (key !== String(position)) {
+      popoverVisibleMap[key] = false;
     }
-  })
+  });
 }
 
 // 处理 Popover 隐藏事件
@@ -303,12 +263,32 @@ const getNodeHeaderStyle = (node) => {
   return option ? { backgroundColor: option.headerBg } : {}
 }
 
-// 添加节点 - 使用 Popover 改造后的版本
-const addNode = (type, position) => {
-  // 生成新节点ID，确保唯一
-  const nodeId = Date.now()
+// 处理添加节点事件
+const handleAddNode = (payload) => {
+  const { type, position } = payload
+  addNode(type, position)
+}
 
-  // 根据类型创建不同的节点配置
+// 处理在条件分支内添加节点
+const handleAddNodeToCondition = (payload, parentNode, condition) => {
+  const { type, position } = payload;
+  const [nodeIndex, condIndex] = position.split('-').map(Number);
+
+  // 创建新节点
+  const nodeId = Date.now();
+  let newNode = createNodeByType(type, nodeId);
+
+  // 将节点添加到条件分支的节点数组中
+  condition.nodes.push(newNode);
+
+  // 关闭弹窗
+  setConditionPopoverVisible(nodeIndex, condIndex, false);
+
+  console.log(`在条件分支 ${condition.name} 内添加节点:`, newNode);
+}
+
+// 根据类型创建节点
+const createNodeByType = (type, nodeId) => {
   let newNode = {
     id: nodeId,
     type: type
@@ -358,7 +338,7 @@ const addNode = (type, position) => {
               nodes: []
             },
             {
-              name: '条件2',
+              name: '默认条件',
               expression: '其他条件进入此流程',
               priority: 2,
               nodes: []
@@ -416,6 +396,17 @@ const addNode = (type, position) => {
       break
   }
 
+  return newNode;
+}
+
+// 添加节点 - 使用 Popover 改造后的版本
+const addNode = (type, position) => {
+  // 生成新节点ID，确保唯一
+  const nodeId = Date.now()
+
+  // 创建新节点
+  let newNode = createNodeByType(type, nodeId)
+
   // 将节点添加到flowNodes数组
   flowNodes.push(newNode)
 
@@ -448,6 +439,43 @@ const editNode = (node) => {
 const deleteNode = (node, index) => {
   console.log('删除节点', node)
   mainFlowNodes.splice(index, 1)
+}
+
+// 添加条件分支
+const addCondition = (node) => {
+  // 获取现有条件数量
+  const conditionsCount = node.props.conditions.length;
+  const conditionNumber = conditionsCount; // 新条件的编号
+
+  // 创建新条件
+  const newCondition = {
+    name: `条件${conditionNumber}`,
+    expression: '',
+    priority: conditionNumber,
+    nodes: []
+  };
+
+  // 将默认条件的优先级设为最低
+  const defaultConditionIndex = node.props.conditions.findIndex(c => c.name === '默认条件');
+  if (defaultConditionIndex !== -1) {
+    node.props.conditions[defaultConditionIndex].priority = conditionsCount + 1;
+  }
+
+  // 在倒数第二位(默认条件之前)插入新条件
+  node.props.conditions.splice(conditionsCount - 1, 0, newCondition);
+
+  console.log('添加条件分支成功', newCondition);
+}
+
+// 删除条件节点中的某个条件分支
+const deleteCondition = (node, condIndex) => {
+  if (node.props.conditions.length <= 2) {
+    // 至少保留两个条件分支
+    ElMessage.warning('至少需要保留两个条件分支')
+    return
+  }
+  node.props.conditions.splice(condIndex, 1)
+  console.log('删除条件分支', condIndex)
 }
 
 // 显示人员选择器
@@ -623,11 +651,54 @@ const configureNode = (node) => {
 }
 
 .condition {
-  border-left: 3px solid #e6a23c;
+  border-left: 3px solid #f56c6c;
 
   .node-header {
-    background-color: #fdf6ec;
+    background-color: #fef0f0;
   }
+}
+
+.condition-branch {
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background-color: white;
+
+  .condition-content {
+    padding: 14px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #909399;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+  }
+}
+
+/* 删除图标样式 */
+.node-delete {
+  color: #f56c6c;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 5px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out, color 0.3s;
+}
+
+.flow-node:hover .node-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.node-delete:hover {
+  color: #ff4d4f;
 }
 
 /* 添加节点按钮 */
@@ -718,13 +789,34 @@ const configureNode = (node) => {
   }
 }
 
+/* 分支容器样式 */
+.flow-branch-container {
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+/* 条件分支顶部按钮样式 */
+.condition-add-btn {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 20px;
+
+  .el-button {
+    background-color: white;
+    font-size: 13px;
+    padding: 8px 20px;
+    height: auto;
+  }
+}
+
 /* 分支样式 */
 .flow-branch {
   width: 100%;
   display: flex;
-  gap: 15px;
+  gap: 30px;
   position: relative;
-  padding-top: 30px;
+  padding: 30px 0 0;
   margin-bottom: 15px;
 
   /* 分支上方连接线 */
@@ -733,17 +825,18 @@ const configureNode = (node) => {
     position: absolute;
     top: 0;
     left: 50%;
-    height: 30px;
+    height: 15px;
     border-left: 1px dashed #c0c4cc;
+    transform: translateX(-50%);
   }
 
   /* 分支顶部横线 */
   &::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 15px;
+    left: 20%;
+    width: 60%;
     border-top: 1px dashed #c0c4cc;
   }
 
@@ -758,22 +851,47 @@ const configureNode = (node) => {
     &::before {
       content: '';
       position: absolute;
-      top: 0;
+      top: -15px;
       left: 50%;
-      height: 30px;
+      height: 15px;
       border-left: 1px dashed #c0c4cc;
     }
   }
 
   .branch-header {
-    background-color: #f5f7fa;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    color: #909399;
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    color: #333;
     margin-bottom: 15px;
+    background-color: white;
     border: 1px solid #e4e7ed;
     z-index: 1;
+
+    .priority-tag {
+      margin-left: 5px;
+      color: #909399;
+      font-size: 12px;
+      font-weight: normal;
+    }
+  }
+}
+
+/* 条件分支内容样式 */
+.condition-content {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #606266;
+  font-size: 14px;
+  cursor: pointer;
+  border-top: 1px solid #ebeef5;
+
+  &:hover {
+    background-color: #f5f7fa;
   }
 }
 
