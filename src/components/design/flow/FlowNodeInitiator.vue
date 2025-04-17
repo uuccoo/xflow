@@ -1,0 +1,93 @@
+<template>
+    <div class="flow-node initiator">
+        <div class="node-header">
+            <span class="node-icon">
+                <el-icon>
+                    <User />
+                </el-icon>
+            </span>
+            <span class="node-title">{{ initiator.name }}</span>
+        </div>
+        <div class="node-content">
+            <div class="node-item" @click="$emit('select')">
+                <span>{{ initiator.props.initiator || '所有人' }}</span>
+                <el-icon class="chevron-icon">
+                    <ArrowRight />
+                </el-icon>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { User, ArrowRight } from '@element-plus/icons-vue'
+
+defineProps({
+    initiator: {
+        type: Object,
+        required: true
+    }
+})
+
+defineEmits(['select'])
+</script>
+
+<style scoped lang="scss">
+.initiator {
+    width: 220px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #e4e7ed;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    margin-left: auto;
+    margin-right: auto;
+    border-left: 3px solid #409eff;
+
+    .node-header {
+        background-color: #ecf5ff;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #e4e7ed;
+        border-radius: 4px 4px 0 0;
+
+        .node-icon {
+            margin-right: 5px;
+            color: #409eff;
+            display: flex;
+            align-items: center;
+        }
+
+        .node-title {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #303133;
+            font-weight: 500;
+        }
+    }
+
+    .node-content {
+        padding: 0;
+
+        .node-item {
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #606266;
+            font-size: 14px;
+            cursor: pointer;
+
+            &:hover {
+                background-color: #f5f7fa;
+            }
+
+            .chevron-icon {
+                color: #c0c4cc;
+                font-size: 12px;
+            }
+        }
+    }
+}
+</style>

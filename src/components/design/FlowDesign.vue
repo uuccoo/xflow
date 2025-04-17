@@ -4,157 +4,35 @@
       <!-- 流程图主体 -->
       <div class="flow-chart">
         <!-- 发起人节点 -->
-        <div class="flow-node initiator">
-          <div class="node-header">
-            <span class="node-icon"><el-icon>
-                <User />
-              </el-icon></span>
-            <span class="node-title">发起人</span>
-          </div>
-          <div class="node-content">
-            <div class="node-item" @click="showPersonSelector">
-              <span>所有人</span>
-              <el-icon class="chevron-icon">
-                <ArrowRight />
-              </el-icon>
-            </div>
-          </div>
-        </div>
+        <flow-node-renderer :node="flowData.initiator" :index="-1" :nodeOptions="nodeOptions"
+          :getPopoverVisible="getPopoverVisible" :setPopoverVisible="setPopoverVisible"
+          @select-initiator="showPersonSelector" />
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
-        <NodeAddButton :position="0" :nodeOptions="nodeOptions" :visible="popoverVisibleMap[0]"
-          @update:visible="val => popoverVisibleMap[0] = val" @add="handleAddNode" @show="handlePopoverShow"
+        <node-add-button :position="0" :nodeOptions="nodeOptions" :visible="getPopoverVisible(0)"
+          @update:visible="val => setPopoverVisible(0, val)" @add="handleAddNode" @show="handlePopoverShow"
           @hide="handlePopoverHide" />
 
         <!-- 动态渲染主流程中的节点 -->
-        <template v-for="(node, index) in mainFlowNodes" :key="node.id">
-          <!-- 渲染审批人节点 -->
-          <div v-if="node.type === 'approver'" class="flow-node approver" :style="getNodeStyle(node)">
-            <div class="node-header" :style="getNodeHeaderStyle(node)">
-              <span class="node-icon"><el-icon>
-                  <User />
-                </el-icon></span>
-              <span class="node-title">{{ node.name }}</span>
-              <el-icon class="node-delete" @click="deleteNode(node, index)">
-                <Delete />
-              </el-icon>
-            </div>
-            <div class="node-content">
-              <div class="node-item" @click="selectApprovers(node)">
-                <span>{{ node.props.approvers.length > 0 ? formatUserNames(node.props.approvers) : '请选择审批人' }}</span>
-                <el-icon class="chevron-icon">
-                  <ArrowRight />
-                </el-icon>
-              </div>
-            </div>
-          </div>
-
-          <!-- 渲染抄送人节点 -->
-          <div v-else-if="node.type === 'copyTo'" class="flow-node copyto" :style="getNodeStyle(node)">
-            <div class="node-header" :style="getNodeHeaderStyle(node)">
-              <span class="node-icon"><el-icon>
-                  <Document />
-                </el-icon></span>
-              <span class="node-title">{{ node.name }}</span>
-              <el-icon class="node-delete" @click="deleteNode(node, index)">
-                <Delete />
-              </el-icon>
-            </div>
-            <div class="node-content">
-              <div class="node-item" @click="selectUsers(node)">
-                <span>{{ node.props.users.length > 0 ? formatUserNames(node.props.users) : '请选择抄送人' }}</span>
-                <el-icon class="chevron-icon">
-                  <ArrowRight />
-                </el-icon>
-              </div>
-            </div>
-          </div>
-
-          <!-- 渲染办理节点 -->
-          <div v-else-if="node.type === 'process'" class="flow-node process" :style="getNodeStyle(node)">
-            <div class="node-header" :style="getNodeHeaderStyle(node)">
-              <span class="node-icon"><el-icon>
-                  <Edit />
-                </el-icon></span>
-              <span class="node-title">{{ node.name }}</span>
-              <el-icon class="node-delete" @click="deleteNode(node, index)">
-                <Delete />
-              </el-icon>
-            </div>
-            <div class="node-content">
-              <div class="node-item" @click="selectProcessors(node)">
-                <span>{{ node.props.processors.length > 0 ? formatUserNames(node.props.processors) : '请选择办理人' }}</span>
-                <el-icon class="chevron-icon">
-                  <ArrowRight />
-                </el-icon>
-              </div>
-            </div>
-          </div>
-
-          <!-- 渲染条件分支节点 -->
-          <div v-else-if="node.type === 'condition'" class="flow-branch-container">
-            <!-- 条件分支顶部按钮 -->
-            <div class="condition-add-btn">
-              <el-button size="small" type="primary" plain round @click="addCondition(node)">添加条件</el-button>
-            </div>
-
-            <!-- 条件分支直接渲染，不需要外层框 -->
-            <div class="flow-branch">
-              <div class="branch-item" v-for="(condition, condIndex) in node.props.conditions" :key="condIndex">
-                <div class="branch-header">
-                  {{ condition.name }} <span class="priority-tag">优先级{{ condition.priority }}</span>
-                </div>
-                <div class="flow-node condition-branch">
-                  <div class="node-content condition-content">
-                    <span v-if="condition.priority === 2">其他条件进入此流程</span>
-                    <span v-else>请设置条件</span>
-                  </div>
-                </div>
-
-                <!-- 为每个条件分支添加节点按钮 -->
-                <NodeAddButton :position="`${index}-${condIndex}`" :nodeOptions="nodeOptions"
-                  :visible="getConditionPopoverVisible(index, condIndex)"
-                  @update:visible="val => setConditionPopoverVisible(index, condIndex, val)"
-                  @add="payload => handleAddNodeToCondition(payload, node, condition)"
-                  @show="position => handlePopoverShow(`${index}-${condIndex}`)"
-                  @hide="position => handlePopoverHide(`${index}-${condIndex}`)" />
-              </div>
-            </div>
-          </div>
-
-          <!-- 其他类型的节点可以按需添加 -->
-          <div v-else class="flow-node generic" :style="getNodeStyle(node)">
-            <div class="node-header" :style="getNodeHeaderStyle(node)">
-              <span class="node-icon"><el-icon>
-                  <component :is="getNodeIcon(node.type)" />
-                </el-icon></span>
-              <span class="node-title">{{ node.name }}</span>
-              <el-icon class="node-delete" @click="deleteNode(node, index)">
-                <Delete />
-              </el-icon>
-            </div>
-            <div class="node-content">
-              <div class="node-item" @click="configureNode(node)">
-                <span>点击配置</span>
-                <el-icon class="chevron-icon">
-                  <ArrowRight />
-                </el-icon>
-              </div>
-            </div>
-          </div>
+        <template v-for="(node, index) in flowData.nodes" :key="node.id">
+          <!-- 使用通用节点组件渲染所有节点类型 -->
+          <flow-node-renderer :node="node" :index="index" :nodeOptions="nodeOptions"
+            :getPopoverVisible="getPopoverVisible" :setPopoverVisible="setPopoverVisible" @delete="deleteNode"
+            @select-initiator="showPersonSelector" @select-approvers="selectApprovers" @select-users="selectUsers"
+            @select-processors="selectProcessors" @add-condition="addCondition" @delete-condition="deleteCondition"
+            @edit-condition="editCondition" @add-branch="addBranch" @delete-branch="deleteBranch"
+            @edit-branch="editBranch" @add-node-to-condition="handleAddNodeToCondition"
+            @add-node-to-parallel="handleAddNodeToParallel" @popover-show="handlePopoverShow"
+            @popover-hide="handlePopoverHide" @configure="configureNode" />
 
           <!-- 每个节点后面都有一个添加按钮 -->
-          <NodeAddButton :position="index + 1" :nodeOptions="nodeOptions" :visible="popoverVisibleMap[index + 1]"
-            @update:visible="val => popoverVisibleMap[index + 1] = val" @add="handleAddNode" @show="handlePopoverShow"
+          <node-add-button :position="index + 1" :nodeOptions="nodeOptions" :visible="getPopoverVisible(index + 1)"
+            @update:visible="val => setPopoverVisible(index + 1, val)" @add="handleAddNode" @show="handlePopoverShow"
             @hide="handlePopoverHide" />
         </template>
 
         <!-- 结束节点 -->
-        <div class="flow-end">
-          <div class="end-node">
-            <span>流程结束</span>
-          </div>
-        </div>
+        <flow-node-renderer :node="{ type: 'end' }" :index="-2" :nodeOptions="nodeOptions" />
       </div>
     </div>
   </div>
@@ -179,43 +57,65 @@ import {
   Delete
 } from '@element-plus/icons-vue'
 import NodeAddButton from './NodeAddButton.vue'
+import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
 
 // 发起人信息
 const initiator = ref('zc企业')
 
-// 存储流程节点
-const flowNodes = reactive([
-  {
+// 存储完整流程数据（统一节点数据结构）
+// 存储完整流程数据（统一节点数据结构）
+const flowData = reactive({
+  id: 'flow-' + Date.now(),
+  name: '未命名流程',
+  version: '1.0',
+  initiator: {
     id: 1,
     type: 'initiator',
     name: '发起人',
     props: {
       initiator: 'zc企业'
     }
-  }
-])
+  },
+  nodes: [] // 替代原来的 mainFlowNodes
+})
 
-// 当前主要流程节点列表（不包括分支内的节点）
-const mainFlowNodes = reactive([])
+// 使用 Map 来跟踪每个位置的 Popover 显示状态
+const popoverVisibleMap = reactive(new Map());
 
-// 使用对象来跟踪每个位置的 Popover 显示状态
-const popoverVisibleMap = reactive({
-  0: false // 为初始位置显式添加一个值
-});
+// 保存当前活跃的 Popover 位置
+const activePopoverPosition = ref(null);
+
+// 获取 Popover 显示状态
+const getPopoverVisible = (position) => {
+  return popoverVisibleMap.get(String(position)) || false
+}
+
+// 设置 Popover 显示状态
+const setPopoverVisible = (position, value) => {
+  popoverVisibleMap.set(String(position), value)
+}
 
 // 条件分支的弹窗状态管理
 const getConditionPopoverVisible = (nodeIndex, condIndex) => {
   const key = `${nodeIndex}-${condIndex}`;
-  return popoverVisibleMap[key] || false;
+  return getPopoverVisible(key)
 }
 
 const setConditionPopoverVisible = (nodeIndex, condIndex, value) => {
   const key = `${nodeIndex}-${condIndex}`;
-  popoverVisibleMap[key] = value;
+  setPopoverVisible(key, value)
 }
 
-// 保存当前活跃的 Popover 位置
-const activePopoverPosition = ref(null);
+// 并行分支的弹窗状态管理
+const getParallelPopoverVisible = (nodeIndex, branchIndex) => {
+  const key = `${nodeIndex}-p${branchIndex}`;
+  return getPopoverVisible(key)
+}
+
+const setParallelPopoverVisible = (nodeIndex, branchIndex, value) => {
+  const key = `${nodeIndex}-p${branchIndex}`;
+  setPopoverVisible(key, value)
+}
 
 // 处理 Popover 显示事件
 const handlePopoverShow = (position) => {
@@ -224,9 +124,9 @@ const handlePopoverShow = (position) => {
   activePopoverPosition.value = position;
 
   // 关闭其他所有 Popover
-  Object.keys(popoverVisibleMap).forEach(key => {
+  popoverVisibleMap.forEach((value, key) => {
     if (key !== String(position)) {
-      popoverVisibleMap[key] = false;
+      popoverVisibleMap.set(key, false);
     }
   });
 }
@@ -237,6 +137,135 @@ const handlePopoverHide = (position) => {
   if (activePopoverPosition.value === position) {
     activePopoverPosition.value = null
   }
+}
+
+// 导出完整流程数据（用于保存或传输）
+const exportFlowData = () => {
+  return {
+    ...flowData,
+    updateTime: new Date().toISOString()
+  }
+}
+
+// 导入流程数据
+const importFlowData = (data) => {
+  if (!data || !data.id) {
+    ElMessage.error('导入的流程数据无效');
+    return false;
+  }
+
+  // 验证数据结构
+  if (!validateFlowData(data)) {
+    return false;
+  }
+
+  // 重置当前数据
+  flowData.id = data.id;
+  flowData.name = data.name || '未命名流程';
+  flowData.version = data.version || '1.0';
+
+  // 导入发起人
+  if (data.initiator) {
+    flowData.initiator = data.initiator;
+  }
+
+  // 导入节点
+  flowData.nodes = data.nodes || [];
+
+  ElMessage.success('流程数据导入成功');
+  return true;
+}
+
+// 验证流程数据完整性
+const validateFlowData = (data) => {
+  const errors = [];
+
+  // 1. 基本信息验证
+  if (!data.name) {
+    errors.push('流程名称不能为空');
+  }
+
+  // 2. 验证发起人
+  if (!data.initiator || !data.initiator.props || !data.initiator.props.initiator) {
+    errors.push('流程发起人未配置');
+  }
+
+  // 3. 验证节点配置
+  if (data.nodes && data.nodes.length > 0) {
+    data.nodes.forEach((node, index) => {
+      // 审批人节点
+      if (node.type === 'approver' && (!node.props.approvers || node.props.approvers.length === 0)) {
+        errors.push(`第${index + 1}个节点(${node.name})未配置审批人`);
+      }
+
+      // 办理节点
+      if (node.type === 'process' && (!node.props.processors || node.props.processors.length === 0)) {
+        errors.push(`第${index + 1}个节点(${node.name})未配置办理人`);
+      }
+
+      // 抄送人节点
+      if (node.type === 'copyTo' && (!node.props.users || node.props.users.length === 0)) {
+        errors.push(`第${index + 1}个节点(${node.name})未配置抄送人`);
+      }
+
+      // 条件节点
+      if (node.type === 'condition') {
+        const conditions = node.props.conditions || [];
+        if (conditions.length < 2) {
+          errors.push(`第${index + 1}个节点(条件分支)至少需要两个条件`);
+        }
+
+        // 检查非默认条件的表达式
+        conditions.forEach((condition, condIndex) => {
+          if (condition.name !== '默认条件' && !condition.expression) {
+            errors.push(`第${index + 1}个节点的条件${condIndex + 1}未配置条件表达式`);
+          }
+        });
+      }
+
+      // 并行节点
+      if (node.type === 'parallel') {
+        const branches = node.props.branches || [];
+        if (branches.length < 2) {
+          errors.push(`第${index + 1}个节点(并行分支)至少需要两个分支`);
+        }
+      }
+    });
+  } else {
+    errors.push('流程至少需要一个节点');
+  }
+
+  // 显示验证结果
+  if (errors.length > 0) {
+    ElMessage.error(`流程数据验证失败: ${errors[0]}`);
+    console.error('流程验证错误', errors);
+    return false;
+  }
+
+  return true;
+}
+
+// 预览流程
+const previewFlow = () => {
+  if (validateFlowData(flowData)) {
+    ElMessage.success('流程验证通过，可以预览');
+    console.log('预览流程数据', exportFlowData());
+    // 此处可以打开预览弹窗或导航到预览页面
+    return true;
+  }
+  return false;
+}
+
+// 发布流程
+const publishFlow = () => {
+  if (validateFlowData(flowData)) {
+    ElMessage.success('流程验证通过，可以发布');
+    const publishData = exportFlowData();
+    console.log('发布流程数据', publishData);
+    // 此处可以发送请求保存流程数据
+    return true;
+  }
+  return false;
 }
 
 // 节点选项
@@ -263,6 +292,100 @@ const getNodeHeaderStyle = (node) => {
   return option ? { backgroundColor: option.headerBg } : {}
 }
 
+// 根据类型创建节点
+const createNodeByType = (type, nodeId) => {
+  // 节点类型配置映射
+  const nodeConfigs = {
+    approver: {
+      name: '审批人',
+      props: {
+        approvers: [],
+        mode: 'anyone' // 任意一人通过即可，可选值：anyone, all
+      }
+    },
+    copyTo: {
+      name: '抄送人',
+      props: {
+        users: []
+      }
+    },
+    process: {
+      name: '办理',
+      props: {
+        processors: [],
+        mode: 'sequential' // 串行处理，可选值：sequential, parallel
+      }
+    },
+    condition: {
+      name: '条件分支',
+      props: {
+        conditions: [
+          {
+            name: '条件1',
+            expression: '',
+            priority: 1,
+            nodes: []
+          },
+          {
+            name: '默认条件',
+            expression: '其他条件进入此流程',
+            priority: 2,
+            nodes: []
+          }
+        ]
+      }
+    },
+    automation: {
+      name: '自动化',
+      props: {
+        actions: []
+      }
+    },
+    connector: {
+      name: '连接器',
+      props: {
+        connector: '',
+        config: {}
+      }
+    },
+    parallel: {
+      name: '并行分支',
+      props: {
+        branches: [
+          {
+            name: '分支1',
+            nodes: []
+          },
+          {
+            name: '分支2',
+            nodes: []
+          }
+        ]
+      }
+    },
+    payment: {
+      name: '付款人',
+      props: {
+        payers: [],
+        amount: 0
+      }
+    }
+  }
+
+  // 获取节点配置
+  const config = nodeConfigs[type] || {}
+  const option = nodeOptions.find(option => option.type === type)
+  const label = option?.label || '未知节点'
+
+  // 创建并返回节点
+  return {
+    id: nodeId,
+    type,
+    name: config.name || label,
+    props: { ...(config.props || {}) }
+  }
+}
+
 // 处理添加节点事件
 const handleAddNode = (payload) => {
   const { type, position } = payload
@@ -272,161 +395,67 @@ const handleAddNode = (payload) => {
 // 处理在条件分支内添加节点
 const handleAddNodeToCondition = (payload, parentNode, condition) => {
   const { type, position } = payload;
-  const [nodeIndex, condIndex] = position.split('-').map(Number);
+  // 解析位置标识，可能包含多级嵌套路径
+  const positionParts = position.split('-');
 
   // 创建新节点
   const nodeId = Date.now();
   let newNode = createNodeByType(type, nodeId);
 
+  // 如果要添加的是条件分支节点，为其生成唯一标识符
+  if (type === 'condition') {
+    newNode.id = `nested-${nodeId}`;
+    newNode.isNested = true;  // 标记为嵌套节点，方便特殊处理
+  }
+
   // 将节点添加到条件分支的节点数组中
   condition.nodes.push(newNode);
 
   // 关闭弹窗
+  const [nodeIndex, condIndex] = positionParts.map(Number);
   setConditionPopoverVisible(nodeIndex, condIndex, false);
+  activePopoverPosition.value = null;
 
   console.log(`在条件分支 ${condition.name} 内添加节点:`, newNode);
 }
 
-// 根据类型创建节点
-const createNodeByType = (type, nodeId) => {
-  let newNode = {
-    id: nodeId,
-    type: type
-  }
+// 处理在并行分支内添加节点
+const handleAddNodeToParallel = (payload, parentNode, branch) => {
+  const { type, position } = payload;
+  const [nodeIndex, branchIndex] = position.split('-p').map(Number);
 
-  // 根据节点类型设置不同的属性
-  switch (type) {
-    case 'approver':
-      newNode = {
-        ...newNode,
-        name: '审批人',
-        props: {
-          approvers: [],
-          mode: 'anyone' // 任意一人通过即可，可选值：anyone, all
-        }
-      }
-      break
-    case 'copyTo':
-      newNode = {
-        ...newNode,
-        name: '抄送人',
-        props: {
-          users: []
-        }
-      }
-      break
-    case 'process':
-      newNode = {
-        ...newNode,
-        name: '办理',
-        props: {
-          processors: [],
-          mode: 'sequential' // 串行处理，可选值：sequential, parallel
-        }
-      }
-      break
-    case 'condition':
-      newNode = {
-        ...newNode,
-        name: '条件分支',
-        props: {
-          conditions: [
-            {
-              name: '条件1',
-              expression: '',
-              priority: 1,
-              nodes: []
-            },
-            {
-              name: '默认条件',
-              expression: '其他条件进入此流程',
-              priority: 2,
-              nodes: []
-            }
-          ]
-        }
-      }
-      break
-    case 'automation':
-      newNode = {
-        ...newNode,
-        name: '自动化',
-        props: {
-          actions: []
-        }
-      }
-      break
-    case 'connector':
-      newNode = {
-        ...newNode,
-        name: '连接器',
-        props: {
-          connector: '',
-          config: {}
-        }
-      }
-      break
-    case 'parallel':
-      newNode = {
-        ...newNode,
-        name: '并行分支',
-        props: {
-          branches: [
-            {
-              name: '分支1',
-              nodes: []
-            },
-            {
-              name: '分支2',
-              nodes: []
-            }
-          ]
-        }
-      }
-      break
-    case 'payment':
-      newNode = {
-        ...newNode,
-        name: '付款人',
-        props: {
-          payers: [],
-          amount: 0
-        }
-      }
-      break
-  }
+  // 创建新节点
+  const nodeId = Date.now();
+  let newNode = createNodeByType(type, nodeId);
 
-  return newNode;
+  // 将节点添加到并行分支的节点数组中
+  branch.nodes.push(newNode);
+
+  // 关闭弹窗
+  setParallelPopoverVisible(nodeIndex, branchIndex, false);
+  activePopoverPosition.value = null;
+
+  console.log(`在并行分支 ${branch.name} 内添加节点:`, newNode);
 }
 
-// 添加节点 - 使用 Popover 改造后的版本
+// 添加节点 - 使用统一的节点管理
 const addNode = (type, position) => {
   // 生成新节点ID，确保唯一
   const nodeId = Date.now()
 
   // 创建新节点
-  let newNode = createNodeByType(type, nodeId)
-
-  // 将节点添加到flowNodes数组
-  flowNodes.push(newNode)
+  const newNode = createNodeByType(type, nodeId)
 
   // 添加到主流程中的指定位置
-  mainFlowNodes.splice(position, 0, newNode)
+  flowData.nodes.splice(position, 0, newNode)
 
   // 关闭 Popover
-  popoverVisibleMap[position] = false
+  setPopoverVisible(position, false)
   activePopoverPosition.value = null
 
-  // 渲染新节点到页面
-  renderNewNode(newNode)
-}
-
-// 渲染新添加的节点到页面
-const renderNewNode = (node) => {
-  // 在下一个DOM更新周期后执行
+  // 更新渲染
   nextTick(() => {
-    console.log(`节点已添加，正在渲染: ${node.name}`, node)
-    // 这里实际项目可能需要触发状态更新或其他操作
+    console.log(`节点已添加: ${newNode.name}`, newNode)
   })
 }
 
@@ -435,13 +464,24 @@ const editNode = (node) => {
   console.log('编辑节点', node)
 }
 
-// 删除节点
-const deleteNode = (node, index) => {
-  console.log('删除节点', node)
-  mainFlowNodes.splice(index, 1)
+// 删除节点 - 支持删除主流程和条件分支内的节点
+const deleteNode = (node, index, parentPath = null) => {
+  if (parentPath) {
+    // 从条件分支中删除节点
+    const [nodeIndex, condIndex, itemIndex] = parentPath.split('-').map(Number);
+    const conditionNode = flowData.nodes[nodeIndex];
+    if (conditionNode && conditionNode.props.conditions[condIndex]) {
+      conditionNode.props.conditions[condIndex].nodes.splice(itemIndex, 1);
+      console.log('从条件分支中删除节点', node);
+    }
+  } else {
+    // 从主流程中删除节点
+    flowData.nodes.splice(index, 1);
+    console.log('从主流程中删除节点', node);
+  }
 }
 
-// 添加条件分支
+// 优化条件分支相关功能
 const addCondition = (node) => {
   // 获取现有条件数量
   const conditionsCount = node.props.conditions.length;
@@ -471,11 +511,106 @@ const addCondition = (node) => {
 const deleteCondition = (node, condIndex) => {
   if (node.props.conditions.length <= 2) {
     // 至少保留两个条件分支
-    ElMessage.warning('至少需要保留两个条件分支')
+    ElMessage.warning('至少需要保留两个条件分支');
+    return;
+  }
+
+  // 收集被删除分支中的所有节点
+  const orphanedNodes = node.props.conditions[condIndex].nodes;
+
+  // 如果有孤立节点，可以选择将它们移到默认分支
+  if (orphanedNodes.length > 0) {
+    const defaultConditionIndex = node.props.conditions.findIndex(c => c.name === '默认条件');
+    if (defaultConditionIndex !== -1) {
+      node.props.conditions[defaultConditionIndex].nodes.push(...orphanedNodes);
+      ElMessage.info('已将分支中的节点转移到默认条件');
+    }
+  }
+
+  // 删除条件分支
+  node.props.conditions.splice(condIndex, 1);
+
+  // 更新剩余条件分支的优先级
+  node.props.conditions.forEach((condition, idx) => {
+    if (condition.name !== '默认条件') {
+      condition.priority = idx + 1;
+    } else {
+      condition.priority = node.props.conditions.length;
+    }
+  });
+
+  console.log('删除条件分支', condIndex);
+}
+
+// 编辑条件表达式
+const editCondition = (node, condIndex, condition) => {
+  ElMessage({
+    message: '请编辑条件表达式',
+    type: 'info'
+  })
+  console.log('编辑条件表达式', node, condIndex, condition)
+  // 这里可以打开条件编辑弹窗
+}
+
+// 添加并行分支
+const addBranch = (node) => {
+  // 获取当前分支数量
+  const branchCount = node.props.branches.length
+  const branchNumber = branchCount + 1
+
+  // 创建新分支
+  const newBranch = {
+    name: `分支${branchNumber}`,
+    nodes: []
+  }
+
+  // 添加到并行分支列表
+  node.props.branches.push(newBranch)
+
+  console.log('添加并行分支成功', newBranch)
+}
+
+// 删除并行分支
+const deleteBranch = (node, branchIndex) => {
+  if (node.props.branches.length <= 2) {
+    // 至少保留两个并行分支
+    ElMessage.warning('至少需要保留两个并行分支')
     return
   }
-  node.props.conditions.splice(condIndex, 1)
-  console.log('删除条件分支', condIndex)
+
+  // 收集要删除分支中的节点（可选择转移到其他分支）
+  const orphanedNodes = node.props.branches[branchIndex].nodes
+  if (orphanedNodes.length > 0) {
+    // 如果有节点，可以分配到第一个分支
+    if (branchIndex !== 0 && node.props.branches[0]) {
+      node.props.branches[0].nodes.push(...orphanedNodes)
+      ElMessage.info('已将分支中的节点转移到第一个分支')
+    }
+  }
+
+  // 删除分支
+  node.props.branches.splice(branchIndex, 1)
+  console.log('删除并行分支', branchIndex)
+}
+
+// 编辑并行分支信息
+const editBranch = (node, branchIndex, branch) => {
+  ElMessage({
+    message: '请编辑分支名称',
+    type: 'info'
+  })
+  console.log('编辑分支信息', node, branchIndex, branch)
+  // 这里可以打开编辑分支的弹窗
+
+  // 示例：直接修改分支名称
+  // branch.name = '新分支名称' + branchIndex
+}
+
+// 更新并行分支汇合策略
+const updateJoinStrategy = (node, strategy) => {
+  // 可选策略：all(全部完成), any(任一完成), majority(多数完成)
+  node.props.joinStrategy = strategy
+  console.log('更新并行分支汇合策略', strategy)
 }
 
 // 显示人员选择器
