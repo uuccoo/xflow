@@ -49,9 +49,9 @@ const props = defineProps({
         required: true
     },
     // 添加新的props，用于标识当前节点的父节点信息
-    parentPath: {
-        type: String,
-        default: ''
+    parentNode: {
+        type: Object,
+        default: null
     },
     // 当前操作的条件对象（可选）
     condition: {
@@ -83,7 +83,7 @@ const handleNodeAdd = (type) => {
             node: newNode,
             condition: props.condition,
             conditionIndex: props.conditionIndex
-        }, null, props.condition);
+        });
     } else {
         // 向主流程添加节点
         flowStore.handleAddNodeEvent({

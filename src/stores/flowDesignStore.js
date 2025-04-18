@@ -19,12 +19,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     nodes: [],
   })
 
-  // 使用 Map 来跟踪每个位置的 Popover 显示状态
-  const popoverVisibleMap = reactive(new Map())
-
-  // 保存当前活跃的 Popover 位置
-  const activePopoverPosition = ref(null)
-
   // 节点选项
   const nodeOptions = [
     { type: 'approver', label: '审批人', icon: 'User', color: '#67c23a', headerBg: '#f0f9eb' },
@@ -45,63 +39,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
       color: '#9254de',
       headerBg: '#f3f0fa',
     },
-    { type: 'parallel', label: '并行分支', icon: 'Sort', color: '#1890ff', headerBg: '#e6f7ff' },
     { type: 'payment', label: '付款人', icon: 'Money', color: '#52c41a', headerBg: '#f6ffed' },
   ]
-
-  // 获取 Popover 显示状态
-  const getPopoverVisible = (position) => {
-    return popoverVisibleMap.get(String(position)) || false
-  }
-
-  // 设置 Popover 显示状态
-  const setPopoverVisible = (position, value) => {
-    popoverVisibleMap.set(String(position), value)
-  }
-
-  // 条件分支的弹窗状态管理
-  const getConditionPopoverVisible = (nodeIndex, condIndex) => {
-    const key = `${nodeIndex}-${condIndex}`
-    return getPopoverVisible(key)
-  }
-
-  const setConditionPopoverVisible = (nodeIndex, condIndex, value) => {
-    const key = `${nodeIndex}-${condIndex}`
-    setPopoverVisible(key, value)
-  }
-
-  // 并行分支的弹窗状态管理
-  const getParallelPopoverVisible = (nodeIndex, branchIndex) => {
-    const key = `${nodeIndex}-p${branchIndex}`
-    return getPopoverVisible(key)
-  }
-
-  const setParallelPopoverVisible = (nodeIndex, branchIndex, value) => {
-    const key = `${nodeIndex}-p${branchIndex}`
-    setPopoverVisible(key, value)
-  }
-
-  // 处理 Popover 显示事件
-  const handlePopoverShow = (position) => {
-    console.log('显示弹窗，位置:', position)
-    // 记录当前活跃的位置
-    activePopoverPosition.value = position
-
-    // 关闭其他所有 Popover
-    popoverVisibleMap.forEach((value, key) => {
-      if (key !== String(position)) {
-        popoverVisibleMap.set(key, false)
-      }
-    })
-  }
-
-  // 处理 Popover 隐藏事件
-  const handlePopoverHide = (position) => {
-    // 只在当前活跃的 Popover 被隐藏时重置活跃状态
-    if (activePopoverPosition.value === position) {
-      activePopoverPosition.value = null
-    }
-  }
 
   // 导出完整流程数据
   const exportFlowData = () => {
@@ -192,14 +131,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
             }
           })
         }
-
-        // 并行节点
-        if (node.type === 'parallel') {
-          const branches = node.props.branches || []
-          if (branches.length < 2) {
-            errors.push(`第${index + 1}个节点(并行分支)至少需要两个分支`)
-          }
-        }
       })
     } else {
       errors.push('流程至少需要一个节点')
@@ -276,16 +207,12 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
       addNode(type, position)
     }
 
-    // 关闭 Popover
-    setPopoverVisible(position, false)
-    activePopoverPosition.value = null
-
     console.log(`节点已添加到位置 ${position}:`, node || type)
   }
 
   // 处理在条件分支内添加节点
-  const handleAddNodeToCondition = (payload, parentNode, condition) => {
-    const { type, position } = payload
+  const handleAddNodeToCondition = (payload) => {
+    const { type, position, condition } = payload
     // 解析位置标识，可能包含多级嵌套路径
     const positionParts = position.split('-')
 
@@ -308,25 +235,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     activePopoverPosition.value = null
 
     console.log(`在条件分支 ${condition.name} 内添加节点:`, newNode)
-  }
-
-  // 处理在并行分支内添加节点
-  const handleAddNodeToParallel = (payload, parentNode, branch) => {
-    const { type, position } = payload
-    const [nodeIndex, branchIndex] = position.split('-p').map(Number)
-
-    // 创建新节点
-    const nodeId = Date.now()
-    let newNode = createNodeByType(type, nodeId)
-
-    // 将节点添加到并行分支的节点数组中
-    branch.nodes.push(newNode)
-
-    // 关闭弹窗
-    setParallelPopoverVisible(nodeIndex, branchIndex, false)
-    activePopoverPosition.value = null
-
-    console.log(`在并行分支 ${branch.name} 内添加节点:`, newNode)
   }
 
   // 根据类型创建节点
@@ -385,21 +293,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
           config: {},
         },
       },
-      parallel: {
-        name: '并行分支',
-        props: {
-          branches: [
-            {
-              name: '分支1',
-              nodes: [],
-            },
-            {
-              name: '分支2',
-              nodes: [],
-            },
-          ],
-        },
-      },
       payment: {
         name: '付款人',
         props: {
@@ -424,29 +317,20 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   }
 
   // 删除节点 - 支持删除主流程和分支内的节点
-  const deleteNode = (node, index, parent = null) => {
-    // 如果没有父节点，说明是从主流程中删除节点
-    if (!parent) {
+  const deleteNode = (node, index, branch = null) => {
+    // 如果没有分支对象，说明是从主流程中删除节点
+    if (!branch) {
       flowData.nodes.splice(index, 1)
       console.log('从主流程中删除节点', node, index)
       return
     }
 
-    // 根据父节点类型执行不同的删除操作
-    if (parent.type === 'condition') {
-      // 从条件分支中删除节点
-      // index格式: {condIndex: 数字, itemIndex: 数字}
-      const { condIndex, itemIndex } = index
-      parent.props.conditions[condIndex].nodes.splice(itemIndex, 1)
-      console.log('从条件分支中删除节点', node)
-    } else if (parent.type === 'parallel') {
-      // 从并行分支中删除节点
-      // index格式: {branchIndex: 数字, itemIndex: 数字}
-      const { branchIndex, itemIndex } = index
-      parent.props.branches[branchIndex].nodes.splice(itemIndex, 1)
-      console.log('从并行分支中删除节点', node)
+    // 从分支对象中移除节点
+    if (branch.nodes) {
+      branch.nodes.splice(index, 1)
+      console.log('从分支中删除节点', node, index)
     } else {
-      console.error('未知的父节点类型:', parent.type)
+      console.error('无效的分支对象，缺少nodes数组:', branch)
     }
   }
 
@@ -457,22 +341,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
       type: 'info',
     })
     console.log('编辑条件表达式', node, condIndex, condition)
-  }
-
-  // 编辑并行分支信息
-  const editBranch = (node, branchIndex, branch) => {
-    ElMessage({
-      message: '正在编辑分支信息',
-      type: 'info',
-    })
-    console.log('编辑分支信息', node, branchIndex, branch)
-  }
-
-  // 更新并行分支汇合策略
-  const updateJoinStrategy = (node, strategy) => {
-    // 可选策略：all(全部完成), any(任一完成), majority(多数完成)
-    node.props.joinStrategy = strategy
-    console.log('更新并行分支汇合策略', strategy)
   }
 
   // 显示人员选择器
@@ -508,16 +376,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   return {
     flowData,
     nodeOptions,
-    popoverVisibleMap,
-    activePopoverPosition,
-    getPopoverVisible,
-    setPopoverVisible,
-    getConditionPopoverVisible,
-    setConditionPopoverVisible,
-    getParallelPopoverVisible,
-    setParallelPopoverVisible,
-    handlePopoverShow,
-    handlePopoverHide,
     exportFlowData,
     importFlowData,
     validateFlowData,
@@ -528,12 +386,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     addNode,
     handleAddNodeEvent,
     handleAddNodeToCondition,
-    handleAddNodeToParallel,
     createNodeByType,
     deleteNode,
     editCondition,
-    editBranch,
-    updateJoinStrategy,
     showPersonSelector,
     formatUserNames,
     configureNode,

@@ -69,15 +69,19 @@ const props = defineProps({
     index: {
         type: Number,
         required: true
+    },
+    parentNode: {
+        type: Object,
+        default: null
+    },
+    branch: {
+        type: Object,
+        default: null
     }
 })
 
 const emit = defineEmits([
-    'delete',
-    'select-approvers',
-    'select-users',
-    'select-processors',
-    'configure'
+    // 所有操作已直接使用store处理，不再需要任何事件定义
 ])
 
 // 节点图标
@@ -101,20 +105,21 @@ const nodeHeaderStyle = computed(() => {
 // 删除当前节点
 const deleteNode = () => {
     console.log('删除节点', props.node);
-    emit('delete', props.node, props.index);
+    // 使用分支对象进行节点删除
+    flowStore.deleteNode(props.node, props.index, props.branch);
 };
 
 // 配置当前节点
 const configureNode = () => {
     console.log('配置节点', props.node);
-    emit('configure', props.node);
+    flowStore.configureNode(props.node);
 };
 
 // 选择审批人（适用于审批节点）
 const selectApprovers = () => {
     if (props.node.type === 'approver') {
         console.log('选择审批人', props.node);
-        emit('select-approvers', props.node);
+        flowStore.selectApprovers(props.node);
     }
 };
 
@@ -122,7 +127,7 @@ const selectApprovers = () => {
 const selectUsers = () => {
     if (props.node.type === 'copyTo') {
         console.log('选择抄送人', props.node);
-        emit('select-users', props.node);
+        flowStore.selectUsers(props.node);
     }
 };
 
@@ -130,7 +135,7 @@ const selectUsers = () => {
 const selectProcessors = () => {
     if (props.node.type === 'process') {
         console.log('选择办理人', props.node);
-        emit('select-processors', props.node);
+        flowStore.selectProcessors(props.node);
     }
 };
 
@@ -168,7 +173,7 @@ const getNodeActions = () => {
         actions.push({
             name: '设置付款人',
             icon: 'Money',
-            action: () => emit('configure', props.node)
+            action: () => flowStore.configureNode(props.node)
         });
     }
 
