@@ -9,7 +9,7 @@
             <span class="node-title">{{ initiator.name }}</span>
         </div>
         <div class="node-content">
-            <div class="node-item" @click="$emit('select')">
+            <div class="node-item" @click="selectInitiator">
                 <span>{{ initiator.props.initiator || '所有人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -21,15 +21,22 @@
 
 <script setup>
 import { User, ArrowRight } from '@element-plus/icons-vue'
+import { useFlowDesignStore } from '../../../stores/flowDesignStore'
 
-defineProps({
+// 使用 Pinia store
+const flowStore = useFlowDesignStore()
+
+const props = defineProps({
     initiator: {
         type: Object,
         required: true
     }
 })
 
-defineEmits(['select'])
+// 选择发起人
+const selectInitiator = () => {
+    flowStore.showPersonSelector()
+}
 </script>
 
 <style scoped lang="scss">

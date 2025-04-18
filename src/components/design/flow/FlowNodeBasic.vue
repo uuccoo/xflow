@@ -51,9 +51,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { ArrowRight, Delete } from '@element-plus/icons-vue'
-import { User, Document, Edit, Connection, Sort, TurnOff, Setting, Money } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+
+// 使用 Pinia store
+const flowStore = useFlowDesignStore()
+
+// 从 store 获取 nodeOptions
+const nodeOptions = computed(() => flowStore.nodeOptions)
 
 const props = defineProps({
     node: {
@@ -62,10 +68,6 @@ const props = defineProps({
     },
     index: {
         type: Number,
-        required: true
-    },
-    nodeOptions: {
-        type: Array,
         required: true
     }
 })
@@ -80,19 +82,19 @@ const emit = defineEmits([
 
 // 节点图标
 const nodeIcon = computed(() => {
-    const option = props.nodeOptions.find(option => option.type === props.node.type)
+    const option = nodeOptions.value.find(option => option.type === props.node.type)
     return option ? option.icon : null
 })
 
 // 节点样式
 const nodeStyle = computed(() => {
-    const option = props.nodeOptions.find(option => option.type === props.node.type)
+    const option = nodeOptions.value.find(option => option.type === props.node.type)
     return option ? { borderLeft: `3px solid ${option.color}` } : {}
 })
 
 // 节点头部样式
 const nodeHeaderStyle = computed(() => {
-    const option = props.nodeOptions.find(option => option.type === props.node.type)
+    const option = nodeOptions.value.find(option => option.type === props.node.type)
     return option ? { backgroundColor: option.headerBg } : {}
 })
 

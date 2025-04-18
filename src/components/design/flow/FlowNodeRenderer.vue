@@ -35,6 +35,10 @@ import FlowNodeCondition from './FlowNodeCondition.vue';
 import FlowNodeEnd from './FlowNodeEnd.vue';
 import InitiatorNode from './FlowNodeInitiator.vue';
 import FlowNodeParallel from './FlowNodeParallel.vue';
+import { useFlowDesignStore } from '../../../stores/flowDesignStore';
+
+// 获取 flowDesignStore
+const flowStore = useFlowDesignStore();
 
 // 导入组件自身以进行递归引用
 const props = defineProps({
@@ -46,10 +50,6 @@ const props = defineProps({
         type: [Number, String],
         required: true
     },
-    nodeOptions: {
-        type: Array,
-        required: true
-    },
     parentPath: {
         type: String,
         default: ''
@@ -57,15 +57,6 @@ const props = defineProps({
     showDeleteBtn: {
         type: Boolean,
         default: true
-    },
-    // 函数props用于处理弹出状态和事件
-    getPopoverVisible: {
-        type: Function,
-        default: () => false
-    },
-    setPopoverVisible: {
-        type: Function,
-        default: () => { }
     }
 });
 
@@ -79,10 +70,11 @@ const emit = defineEmits([
     'edit-branch',
     'add-node-to-condition',
     'add-node-to-parallel',
-    'popover-show',
-    'popover-hide',
     'configure'
 ]);
+
+// 获取节点选项数据
+const nodeOptions = computed(() => flowStore.nodeOptions);
 
 // 判断是否为普通节点（非分支类节点）
 const isRegularNode = computed(() => {

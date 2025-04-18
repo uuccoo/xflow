@@ -32,7 +32,8 @@
         <!-- 分支内的节点列表 -->
         <div class="branch-nodes" v-if="branch.nodes && branch.nodes.length > 0">
           <flow-node-basic v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id" :node="branchNode"
-            :index="nodeIdx" :node-options="nodeOptions" @delete="(...args) => $emit('delete', ...args)"
+            :index="{ branchIndex: branchIndex, itemIndex: nodeIdx }" :node-options="nodeOptions"
+            @delete="(node, idx) => $emit('delete', node, idx, props.node)"
             @select-approvers="(event) => $emit('select-approvers', event)"
             @select-users="(event) => $emit('select-users', event)"
             @select-processors="(event) => $emit('select-processors', event)"
@@ -55,7 +56,16 @@
 
 <script setup>
 import { Delete, Edit } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 import FlowNodeBasic from './FlowNodeBasic.vue'
+import { ElMessage } from 'element-plus'
+import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+
+// 使用 Pinia store
+const flowStore = useFlowDesignStore()
+
+// 从 store 获取 nodeOptions
+const nodeOptions = computed(() => flowStore.nodeOptions)
 
 const props = defineProps({
   node: {
@@ -64,10 +74,6 @@ const props = defineProps({
   },
   index: {
     type: Number,
-    required: true
-  },
-  nodeOptions: {
-    type: Array,
     required: true
   },
   showDeleteBtn: {
@@ -86,13 +92,6 @@ const emit = defineEmits([
   'select-processors',
   'configure'
 ])
-
-// 处理删除分支内节点
-const handleDeleteBranchNode = (parentNode, branchIndex, nodeIdx) => {
-  // 传递一个特殊的路径标识，表示这是并行分支内的节点
-  const parentPath = `${props.index}-p${branchIndex}-${nodeIdx}`
-  emit('delete', parentNode.props.branches[branchIndex].nodes[nodeIdx], nodeIdx, parentPath)
-}
 
 // 获取汇合策略文本
 const getJoinStrategyText = (strategy) => {
@@ -122,7 +121,6 @@ const addBranch = () => {
   props.node.props.branches.push(newBranch)
 
   console.log('添加并行分支成功', newBranch)
-  // 不再向上传递事件，直接在组件内处理
 }
 
 // 删除并行分支
@@ -146,24 +144,26 @@ const deleteBranch = (branchIndex) => {
   // 删除分支
   props.node.props.branches.splice(branchIndex, 1)
   console.log('删除并行分支', branchIndex)
-
-  // 不再向上传递事件，直接在组件内处理
 }
 
 // 编辑并行分支信息
 const editBranch = (branchIndex, branch) => {
-  console.log('编辑分支信息', props.node, branchIndex, branch)
-  // 这里可以打开编辑分支的弹窗
-
-  // 通知父组件状态已更改
-  emit('edit-branch', props.node, branchIndex, branch)
+  // 使用 store 的方法
+  flowStore.editBranch(props.node, branchIndex, branch)
 }
 
 // 更新并行分支汇合策略
 const updateJoinStrategy = (strategy) => {
-  // 可选策略：all(全部完成), any(任一完成), majority(多数完成)
-  props.node.props.joinStrategy = strategy
-  console.log('更新并行分支汇合策略', strategy)
+  // 使用 store 的方法
+  flowStore.updateJoinStrategy(props.node, strategy)
+}
+
+// 处理在分支内添加节点
+const handleAddNodeEvent = (payload) => {
+  const { type, position, branch, branchIndex } = payload
+
+  // 使用 store 处理在并行分支内添加节点
+  flowStore.handleAddNodeToParallel(payload, props.node, props.node.props.branches[branchIndex])
 }
 </script>
 

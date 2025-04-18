@@ -1,8 +1,7 @@
 <template>
     <div class="node-add-btn">
         <el-popover placement="right-start" :width="280" trigger="click" :hide-after="0" :show-arrow="true" :offset="12"
-            popper-class="node-popover" v-model:visible="popoverVisible" @show="handlePopoverShow"
-            @hide="handlePopoverHide">
+            popper-class="node-popover" v-model:visible="popoverVisible">
             <template #reference>
                 <el-button circle class="add-btn">
                     <el-icon>
@@ -31,21 +30,23 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
+import { useFlowDesignStore } from '../../stores/flowDesignStore';
+
+// 使用 Pinia store
+const flowStore = useFlowDesignStore();
+
+// 从store获取节点选项
+const nodeOptions = computed(() => flowStore.nodeOptions);
+
+// 简单的 popover 可见状态，由 el-popover 组件自动管理
+const popoverVisible = ref(false);
 
 const props = defineProps({
     position: {
         type: Number,
         required: true
-    },
-    nodeOptions: {
-        type: Array,
-        required: true
-    },
-    visible: {
-        type: Boolean,
-        default: false
     },
     // 添加新的props，用于标识当前节点的父节点信息
     parentPath: {
@@ -64,119 +65,35 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits([
-    'add',
-    'show',
-    'hide',
-    'update:visible',
-    'select-approvers',
-    'select-users',
-    'select-processors'
-]);
-
-// 使用本地状态跟踪弹出框的可见性
-const popoverVisible = ref(false);
-
-// 监听外部传入的visible变化
-watch(() => props.visible, (newValue) => {
-    popoverVisible.value = newValue;
-}, { immediate: true });
-
-// 监听内部popoverVisible变化，向外传递
-watch(popoverVisible, (newValue) => {
-    emit('update:visible', newValue);
-});
-
-const handlePopoverShow = () => {
-    popoverVisible.value = true;
-    emit('show', props.position);
-};
-
-const handlePopoverHide = () => {
-    popoverVisible.value = false;
-    emit('hide', props.position);
-};
-
 // 创建新节点对象
 const createNewNode = (type) => {
-    // 创建节点的基本结构
-    const nodeId = Date.now();
-    const newNode = {
-        id: nodeId,
-        type: type,
-        name: props.nodeOptions.find(option => option.type === type)?.label || '未知节点',
-        props: {}
-    };
-
-    // 根据节点类型设置初始属性
-    if (type === 'condition') {
-        newNode.isNested = true;
-        newNode.props = {
-            conditions: [
-                {
-                    name: '条件1',
-                    expression: '',
-                    priority: 1,
-                    nodes: []
-                },
-                {
-                    name: '默认条件',
-                    expression: '其他条件进入此流程',
-                    priority: 2,
-                    nodes: []
-                }
-            ]
-        };
-    } else if (type === 'approver') {
-        newNode.props = { approvers: [], mode: 'anyone' };
-    } else if (type === 'copyTo') {
-        newNode.props = { users: [] };
-    } else if (type === 'process') {
-        newNode.props = { processors: [], mode: 'sequential' };
-    }
-
-    return newNode;
+    return flowStore.createNodeByType(type, Date.now());
 };
 
 const handleNodeAdd = (type) => {
     // 创建新节点
     const newNode = createNewNode(type);
 
-    // 将新节点添加到条件分支中（如果有条件对象）
+    // 根据不同情况处理节点添加
     if (props.condition) {
-        // 确保condition.nodes是一个数组
-        if (!props.condition.nodes) {
-            props.condition.nodes = [];
-        }
-
-        // 添加新节点
-        props.condition.nodes.push(newNode);
-
-        // 构建节点路径
-        const nodePath = props.parentPath ?
-            `${props.parentPath}-${props.conditionIndex}-${props.condition.nodes.length - 1}` :
-            `${props.conditionIndex}-${props.condition.nodes.length - 1}`;
-
-        // 根据节点类型触发事件以打开配置对话框
-        if (type === 'approver') {
-            emit('select-approvers', { node: newNode, index: nodePath });
-        } else if (type === 'copyTo') {
-            emit('select-users', { node: newNode, index: nodePath });
-        } else if (type === 'process') {
-            emit('select-processors', { node: newNode, index: nodePath });
-        }
+        // 向条件分支内添加节点
+        flowStore.handleAddNodeToCondition({
+            type,
+            position: props.conditionIndex,
+            node: newNode,
+            condition: props.condition,
+            conditionIndex: props.conditionIndex
+        }, null, props.condition);
+    } else {
+        // 向主流程添加节点
+        flowStore.handleAddNodeEvent({
+            type,
+            position: props.position,
+            node: newNode
+        });
     }
 
-    // 发出添加事件，包含新节点和位置信息
-    emit('add', {
-        type,
-        position: props.position,
-        node: newNode,
-        condition: props.condition,
-        conditionIndex: props.conditionIndex
-    });
-
-    // 关闭弹出窗口
+    // 关闭悬浮框
     popoverVisible.value = false;
 };
 </script>

@@ -33,9 +33,9 @@
                 <!-- 条件分支内的节点列表 -->
                 <div class="branch-nodes" v-if="condition.nodes && condition.nodes.length > 0">
                     <flow-node-renderer v-for="(branchNode, nodeIdx) in condition.nodes" :key="branchNode.id"
-                        :node="branchNode" :index="`${index}-${condIndex}-${nodeIdx}`" :nodeOptions="nodeOptions"
-                        :showDeleteBtn="true" :parentPath="`${index}-${condIndex}-${nodeIdx}`"
-                        @delete="(...args) => $emit('delete', ...args)"
+                        :node="branchNode" :index="{ condIndex: condIndex, itemIndex: nodeIdx }" :showDeleteBtn="true"
+                        :parentPath="`${index}-${condIndex}-${nodeIdx}`"
+                        @delete="(node, idx) => $emit('delete', node, idx, props.node)"
                         @delete-condition="(...args) => $emit('delete-condition', ...args)"
                         @add-condition="(event) => $emit('add-condition', event)"
                         @edit-condition="(...args) => $emit('edit-condition', ...args)"
@@ -50,8 +50,8 @@
                 </div>
 
                 <!-- 为每个条件分支添加节点按钮 -->
-                <node-add-button :position="condIndex" :nodeOptions="nodeOptions" :condition="condition"
-                    :conditionIndex="condIndex" :parentPath="index" @add="handleAddNodeEvent"
+                <node-add-button :position="condIndex" :condition="condition" :conditionIndex="condIndex"
+                    :parentPath="index" @add="handleAddNodeEvent"
                     @select-approvers="(event) => $emit('select-approvers', event)"
                     @select-users="(event) => $emit('select-users', event)"
                     @select-processors="(event) => $emit('select-processors', event)" />
@@ -65,10 +65,18 @@
 
 <script setup>
 import { Delete, Edit } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 import FlowNodeBasic from './FlowNodeBasic.vue'
 import NodeAddButton from '../NodeAddButton.vue'
 import { getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+
+// 使用 Pinia store
+const flowStore = useFlowDesignStore()
+
+// 从 store 获取 nodeOptions
+const nodeOptions = computed(() => flowStore.nodeOptions)
 
 // 递归引用当前组件
 const props = defineProps({
@@ -78,10 +86,6 @@ const props = defineProps({
     },
     index: {
         type: [Number, String],
-        required: true
-    },
-    nodeOptions: {
-        type: Array,
         required: true
     },
     showDeleteBtn: {
@@ -134,10 +138,9 @@ const addCondition = () => {
 const deleteCondition = (condIndex) => {
     if (props.node.props.conditions.length <= 2) {
         // 当只有两个条件分支时，删除整个当前条件分支组件
-        // 这里直接将条件分支节点自身删除，传递正确的参数
-        console.log('删除条件分支', props.node, props.index, condIndex);
-        emit('delete', props.node, props.index, null)
-        return
+        // 直接使用 store 中的方法删除
+        flowStore.deleteNode(props.node, props.index, null);
+        return;
     }
 
     // 收集被删除分支中的所有节点
@@ -165,20 +168,20 @@ const deleteCondition = (condIndex) => {
     });
 
     console.log('删除条件分支', condIndex);
-    // 不再向上传递事件，只在本地处理即可
 }
 
 // 编辑条件表达式
 const editCondition = (condIndex, condition) => {
-    console.log('编辑条件表达式', props.node, condIndex, condition);
-    // 此处可以打开条件编辑弹窗，然后在完成编辑后通知父组件
-    emit('edit-condition', props.node, condIndex, condition);
+    // 使用 store 中的方法处理
+    flowStore.editCondition(props.node, condIndex, condition);
 }
 
 // 简化的处理添加节点事件的方法
 const handleAddNodeEvent = (payload) => {
-    // 这里只需记录日志或执行简单的后处理逻辑
-    console.log('节点已添加到条件分支:', payload.node, '条件索引:', payload.conditionIndex);
+    const { type, position, node, condition, conditionIndex } = payload;
+
+    // 使用 store 处理条件分支内添加节点
+    flowStore.handleAddNodeToCondition(payload, props.node, props.node.props.conditions[conditionIndex]);
 }
 </script>
 
