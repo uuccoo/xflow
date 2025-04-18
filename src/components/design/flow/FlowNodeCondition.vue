@@ -1,10 +1,8 @@
 <template>
     <div class="flow-branch-container">
-        <!-- 条件分支顶部按钮 -->
+        <!-- 条件分支顶部按钮 - 只保留添加条件按钮 -->
         <div class="condition-add-btn">
-            <el-button size="small" type="primary" plain round @click="$emit('add-condition', node)">添加条件</el-button>
-            <el-button v-if="showDeleteBtn" size="small" type="danger" plain round icon="Delete"
-                @click="$emit('delete', node, index)" />
+            <el-button size="small" type="primary" plain round @click="addCondition">添加条件</el-button>
         </div>
 
         <!-- 条件分支内容 -->
@@ -14,17 +12,16 @@
                 <div class="flow-node condition-branch">
                     <div class="branch-header">
                         {{ condition.name }}
-                        <span class="priority-tag">优先级{{ condition.priority }}</span>
+                        <!-- 将优先级标签移到绝对定位的右上角 -->
+                        <div class="priority-tag">优先级{{ condition.priority }}</div>
                         <!-- 删除条件按钮 -->
-                        <el-icon v-if="node.props.conditions.length > 2" class="condition-delete"
-                            @click="$emit('delete-condition', node, condIndex)">
+                        <el-icon class="node-delete" @click.stop="deleteCondition(condIndex)">
                             <Delete />
                         </el-icon>
                     </div>
 
                     <!-- 条件内容 -->
-                    <div class="node-content condition-content"
-                        @click="$emit('edit-condition', node, condIndex, condition)">
+                    <div class="node-content condition-content" @click="editCondition(condIndex, condition)">
                         <span v-if="condition.name === '默认条件'">其他条件进入此流程</span>
                         <span v-else>{{ condition.expression || '请设置条件' }}</span>
                         <el-icon class="chevron-icon">
@@ -35,38 +32,31 @@
 
                 <!-- 条件分支内的节点列表 -->
                 <div class="branch-nodes" v-if="condition.nodes && condition.nodes.length > 0">
-                    <!-- 递归渲染嵌套的条件分支节点 -->
-                    <template v-for="(branchNode, nodeIdx) in condition.nodes" :key="branchNode.id">
-                        <!-- 嵌套的条件分支节点 -->
-                        <flow-node-condition v-if="branchNode.type === 'condition'" :node="branchNode"
-                            :index="`${index}-${condIndex}-${nodeIdx}`" :nodeOptions="nodeOptions" :showDeleteBtn="true"
-                            @delete="$emit('delete', $event, nodeIdx, `${index}-${condIndex}-${nodeIdx}`)"
-                            @delete-condition="$emit('delete-condition', $event, $event2)"
-                            @add-condition="$emit('add-condition', $event)"
-                            @edit-condition="$emit('edit-condition', $event, $event2, $event3)"
-                            @select-approvers="$emit('select-approvers', $event)"
-                            @select-users="$emit('select-users', $event)"
-                            @select-processors="$emit('select-processors', $event)"
-                            @configure="$emit('configure', $event)">
-                            <!-- 传递嵌套条件分支的添加按钮 -->
-                            <template v-slot="{ condition: nestedCondition, condIndex: nestedCondIndex }">
-                                <node-add-button :position="`${index}-${condIndex}-${nodeIdx}-${nestedCondIndex}`"
-                                    :nodeOptions="nodeOptions" :visible="false"
-                                    @add="payload => handleNestedAdd(payload, branchNode, nestedCondition)" />
-                            </template>
-                        </flow-node-condition>
-
-                        <!-- 普通节点 -->
-                        <flow-node-basic v-else :node="branchNode" :index="nodeIdx" :node-options="nodeOptions"
-                            @delete="handleDeleteBranchNode(node, condIndex, nodeIdx)"
-                            @select-approvers="$emit('select-approvers', $event)"
-                            @select-users="$emit('select-users', $event)"
-                            @select-processors="$emit('select-processors', $event)"
-                            @configure="$emit('configure', $event)" />
-                    </template>
+                    <flow-node-renderer v-for="(branchNode, nodeIdx) in condition.nodes" :key="branchNode.id"
+                        :node="branchNode" :index="`${index}-${condIndex}-${nodeIdx}`" :nodeOptions="nodeOptions"
+                        :showDeleteBtn="true" :parentPath="`${index}-${condIndex}-${nodeIdx}`"
+                        @delete="(...args) => $emit('delete', ...args)"
+                        @delete-condition="(...args) => $emit('delete-condition', ...args)"
+                        @add-condition="(event) => $emit('add-condition', event)"
+                        @edit-condition="(...args) => $emit('edit-condition', ...args)"
+                        @select-approvers="(event) => $emit('select-approvers', event)"
+                        @select-users="(event) => $emit('select-users', event)"
+                        @select-processors="(event) => $emit('select-processors', event)"
+                        @configure="(event) => $emit('configure', event)">
+                        <template #default>
+                            <slot :condition="condition" :cond-index="condIndex"></slot>
+                        </template>
+                    </flow-node-renderer>
                 </div>
 
                 <!-- 为每个条件分支添加节点按钮 -->
+                <node-add-button :position="condIndex" :nodeOptions="nodeOptions" :condition="condition"
+                    :conditionIndex="condIndex" :parentPath="index" @add="handleAddNodeEvent"
+                    @select-approvers="(event) => $emit('select-approvers', event)"
+                    @select-users="(event) => $emit('select-users', event)"
+                    @select-processors="(event) => $emit('select-processors', event)" />
+
+                <!-- 原有的插槽 -->
                 <slot :condition="condition" :cond-index="condIndex"></slot>
             </div>
         </div>
@@ -78,6 +68,7 @@ import { Delete, Edit } from '@element-plus/icons-vue'
 import FlowNodeBasic from './FlowNodeBasic.vue'
 import NodeAddButton from '../NodeAddButton.vue'
 import { getCurrentInstance } from 'vue'
+import { ElMessage } from 'element-plus'
 
 // 递归引用当前组件
 const props = defineProps({
@@ -110,57 +101,84 @@ const emit = defineEmits([
     'configure'
 ])
 
-// 处理删除分支内节点
-const handleDeleteBranchNode = (parentNode, condIndex, nodeIdx) => {
-    // 传递一个特殊的路径标识，表示这是条件分支内的节点
-    const parentPath = `${props.index}-${condIndex}-${nodeIdx}`
-    emit('delete', parentNode.props.conditions[condIndex].nodes[nodeIdx], nodeIdx, parentPath)
+// ===== 将条件节点相关操作逻辑封装在组件内部 =====
+
+// 添加条件分支
+const addCondition = () => {
+    // 获取现有条件数量
+    const conditionsCount = props.node.props.conditions.length;
+    const conditionNumber = conditionsCount; // 新条件的编号
+
+    // 创建新条件
+    const newCondition = {
+        name: `条件${conditionNumber}`,
+        expression: '',
+        priority: conditionNumber,
+        nodes: []
+    };
+
+    // 将默认条件的优先级设为最低
+    const defaultConditionIndex = props.node.props.conditions.findIndex(c => c.name === '默认条件');
+    if (defaultConditionIndex !== -1) {
+        props.node.props.conditions[defaultConditionIndex].priority = conditionsCount + 1;
+    }
+
+    // 在倒数第二位(默认条件之前)插入新条件
+    props.node.props.conditions.splice(conditionsCount - 1, 0, newCondition);
+
+    console.log('添加条件分支成功', newCondition);
+    // 不再向上传递事件，只在本地处理即可
 }
 
-// 处理嵌套条件分支内的添加操作
-const handleNestedAdd = (payload, parentNode, condition) => {
-    const { type, position } = payload
-
-    // 创建新节点
-    const nodeId = Date.now()
-    const newNode = {
-        id: nodeId,
-        type: type,
-        name: props.nodeOptions.find(option => option.type === type)?.label || '未知节点',
-        props: {}
+// 删除条件分支
+const deleteCondition = (condIndex) => {
+    if (props.node.props.conditions.length <= 2) {
+        // 当只有两个条件分支时，删除整个当前条件分支组件
+        // 这里直接将条件分支节点自身删除，传递正确的参数
+        console.log('删除条件分支', props.node, props.index, condIndex);
+        emit('delete', props.node, props.index, null)
+        return
     }
 
-    // 根据节点类型设置初始属性
-    if (type === 'condition') {
-        newNode.isNested = true
-        newNode.props = {
-            conditions: [
-                {
-                    name: '条件1',
-                    expression: '',
-                    priority: 1,
-                    nodes: []
-                },
-                {
-                    name: '默认条件',
-                    expression: '其他条件进入此流程',
-                    priority: 2,
-                    nodes: []
-                }
-            ]
+    // 收集被删除分支中的所有节点
+    const orphanedNodes = props.node.props.conditions[condIndex].nodes;
+
+    // 如果有孤立节点，可以选择将它们移到默认分支
+    if (orphanedNodes.length > 0) {
+        const defaultConditionIndex = props.node.props.conditions.findIndex(c => c.name === '默认条件');
+        if (defaultConditionIndex !== -1) {
+            props.node.props.conditions[defaultConditionIndex].nodes.push(...orphanedNodes);
+            ElMessage.info('已将分支中的节点转移到默认条件');
         }
-    } else if (type === 'approver') {
-        newNode.props = { approvers: [], mode: 'anyone' }
-    } else if (type === 'copyTo') {
-        newNode.props = { users: [] }
-    } else if (type === 'process') {
-        newNode.props = { processors: [], mode: 'sequential' }
     }
 
-    // 添加到嵌套条件分支的节点数组中
-    condition.nodes.push(newNode)
+    // 删除条件分支
+    props.node.props.conditions.splice(condIndex, 1);
 
-    console.log('在嵌套条件分支中添加节点:', newNode)
+    // 更新剩余条件分支的优先级
+    props.node.props.conditions.forEach((condition, idx) => {
+        if (condition.name !== '默认条件') {
+            condition.priority = idx + 1;
+        } else {
+            condition.priority = props.node.props.conditions.length;
+        }
+    });
+
+    console.log('删除条件分支', condIndex);
+    // 不再向上传递事件，只在本地处理即可
+}
+
+// 编辑条件表达式
+const editCondition = (condIndex, condition) => {
+    console.log('编辑条件表达式', props.node, condIndex, condition);
+    // 此处可以打开条件编辑弹窗，然后在完成编辑后通知父组件
+    emit('edit-condition', props.node, condIndex, condition);
+}
+
+// 简化的处理添加节点事件的方法
+const handleAddNodeEvent = (payload) => {
+    // 这里只需记录日志或执行简单的后处理逻辑
+    console.log('节点已添加到条件分支:', payload.node, '条件索引:', payload.conditionIndex);
 }
 </script>
 
@@ -237,47 +255,70 @@ const handleNestedAdd = (payload, parentNode, condition) => {
 }
 
 .branch-header {
+    position: relative;
     display: flex;
     align-items: center;
-    padding: 4px 12px;
-    border-radius: 15px;
+    padding: 8px 12px;
     font-size: 13px;
     color: #333;
     margin-bottom: 0;
-    background-color: white;
-    border: 1px solid #e4e7ed;
-    z-index: 1;
-    position: relative;
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #e4e7ed;
+    border-radius: 4px 4px 0 0;
 
     .priority-tag {
-        margin-left: 5px;
+        position: absolute;
+        top: 8px;
+        right: 16px;
         color: #909399;
         font-size: 12px;
         font-weight: normal;
+        visibility: visible;
+        opacity: 1;
+        transition: visibility 0s, opacity 0.2s ease-in-out;
     }
 
-    .condition-delete {
-        margin-left: 8px;
+    /* 删除图标样式 */
+    .node-delete {
+        position: absolute;
+        top: 8px;
+        right: 8px;
         color: #f56c6c;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 16px;
+        visibility: hidden;
         opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    &:hover .condition-delete {
-        opacity: 1;
+        transition: visibility 0s, opacity 0.2s ease-in-out;
+        z-index: 2;
     }
 }
 
 .condition-branch {
-    width: 100%;
+    width: 220px;
     margin-bottom: 10px;
     border: 1px solid #e4e7ed;
     border-radius: 4px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
     background-color: white;
     border-left: 3px solid #f56c6c;
+
+    // 修改优先级标签的显示逻辑
+    &:hover {
+        .priority-tag {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .node-delete {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
+
+    /* 删除图标样式 */
+    .node-delete:hover {
+        color: #ff4d4f;
+    }
 
     .condition-content {
         padding: 14px 16px;

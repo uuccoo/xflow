@@ -10,8 +10,9 @@
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
         <node-add-button :position="0" :nodeOptions="nodeOptions" :visible="getPopoverVisible(0)"
-          @update:visible="val => setPopoverVisible(0, val)" @add="handleAddNode" @show="handlePopoverShow"
-          @hide="handlePopoverHide" />
+          @update:visible="val => setPopoverVisible(0, val)" @add="handleAddNodeEvent" @show="handlePopoverShow"
+          @hide="handlePopoverHide" @select-approvers="selectApprovers" @select-users="selectUsers"
+          @select-processors="selectProcessors" />
 
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in flowData.nodes" :key="node.id">
@@ -19,16 +20,15 @@
           <flow-node-renderer :node="node" :index="index" :nodeOptions="nodeOptions"
             :getPopoverVisible="getPopoverVisible" :setPopoverVisible="setPopoverVisible" @delete="deleteNode"
             @select-initiator="showPersonSelector" @select-approvers="selectApprovers" @select-users="selectUsers"
-            @select-processors="selectProcessors" @add-condition="addCondition" @delete-condition="deleteCondition"
-            @edit-condition="editCondition" @add-branch="addBranch" @delete-branch="deleteBranch"
-            @edit-branch="editBranch" @add-node-to-condition="handleAddNodeToCondition"
-            @add-node-to-parallel="handleAddNodeToParallel" @popover-show="handlePopoverShow"
-            @popover-hide="handlePopoverHide" @configure="configureNode" />
+            @select-processors="selectProcessors" @edit-condition="editCondition" @edit-branch="editBranch"
+            @add-node-to-condition="handleAddNodeToCondition" @add-node-to-parallel="handleAddNodeToParallel"
+            @popover-show="handlePopoverShow" @popover-hide="handlePopoverHide" @configure="configureNode" />
 
           <!-- 每个节点后面都有一个添加按钮 -->
           <node-add-button :position="index + 1" :nodeOptions="nodeOptions" :visible="getPopoverVisible(index + 1)"
-            @update:visible="val => setPopoverVisible(index + 1, val)" @add="handleAddNode" @show="handlePopoverShow"
-            @hide="handlePopoverHide" />
+            @update:visible="val => setPopoverVisible(index + 1, val)" @add="handleAddNodeEvent"
+            @show="handlePopoverShow" @hide="handlePopoverHide" @select-approvers="selectApprovers"
+            @select-users="selectUsers" @select-processors="selectProcessors" />
         </template>
 
         <!-- 结束节点 -->
@@ -292,7 +292,90 @@ const getNodeHeaderStyle = (node) => {
   return option ? { backgroundColor: option.headerBg } : {}
 }
 
-// 根据类型创建节点
+// 简化版的添加节点事件处理
+const handleAddNodeEvent = (payload) => {
+  const { type, position, node } = payload;
+
+  // 如果NodeAddButton组件已经创建了节点对象
+  if (node) {
+    // 直接添加到主流程中的指定位置
+    flowData.nodes.splice(position, 0, node);
+  } else {
+    // 兼容旧版本处理方式
+    addNode(type, position);
+  }
+
+  // 关闭 Popover
+  setPopoverVisible(position, false);
+  activePopoverPosition.value = null;
+
+  console.log(`节点已添加到位置 ${position}:`, node || type);
+}
+
+// 处理在条件分支内添加节点
+const handleAddNodeToCondition = (payload, parentNode, condition) => {
+  const { type, position } = payload;
+  // 解析位置标识，可能包含多级嵌套路径
+  const positionParts = position.split('-');
+
+  // 创建新节点
+  const nodeId = Date.now();
+  let newNode = createNodeByType(type, nodeId);
+
+  // 如果要添加的是条件分支节点，为其生成唯一标识符
+  if (type === 'condition') {
+    newNode.id = `nested-${nodeId}`;
+    newNode.isNested = true;  // 标记为嵌套节点，方便特殊处理
+  }
+
+  // 将节点添加到条件分支的节点数组中
+  condition.nodes.push(newNode);
+
+  // 关闭弹窗
+  const [nodeIndex, condIndex] = positionParts.map(Number);
+  setConditionPopoverVisible(nodeIndex, condIndex, false);
+  activePopoverPosition.value = null;
+
+  console.log(`在条件分支 ${condition.name} 内添加节点:`, newNode);
+}
+
+// 处理在并行分支内添加节点
+const handleAddNodeToParallel = (payload, parentNode, branch) => {
+  const { type, position } = payload;
+  const [nodeIndex, branchIndex] = position.split('-p').map(Number);
+
+  // 创建新节点
+  const nodeId = Date.now();
+  let newNode = createNodeByType(type, nodeId);
+
+  // 将节点添加到并行分支的节点数组中
+  branch.nodes.push(newNode);
+
+  // 关闭弹窗
+  setParallelPopoverVisible(nodeIndex, branchIndex, false);
+  activePopoverPosition.value = null;
+
+  console.log(`在并行分支 ${branch.name} 内添加节点:`, newNode);
+}
+
+// 添加节点 - 使用统一的节点管理（保留用于兼容）
+const addNode = (type, position) => {
+  // 生成新节点ID，确保唯一
+  const nodeId = Date.now();
+
+  // 创建新节点
+  const newNode = createNodeByType(type, nodeId);
+
+  // 添加到主流程中的指定位置
+  flowData.nodes.splice(position, 0, newNode);
+
+  // 更新渲染
+  nextTick(() => {
+    console.log(`节点已添加: ${newNode.name}`, newNode);
+  });
+}
+
+// 根据类型创建节点 (保留用于兼容)
 const createNodeByType = (type, nodeId) => {
   // 节点类型配置映射
   const nodeConfigs = {
@@ -386,217 +469,83 @@ const createNodeByType = (type, nodeId) => {
   }
 }
 
-// 处理添加节点事件
-const handleAddNode = (payload) => {
-  const { type, position } = payload
-  addNode(type, position)
-}
-
-// 处理在条件分支内添加节点
-const handleAddNodeToCondition = (payload, parentNode, condition) => {
-  const { type, position } = payload;
-  // 解析位置标识，可能包含多级嵌套路径
-  const positionParts = position.split('-');
-
-  // 创建新节点
-  const nodeId = Date.now();
-  let newNode = createNodeByType(type, nodeId);
-
-  // 如果要添加的是条件分支节点，为其生成唯一标识符
-  if (type === 'condition') {
-    newNode.id = `nested-${nodeId}`;
-    newNode.isNested = true;  // 标记为嵌套节点，方便特殊处理
-  }
-
-  // 将节点添加到条件分支的节点数组中
-  condition.nodes.push(newNode);
-
-  // 关闭弹窗
-  const [nodeIndex, condIndex] = positionParts.map(Number);
-  setConditionPopoverVisible(nodeIndex, condIndex, false);
-  activePopoverPosition.value = null;
-
-  console.log(`在条件分支 ${condition.name} 内添加节点:`, newNode);
-}
-
-// 处理在并行分支内添加节点
-const handleAddNodeToParallel = (payload, parentNode, branch) => {
-  const { type, position } = payload;
-  const [nodeIndex, branchIndex] = position.split('-p').map(Number);
-
-  // 创建新节点
-  const nodeId = Date.now();
-  let newNode = createNodeByType(type, nodeId);
-
-  // 将节点添加到并行分支的节点数组中
-  branch.nodes.push(newNode);
-
-  // 关闭弹窗
-  setParallelPopoverVisible(nodeIndex, branchIndex, false);
-  activePopoverPosition.value = null;
-
-  console.log(`在并行分支 ${branch.name} 内添加节点:`, newNode);
-}
-
-// 添加节点 - 使用统一的节点管理
-const addNode = (type, position) => {
-  // 生成新节点ID，确保唯一
-  const nodeId = Date.now()
-
-  // 创建新节点
-  const newNode = createNodeByType(type, nodeId)
-
-  // 添加到主流程中的指定位置
-  flowData.nodes.splice(position, 0, newNode)
-
-  // 关闭 Popover
-  setPopoverVisible(position, false)
-  activePopoverPosition.value = null
-
-  // 更新渲染
-  nextTick(() => {
-    console.log(`节点已添加: ${newNode.name}`, newNode)
-  })
-}
-
 // 编辑节点
 const editNode = (node) => {
   console.log('编辑节点', node)
 }
 
-// 删除节点 - 支持删除主流程和条件分支内的节点
-const deleteNode = (node, index, parentPath = null) => {
-  if (parentPath) {
-    // 从条件分支中删除节点
-    const [nodeIndex, condIndex, itemIndex] = parentPath.split('-').map(Number);
-    const conditionNode = flowData.nodes[nodeIndex];
-    if (conditionNode && conditionNode.props.conditions[condIndex]) {
-      conditionNode.props.conditions[condIndex].nodes.splice(itemIndex, 1);
-      console.log('从条件分支中删除节点', node);
-    }
-  } else {
-    // 从主流程中删除节点
+// 删除节点 - 支持删除主流程和分支内的节点
+const deleteNode = (node, index, parent = null) => {
+  // 如果没有父节点，说明是从主流程中删除节点
+  if (!parent) {
     flowData.nodes.splice(index, 1);
-    console.log('从主流程中删除节点', node);
+    console.log('从主流程中删除节点', node, index, parent);
+    return;
+  }
+
+  // 根据父节点类型执行不同的删除操作
+  if (parent.type === 'condition') {
+    // 从条件分支中删除节点
+    // index格式: {condIndex: 数字, itemIndex: 数字}
+    const { condIndex, itemIndex } = index;
+    parent.props.conditions[condIndex].nodes.splice(itemIndex, 1);
+    console.log('从条件分支中删除节点', node);
+  }
+  else if (parent.type === 'parallel') {
+    // 从并行分支中删除节点
+    // index格式: {branchIndex: 数字, itemIndex: 数字}
+    const { branchIndex, itemIndex } = index;
+    parent.props.branches[branchIndex].nodes.splice(itemIndex, 1);
+    console.log('从并行分支中删除节点', node);
+  }
+  else {
+    console.error('未知的父节点类型:', parent.type);
   }
 }
 
 // 优化条件分支相关功能
 const addCondition = (node) => {
-  // 获取现有条件数量
-  const conditionsCount = node.props.conditions.length;
-  const conditionNumber = conditionsCount; // 新条件的编号
-
-  // 创建新条件
-  const newCondition = {
-    name: `条件${conditionNumber}`,
-    expression: '',
-    priority: conditionNumber,
-    nodes: []
-  };
-
-  // 将默认条件的优先级设为最低
-  const defaultConditionIndex = node.props.conditions.findIndex(c => c.name === '默认条件');
-  if (defaultConditionIndex !== -1) {
-    node.props.conditions[defaultConditionIndex].priority = conditionsCount + 1;
-  }
-
-  // 在倒数第二位(默认条件之前)插入新条件
-  node.props.conditions.splice(conditionsCount - 1, 0, newCondition);
-
-  console.log('添加条件分支成功', newCondition);
+  // 通知数据已更改，节点操作本身已由 FlowNodeCondition 组件实现
+  console.log('接收到添加条件分支事件', node);
+  // 可以在这里执行任何需要在顶层组件完成的额外操作
 }
 
 // 删除条件节点中的某个条件分支
 const deleteCondition = (node, condIndex) => {
-  if (node.props.conditions.length <= 2) {
-    // 至少保留两个条件分支
-    ElMessage.warning('至少需要保留两个条件分支');
-    return;
-  }
-
-  // 收集被删除分支中的所有节点
-  const orphanedNodes = node.props.conditions[condIndex].nodes;
-
-  // 如果有孤立节点，可以选择将它们移到默认分支
-  if (orphanedNodes.length > 0) {
-    const defaultConditionIndex = node.props.conditions.findIndex(c => c.name === '默认条件');
-    if (defaultConditionIndex !== -1) {
-      node.props.conditions[defaultConditionIndex].nodes.push(...orphanedNodes);
-      ElMessage.info('已将分支中的节点转移到默认条件');
-    }
-  }
-
-  // 删除条件分支
-  node.props.conditions.splice(condIndex, 1);
-
-  // 更新剩余条件分支的优先级
-  node.props.conditions.forEach((condition, idx) => {
-    if (condition.name !== '默认条件') {
-      condition.priority = idx + 1;
-    } else {
-      condition.priority = node.props.conditions.length;
-    }
-  });
-
-  console.log('删除条件分支', condIndex);
+  // 通知数据已更改，节点操作本身已由 FlowNodeCondition 组件实现
+  console.log('接收到删除条件分支事件', condIndex);
+  // 可以在这里执行任何需要在顶层组件完成的额外操作
 }
 
 // 编辑条件表达式
 const editCondition = (node, condIndex, condition) => {
+  // 可以打开全局编辑弹窗
   ElMessage({
-    message: '请编辑条件表达式',
+    message: '正在编辑条件表达式',
     type: 'info'
   })
   console.log('编辑条件表达式', node, condIndex, condition)
-  // 这里可以打开条件编辑弹窗
 }
 
 // 添加并行分支
 const addBranch = (node) => {
-  // 获取当前分支数量
-  const branchCount = node.props.branches.length
-  const branchNumber = branchCount + 1
-
-  // 创建新分支
-  const newBranch = {
-    name: `分支${branchNumber}`,
-    nodes: []
-  }
-
-  // 添加到并行分支列表
-  node.props.branches.push(newBranch)
-
-  console.log('添加并行分支成功', newBranch)
+  // 通知数据已更改，节点操作本身已由 FlowNodeParallel 组件实现
+  console.log('接收到添加并行分支事件', node);
+  // 可以在这里执行任何需要在顶层组件完成的额外操作
 }
 
 // 删除并行分支
 const deleteBranch = (node, branchIndex) => {
-  if (node.props.branches.length <= 2) {
-    // 至少保留两个并行分支
-    ElMessage.warning('至少需要保留两个并行分支')
-    return
-  }
-
-  // 收集要删除分支中的节点（可选择转移到其他分支）
-  const orphanedNodes = node.props.branches[branchIndex].nodes
-  if (orphanedNodes.length > 0) {
-    // 如果有节点，可以分配到第一个分支
-    if (branchIndex !== 0 && node.props.branches[0]) {
-      node.props.branches[0].nodes.push(...orphanedNodes)
-      ElMessage.info('已将分支中的节点转移到第一个分支')
-    }
-  }
-
-  // 删除分支
-  node.props.branches.splice(branchIndex, 1)
-  console.log('删除并行分支', branchIndex)
+  // 通知数据已更改，节点操作本身已由 FlowNodeParallel 组件实现
+  console.log('接收到删除并行分支事件', branchIndex);
+  // 可以在这里执行任何需要在顶层组件完成的额外操作
 }
 
 // 编辑并行分支信息
 const editBranch = (node, branchIndex, branch) => {
+  // 可以打开全局编辑弹窗
   ElMessage({
-    message: '请编辑分支名称',
+    message: '正在编辑分支信息',
     type: 'info'
   })
   console.log('编辑分支信息', node, branchIndex, branch)

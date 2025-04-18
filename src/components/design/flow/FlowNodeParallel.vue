@@ -2,8 +2,9 @@
   <div class="flow-branch-container parallel-container">
     <!-- 并行分支顶部按钮 -->
     <div class="branch-add-btn">
-      <el-button size="small" type="primary" plain round @click="$emit('add-branch', node)">添加分支</el-button>
-      <el-button v-if="showDeleteBtn" size="small" type="danger" plain round icon="Delete" @click="$emit('delete', node, index)" />
+      <el-button size="small" type="primary" plain round @click="addBranch">添加分支</el-button>
+      <el-button v-if="showDeleteBtn" size="small" type="danger" plain round icon="Delete"
+        @click="$emit('delete', node, index)" />
     </div>
 
     <!-- 并行分支内容 -->
@@ -14,13 +15,13 @@
           <div class="branch-header">
             {{ branch.name }}
             <!-- 删除分支按钮 -->
-            <el-icon v-if="node.props.branches.length > 2" class="branch-delete" @click="$emit('delete-branch', node, branchIndex)">
+            <el-icon v-if="node.props.branches.length > 2" class="branch-delete" @click="deleteBranch(branchIndex)">
               <Delete />
             </el-icon>
           </div>
-          
+
           <!-- 分支标题点击可编辑 -->
-          <div class="node-content branch-content" @click="$emit('edit-branch', node, branchIndex, branch)">
+          <div class="node-content branch-content" @click="editBranch(branchIndex, branch)">
             <span>{{ branch.name }}</span>
             <el-icon class="chevron-icon">
               <Edit />
@@ -30,18 +31,12 @@
 
         <!-- 分支内的节点列表 -->
         <div class="branch-nodes" v-if="branch.nodes && branch.nodes.length > 0">
-          <flow-node-basic
-            v-for="(branchNode, nodeIdx) in branch.nodes"
-            :key="branchNode.id"
-            :node="branchNode"
-            :index="nodeIdx"
-            :node-options="nodeOptions"
-            @delete="handleDeleteBranchNode(node, branchIndex, nodeIdx)"
-            @select-approvers="$emit('select-approvers', $event)"
-            @select-users="$emit('select-users', $event)"
-            @select-processors="$emit('select-processors', $event)"
-            @configure="$emit('configure', $event)"
-          />
+          <flow-node-basic v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id" :node="branchNode"
+            :index="nodeIdx" :node-options="nodeOptions" @delete="(...args) => $emit('delete', ...args)"
+            @select-approvers="(event) => $emit('select-approvers', event)"
+            @select-users="(event) => $emit('select-users', event)"
+            @select-processors="(event) => $emit('select-processors', event)"
+            @configure="(event) => $emit('configure', event)" />
         </div>
 
         <!-- 为每个并行分支添加节点按钮 -->
@@ -84,9 +79,9 @@ const props = defineProps({
 const emit = defineEmits([
   'delete',
   'delete-branch',
-  'add-branch', 
+  'add-branch',
   'edit-branch',
-  'select-approvers', 
+  'select-approvers',
   'select-users',
   'select-processors',
   'configure'
@@ -107,6 +102,68 @@ const getJoinStrategyText = (strategy) => {
     'majority': '多数完成后继续'
   }
   return strategies[strategy] || '全部完成后继续'
+}
+
+// ===== 将并行分支相关操作逻辑封装在组件内部 =====
+
+// 添加并行分支
+const addBranch = () => {
+  // 获取当前分支数量
+  const branchCount = props.node.props.branches.length
+  const branchNumber = branchCount + 1
+
+  // 创建新分支
+  const newBranch = {
+    name: `分支${branchNumber}`,
+    nodes: []
+  }
+
+  // 添加到并行分支列表
+  props.node.props.branches.push(newBranch)
+
+  console.log('添加并行分支成功', newBranch)
+  // 不再向上传递事件，直接在组件内处理
+}
+
+// 删除并行分支
+const deleteBranch = (branchIndex) => {
+  if (props.node.props.branches.length <= 2) {
+    // 至少保留两个并行分支
+    ElMessage.warning('至少需要保留两个并行分支')
+    return
+  }
+
+  // 收集要删除分支中的节点（可选择转移到其他分支）
+  const orphanedNodes = props.node.props.branches[branchIndex].nodes
+  if (orphanedNodes.length > 0) {
+    // 如果有节点，可以分配到第一个分支
+    if (branchIndex !== 0 && props.node.props.branches[0]) {
+      props.node.props.branches[0].nodes.push(...orphanedNodes)
+      ElMessage.info('已将分支中的节点转移到第一个分支')
+    }
+  }
+
+  // 删除分支
+  props.node.props.branches.splice(branchIndex, 1)
+  console.log('删除并行分支', branchIndex)
+
+  // 不再向上传递事件，直接在组件内处理
+}
+
+// 编辑并行分支信息
+const editBranch = (branchIndex, branch) => {
+  console.log('编辑分支信息', props.node, branchIndex, branch)
+  // 这里可以打开编辑分支的弹窗
+
+  // 通知父组件状态已更改
+  emit('edit-branch', props.node, branchIndex, branch)
+}
+
+// 更新并行分支汇合策略
+const updateJoinStrategy = (strategy) => {
+  // 可选策略：all(全部完成), any(任一完成), majority(多数完成)
+  props.node.props.joinStrategy = strategy
+  console.log('更新并行分支汇合策略', strategy)
 }
 </script>
 
@@ -194,7 +251,7 @@ const getJoinStrategyText = (strategy) => {
   border: 1px solid #e4e7ed;
   z-index: 1;
   position: relative;
-  
+
   .branch-delete {
     margin-left: 8px;
     color: #f56c6c;
@@ -203,7 +260,7 @@ const getJoinStrategyText = (strategy) => {
     opacity: 0;
     transition: opacity 0.3s;
   }
-  
+
   &:hover .branch-delete {
     opacity: 1;
   }
@@ -230,7 +287,7 @@ const getJoinStrategyText = (strategy) => {
     &:hover {
       background-color: #f5f7fa;
     }
-    
+
     .chevron-icon {
       color: #c0c4cc;
     }
@@ -247,7 +304,7 @@ const getJoinStrategyText = (strategy) => {
   position: relative;
   padding-top: 15px;
   margin-bottom: 15px;
-  
+
   /* 连接线 - 多条线汇合 */
   &::before {
     content: '';
@@ -258,7 +315,7 @@ const getJoinStrategyText = (strategy) => {
     border-left: 1px dashed #c0c4cc;
     transform: translateX(-50%);
   }
-  
+
   /* 横线，连接所有分支 */
   &::after {
     content: '';
@@ -268,7 +325,7 @@ const getJoinStrategyText = (strategy) => {
     width: 60%;
     border-top: 1px dashed #c0c4cc;
   }
-  
+
   .join-node {
     margin: 0 auto;
     padding: 8px 16px;

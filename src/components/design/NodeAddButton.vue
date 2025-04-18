@@ -46,10 +46,33 @@ const props = defineProps({
     visible: {
         type: Boolean,
         default: false
+    },
+    // 添加新的props，用于标识当前节点的父节点信息
+    parentPath: {
+        type: String,
+        default: ''
+    },
+    // 当前操作的条件对象（可选）
+    condition: {
+        type: Object,
+        default: null
+    },
+    // 条件索引
+    conditionIndex: {
+        type: Number,
+        default: -1
     }
 });
 
-const emit = defineEmits(['add', 'show', 'hide', 'update:visible']);
+const emit = defineEmits([
+    'add',
+    'show',
+    'hide',
+    'update:visible',
+    'select-approvers',
+    'select-users',
+    'select-processors'
+]);
 
 // 使用本地状态跟踪弹出框的可见性
 const popoverVisible = ref(false);
@@ -74,8 +97,86 @@ const handlePopoverHide = () => {
     emit('hide', props.position);
 };
 
+// 创建新节点对象
+const createNewNode = (type) => {
+    // 创建节点的基本结构
+    const nodeId = Date.now();
+    const newNode = {
+        id: nodeId,
+        type: type,
+        name: props.nodeOptions.find(option => option.type === type)?.label || '未知节点',
+        props: {}
+    };
+
+    // 根据节点类型设置初始属性
+    if (type === 'condition') {
+        newNode.isNested = true;
+        newNode.props = {
+            conditions: [
+                {
+                    name: '条件1',
+                    expression: '',
+                    priority: 1,
+                    nodes: []
+                },
+                {
+                    name: '默认条件',
+                    expression: '其他条件进入此流程',
+                    priority: 2,
+                    nodes: []
+                }
+            ]
+        };
+    } else if (type === 'approver') {
+        newNode.props = { approvers: [], mode: 'anyone' };
+    } else if (type === 'copyTo') {
+        newNode.props = { users: [] };
+    } else if (type === 'process') {
+        newNode.props = { processors: [], mode: 'sequential' };
+    }
+
+    return newNode;
+};
+
 const handleNodeAdd = (type) => {
-    emit('add', { type, position: props.position });
+    // 创建新节点
+    const newNode = createNewNode(type);
+
+    // 将新节点添加到条件分支中（如果有条件对象）
+    if (props.condition) {
+        // 确保condition.nodes是一个数组
+        if (!props.condition.nodes) {
+            props.condition.nodes = [];
+        }
+
+        // 添加新节点
+        props.condition.nodes.push(newNode);
+
+        // 构建节点路径
+        const nodePath = props.parentPath ?
+            `${props.parentPath}-${props.conditionIndex}-${props.condition.nodes.length - 1}` :
+            `${props.conditionIndex}-${props.condition.nodes.length - 1}`;
+
+        // 根据节点类型触发事件以打开配置对话框
+        if (type === 'approver') {
+            emit('select-approvers', { node: newNode, index: nodePath });
+        } else if (type === 'copyTo') {
+            emit('select-users', { node: newNode, index: nodePath });
+        } else if (type === 'process') {
+            emit('select-processors', { node: newNode, index: nodePath });
+        }
+    }
+
+    // 发出添加事件，包含新节点和位置信息
+    emit('add', {
+        type,
+        position: props.position,
+        node: newNode,
+        condition: props.condition,
+        conditionIndex: props.conditionIndex
+    });
+
+    // 关闭弹出窗口
     popoverVisible.value = false;
 };
 </script>
