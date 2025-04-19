@@ -10,6 +10,12 @@
         <!-- 分支内容 -->
         <div class="flow-branch">
             <div class="branch-item" v-for="(branch, branchIndex) in branches" :key="branchIndex">
+                <div v-if="branchIndex === 0 || branchIndex === branches.length - 1"
+                    :class="{ 'hide-left-line': branchIndex === 0, 'hide-right-line': branchIndex === branches.length - 1 }">
+                </div>
+                <div v-if="branchIndex === 0 || branchIndex === branches.length - 1"
+                    :class="{ 'hide-bottom-left-line': branchIndex === 0, 'hide-bottom-right-line': branchIndex === branches.length - 1 }">
+                </div>
                 <!-- 分支项头部 -->
                 <div class="flow-node branch-node" :class="[branchType]">
                     <div class="branch-header">
@@ -298,13 +304,45 @@ const editCondition = (condIndex, condition) => {
 
         &::after {
             content: '';
-            // position: absolute;
-            top: -25px;
-            left: calc(50% - 1px);
             flex: 1;
-            // height: 0px;
             width: 2px;
             background-color: #c0c4cc;
+        }
+
+        .hide-left-line,
+        .hide-right-line,
+        .hide-bottom-left-line,
+        .hide-bottom-right-line {
+            /* 分支顶部竖线 - 隐藏左侧或右侧的连接线 */
+            position: absolute;
+            height: 5px;
+            width: calc(50% - 1px);
+            background-color: #f5f7fa;
+            z-index: 1;
+        }
+
+        .hide-left-line {
+            // 隐藏左侧连接线
+            top: -32px;
+            left: 0;
+        }
+
+        .hide-right-line {
+            // 隐藏右侧连接线
+            top: -32px;
+            right: 0;
+        }
+
+        .hide-bottom-left-line {
+            // 隐藏下方左侧连接线
+            bottom: -2px;
+            left: 0;
+        }
+
+        .hide-bottom-right-line {
+            // 隐藏下方右侧连接线
+            bottom: -2px;
+            right: 0;
         }
     }
 }
