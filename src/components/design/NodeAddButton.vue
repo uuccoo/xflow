@@ -147,17 +147,21 @@ const addNodeToMainFlow = (node, position) => {
     console.log(`节点已添加到主流程位置 ${position}:`, node);
 };
 
-// 向分支中添加节点 - 原来在 store 中的方法
-const addNodeToBranch = (node, branch) => {
+// 向分支中添加节点 - 修改后的方法，支持在指定位置添加节点
+const addNodeToBranch = (node, branch, position) => {
     // 如果要添加的是条件分支节点，为其生成唯一标识符
     if (node.type === 'condition' && !node.isNested) {
         node.id = `nested-${Date.now()}`;
         node.isNested = true; // 标记为嵌套节点，方便特殊处理
     }
 
-    // 将节点添加到分支的节点数组中
-    branch.nodes.push(node);
-    console.log(`在分支 ${branch.name} 内添加节点:`, node);
+    // 将节点添加到分支的节点数组中指定位置
+    if (!branch.nodes) {
+        branch.nodes = [];
+    }
+
+    branch.nodes.splice(position, 0, node);
+    console.log(`在分支 ${branch.name} 内位置 ${position} 添加节点:`, node);
 };
 
 const handleNodeAdd = (type) => {
@@ -166,8 +170,8 @@ const handleNodeAdd = (type) => {
 
     // 根据不同情况处理节点添加
     if (props.branch) {
-        // 向分支内添加节点
-        addNodeToBranch(newNode, props.branch);
+        // 向分支内添加节点，传递位置参数
+        addNodeToBranch(newNode, props.branch, props.position);
     } else {
         // 向主流程添加节点
         addNodeToMainFlow(newNode, props.position);
@@ -181,7 +185,9 @@ const handleNodeAdd = (type) => {
 <style scoped lang="scss">
 .node-add-btn {
     position: relative;
-    margin: 15px 0;
+    margin: 0;
+    padding: 20px 0 30px 0;
+    /* 添加上下内边距 */
     display: flex;
     justify-content: center;
     z-index: 1;
@@ -189,10 +195,13 @@ const handleNodeAdd = (type) => {
     &::before {
         content: '';
         position: absolute;
-        top: -15px;
-        left: 50%;
-        height: 15px;
-        border-left: 1px dashed #c0c4cc;
+        top: 0;
+        /* 调整连接线顶部位置 */
+        left: calc(50% - 1px);
+        height: 100%;
+        /* 让连接线贯穿整个按钮区域 */
+        width: 2px;
+        background-color: #c0c4cc;
         z-index: -1;
     }
 

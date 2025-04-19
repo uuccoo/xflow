@@ -128,6 +128,7 @@ const resetZoom = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 60px;
   padding-bottom: 50px;
 }
 
@@ -147,88 +148,6 @@ const resetZoom = () => {
     font-size: 14px;
     color: #606266;
     min-width: 40px;
-    text-align: center;
-  }
-}
-
-/* Popover 内容样式 */
-:deep(.node-popover) {
-  .el-popover__title {
-    display: none;
-  }
-}
-
-/* 弹出菜单内容样式 */
-.menu-title {
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #000;
-  border-bottom: 1px solid #e4e7ed;
-}
-
-.node-options {
-  padding: 12px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-
-  .node-option-item {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-    border-radius: 4px;
-
-    &:hover {
-      background-color: #f5f7fa;
-    }
-
-    .option-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-right: 8px;
-
-      .el-icon {
-        font-size: 16px;
-        color: #fff;
-      }
-    }
-
-    .option-name {
-      font-size: 12px;
-      color: #606266;
-    }
-  }
-}
-
-/* 流程结束点 */
-.flow-end {
-  position: relative;
-  padding-top: 15px;
-
-  /* 连接线 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    height: 15px;
-    border-left: 1px dashed #c0c4cc;
-  }
-
-  .end-node {
-    padding: 10px 20px;
-    background-color: #f5f7fa;
-    border-radius: 15px;
-    font-size: 14px;
-    color: #909399;
-    border: 1px solid #e4e7ed;
     text-align: center;
   }
 }

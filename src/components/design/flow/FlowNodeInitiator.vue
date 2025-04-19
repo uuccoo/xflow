@@ -42,7 +42,6 @@ const selectInitiator = () => {
     background-color: #fff;
     border-radius: 4px;
     border: 1px solid #e4e7ed;
-    margin-bottom: 15px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
     margin-left: auto;
     margin-right: auto;

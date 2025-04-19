@@ -13,17 +13,6 @@
 <style scoped lang="scss">
 .flow-end {
     position: relative;
-    padding-top: 15px;
-
-    /* 连接线 */
-    &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        height: 15px;
-        border-left: 1px dashed #c0c4cc;
-    }
 
     .end-node {
         padding: 6px 12px;

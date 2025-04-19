@@ -39,19 +39,23 @@
                     </div>
                 </div>
 
-                <!-- 分支内的节点列表 -->
-                <div class="branch-nodes" v-if="branch.nodes && branch.nodes.length > 0">
-                    <flow-node-renderer v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id"
-                        :node="branchNode" :index="nodeIdx" :showDeleteBtn="true" :parentNode="props.node"
-                        :branch="branch">
-                        <template #default>
-                            <slot :branch="branch" :branch-index="branchIndex"></slot>
-                        </template>
-                    </flow-node-renderer>
-                </div>
+                <!-- 条件框下方紧跟的添加按钮 -->
+                <node-add-button class="first-add-btn" :position="0" :branch="branch" :parentNode="props.node" />
 
-                <!-- 为每个分支添加节点按钮 -->
-                <node-add-button :position="branchIndex" :branch="branch" :parentNode="props.node" />
+                <!-- 分支内的节点列表 -->
+                <div class="branch-nodes-container" v-if="branch.nodes && branch.nodes.length > 0">
+                    <div class="branch-nodes">
+                        <template v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id">
+                            <!-- 渲染节点 -->
+                            <flow-node-renderer :node="branchNode" :index="nodeIdx" :showDeleteBtn="true"
+                                :parentNode="props.node" :branch="branch">
+                            </flow-node-renderer>
+
+                            <!-- 每个节点后的添加按钮 -->
+                            <node-add-button :position="nodeIdx + 1" :branch="branch" :parentNode="props.node" />
+                        </template>
+                    </div>
+                </div>
 
                 <!-- 插槽 -->
                 <slot :branch="branch" :branch-index="branchIndex"></slot>
@@ -221,7 +225,6 @@ const editCondition = (condIndex, condition) => {
 /* 分支容器样式 */
 .flow-branch-container {
     width: 100%;
-    margin-bottom: 15px;
     position: relative;
 }
 
@@ -230,7 +233,11 @@ const editCondition = (condIndex, condition) => {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin: 10px 0 20px;
+    margin: 0;
+    position: absolute;
+    width: 100%;
+    top: -15px;
+    z-index: 1;
 
     .el-button {
         background-color: white;
@@ -244,30 +251,31 @@ const editCondition = (condIndex, condition) => {
 .flow-branch {
     width: 100%;
     display: flex;
-    gap: 30px;
+    justify-content: center;
+    gap: 100px;
     position: relative;
     padding: 30px 0 0;
-    margin-bottom: 15px;
 
     /* 分支上方连接线 */
     &::before {
         content: '';
         position: absolute;
         top: 0;
-        left: 50%;
-        height: 15px;
-        border-left: 1px dashed #c0c4cc;
-        transform: translateX(-50%);
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #c0c4cc;
     }
 
     /* 分支顶部横线 */
     &::after {
         content: '';
         position: absolute;
-        top: 15px;
-        left: 20%;
-        width: 60%;
-        border-top: 1px dashed #c0c4cc;
+        bottom: 0px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #c0c4cc;
     }
 
     .branch-item {
@@ -281,10 +289,22 @@ const editCondition = (condIndex, condition) => {
         &::before {
             content: '';
             position: absolute;
-            top: -15px;
-            left: 50%;
-            height: 15px;
-            border-left: 1px dashed #c0c4cc;
+            top: -30px;
+            left: calc(50% - 1px);
+            height: 30px;
+            width: 2px;
+            background-color: #c0c4cc;
+        }
+
+        &::after {
+            content: '';
+            // position: absolute;
+            top: -25px;
+            left: calc(50% - 1px);
+            flex: 1;
+            // height: 0px;
+            width: 2px;
+            background-color: #c0c4cc;
         }
     }
 }
@@ -330,7 +350,8 @@ const editCondition = (condIndex, condition) => {
 
 .branch-node {
     width: 220px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
+    /* 移除下边距 */
     border: 1px solid #e4e7ed;
     border-radius: 4px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
@@ -378,8 +399,24 @@ const editCondition = (condIndex, condition) => {
     }
 }
 
+/* 分支节点列表容器 */
+.branch-nodes-container {
+    width: 100%;
+}
+
+/* 添加按钮样式 */
+.first-add-btn {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .branch-nodes {
     width: 100%;
-    margin-top: 5px;
+    margin-top: 0;
+
+    /* 每个节点后的添加按钮样式 */
+    :deep(.node-add-btn) {
+        margin: 0;
+    }
 }
 </style>

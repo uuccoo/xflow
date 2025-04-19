@@ -71,6 +71,6 @@ const isBranchNode = computed(() => {
 
 <style scoped lang="scss">
 .universal-flow-node {
-    width: 100%;
+    // width: 100%;
 }
 </style>
