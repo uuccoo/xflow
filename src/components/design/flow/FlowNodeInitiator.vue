@@ -21,17 +21,14 @@
 
 <script setup>
 import { User, ArrowRight } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
 
-const props = defineProps({
-    initiator: {
-        type: Object,
-        required: true
-    }
-})
+// 从 store 获取发起人节点数据
+const initiator = computed(() => flowStore.flowData.initiator)
 
 // 选择发起人
 const selectInitiator = () => {

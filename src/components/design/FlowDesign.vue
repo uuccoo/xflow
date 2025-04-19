@@ -1,10 +1,31 @@
 <template>
   <div class="flow-design-container">
     <div class="flow-canvas">
+      <!-- 流程图缩放控制 -->
+      <div class="zoom-control">
+        <!-- 新增：重置到 100% 的按钮，只在缩放不为100%时显示，且位于放大按钮左边 -->
+        <el-button v-if="zoom !== 1" circle @click="resetZoom" class="reset-btn">
+          <el-icon>
+            <Refresh />
+          </el-icon>
+        </el-button>
+        <el-button circle @click="zoomIn">
+          <el-icon>
+            <Plus />
+          </el-icon>
+        </el-button>
+        <span class="zoom-text">{{ Math.round(zoom * 100) }}%</span>
+        <el-button circle @click="zoomOut">
+          <el-icon>
+            <Minus />
+          </el-icon>
+        </el-button>
+      </div>
+
       <!-- 流程图主体 -->
-      <div class="flow-chart">
+      <div class="flow-chart" :style="zoomStyle">
         <!-- 发起人节点 -->
-        <flow-node-renderer :node="flowStore.flowData.initiator" :index="-1" />
+        <flow-node-renderer :node="{ type: 'initiator' }" :index="-1" />
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
         <node-add-button :position="0" />
@@ -34,11 +55,15 @@ import {
   Setting,
   Sort,
   TurnOff,
-  User
+  User,
+  Plus,
+  Minus,
+  Refresh
 } from '@element-plus/icons-vue'
 import NodeAddButton from './NodeAddButton.vue'
 import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
+import { ref, computed } from 'vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -59,6 +84,26 @@ flowStore.nodeOptions.forEach(option => {
   }
   option.icon = iconMap[option.icon] || null
 })
+
+// 缩放相关逻辑
+const zoom = ref(1)
+const zoomStyle = computed(() => ({
+  transform: `scale(${zoom.value})`,
+  transformOrigin: 'center top',
+  margin: '0 auto'  // 保证水平居中
+}))
+
+const zoomIn = () => {
+  zoom.value = Math.min(zoom.value + 0.1, 2)
+}
+
+const zoomOut = () => {
+  zoom.value = Math.max(zoom.value - 0.1, 0.5)
+}
+
+const resetZoom = () => {
+  zoom.value = 1
+}
 </script>
 
 <style scoped lang="scss">
@@ -84,6 +129,26 @@ flowStore.nodeOptions.forEach(option => {
   flex-direction: column;
   align-items: center;
   padding-bottom: 50px;
+}
+
+/* 流程图缩放控制样式 */
+.zoom-control {
+  position: fixed;
+  top: 80px;
+  right: 40px;
+  /* 增加与页面右侧的距离 */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+  /* 移除了背景色和阴影 */
+
+  .zoom-text {
+    font-size: 14px;
+    color: #606266;
+    min-width: 40px;
+    text-align: center;
+  }
 }
 
 /* Popover 内容样式 */

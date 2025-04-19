@@ -1,7 +1,7 @@
 <template>
     <div class="universal-flow-node">
         <!-- 发起人节点 -->
-        <initiator-node v-if="node.type === 'initiator'" :initiator="node" />
+        <initiator-node v-if="node.type === 'initiator'" />
 
         <!-- 普通节点（审批人、抄送人、办理、付款人等） -->
         <flow-node v-else-if="isRegularNode" :node="node" :index="index" :parentNode="parentNode" :branch="branch" />
@@ -53,9 +53,6 @@ const props = defineProps({
 const emit = defineEmits([
     // 所有事件都已直接使用 store 处理，不需要任何事件定义
 ]);
-
-// 获取节点选项数据
-const nodeOptions = computed(() => flowStore.nodeOptions);
 
 // 判断是否为普通节点（非分支类节点）
 const isRegularNode = computed(() => {

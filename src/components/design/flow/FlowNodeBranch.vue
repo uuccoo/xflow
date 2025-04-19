@@ -51,8 +51,7 @@
                 </div>
 
                 <!-- 为每个分支添加节点按钮 -->
-                <node-add-button :position="branchIndex" :condition="branch" :conditionIndex="branchIndex"
-                    :parentNode="props.node" />
+                <node-add-button :position="branchIndex" :branch="branch" :parentNode="props.node" />
 
                 <!-- 插槽 -->
                 <slot :branch="branch" :branch-index="branchIndex"></slot>
@@ -186,7 +185,7 @@ const deleteConditionBranch = (condIndex) => {
     // 收集被删除分支中的所有节点
     const orphanedNodes = props.node.props.conditions[condIndex].nodes;
 
-// 如果有孤立节点，可以选择将它们移到默认分支
+    // 如果有孤立节点，可以选择将它们移到默认分支
     if (orphanedNodes.length > 0) {
         const defaultConditionIndex = props.node.props.conditions.findIndex(c => c.name === '默认条件');
         if (defaultConditionIndex !== -1) {

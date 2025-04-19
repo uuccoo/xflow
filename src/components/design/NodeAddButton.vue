@@ -37,8 +37,9 @@ import { useFlowDesignStore } from '../../stores/flowDesignStore';
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
 
-// 从store获取节点选项
+// 从store获取节点选项和流程数据
 const nodeOptions = computed(() => flowStore.nodeOptions);
+const flowData = computed(() => flowStore.flowData);
 
 // 简单的 popover 可见状态，由 el-popover 组件自动管理
 const popoverVisible = ref(false);
@@ -53,44 +54,123 @@ const props = defineProps({
         type: Object,
         default: null
     },
-    // 当前操作的条件对象（可选）
-    condition: {
+    // 当前操作的分支对象（可选）
+    branch: {
         type: Object,
         default: null
-    },
-    // 条件索引
-    conditionIndex: {
-        type: Number,
-        default: -1
     }
 });
 
-// 创建新节点对象
-const createNewNode = (type) => {
-    return flowStore.createNodeByType(type, Date.now());
+// 创建新节点对象 - 原来在 store 中的方法
+const createNodeByType = (type, nodeId) => {
+    // 节点类型配置映射
+    const nodeConfigs = {
+        approver: {
+            name: '审批人',
+            props: {
+                approvers: [],
+                mode: 'anyone', // 任意一人通过即可，可选值：anyone, all
+            },
+        },
+        copyTo: {
+            name: '抄送人',
+            props: {
+                users: [],
+            },
+        },
+        process: {
+            name: '办理',
+            props: {
+                processors: [],
+                mode: 'sequential', // 串行处理，可选值：sequential, parallel
+            },
+        },
+        condition: {
+            name: '条件分支',
+            props: {
+                conditions: [
+                    {
+                        name: '条件1',
+                        expression: '',
+                        priority: 1,
+                        nodes: [],
+                    },
+                    {
+                        name: '默认条件',
+                        expression: '其他条件进入此流程',
+                        priority: 2,
+                        nodes: [],
+                    },
+                ],
+            },
+        },
+        automation: {
+            name: '自动化',
+            props: {
+                actions: [],
+            },
+        },
+        connector: {
+            name: '连接器',
+            props: {
+                connector: '',
+                config: {},
+            },
+        },
+        payment: {
+            name: '付款人',
+            props: {
+                payers: [],
+                amount: 0,
+            },
+        },
+    };
+
+    // 获取节点配置
+    const config = nodeConfigs[type] || {};
+    const option = nodeOptions.value.find((option) => option.type === type);
+    const label = option?.label || '未知节点';
+
+    // 创建并返回节点
+    return {
+        id: nodeId,
+        type,
+        name: config.name || label,
+        props: { ...(config.props || {}) },
+    };
+};
+
+// 向主流程中添加节点 - 原来在 store 中的方法
+const addNodeToMainFlow = (node, position) => {
+    // 添加到主流程中的指定位置
+    flowData.value.nodes.splice(position, 0, node);
+    console.log(`节点已添加到主流程位置 ${position}:`, node);
+};
+
+// 向分支中添加节点 - 原来在 store 中的方法
+const addNodeToBranch = (node, branch) => {
+    // 如果要添加的是条件分支节点，为其生成唯一标识符
+    if (node.type === 'condition' && !node.isNested) {
+        node.id = `nested-${Date.now()}`;
+        node.isNested = true; // 标记为嵌套节点，方便特殊处理
+    }
+
+    // 将节点添加到分支的节点数组中
+    branch.nodes.push(node);
+    console.log(`在分支 ${branch.name} 内添加节点:`, node);
 };
 
 const handleNodeAdd = (type) => {
     // 创建新节点
-    const newNode = createNewNode(type);
+    const newNode = createNodeByType(type, Date.now());
 
     // 根据不同情况处理节点添加
-    if (props.condition) {
-        // 向条件分支内添加节点
-        flowStore.handleAddNodeToCondition({
-            type,
-            position: props.conditionIndex,
-            node: newNode,
-            condition: props.condition,
-            conditionIndex: props.conditionIndex
-        });
+    if (props.branch) {
+        // 向分支内添加节点
+        addNodeToBranch(newNode, props.branch);
     } else {
         // 向主流程添加节点
-        flowStore.handleAddNodeEvent({
-            type,
-            position: props.position,
-            node: newNode
-        });
+        addNodeToMainFlow(newNode, props.position);
     }
 
     // 关闭悬浮框
