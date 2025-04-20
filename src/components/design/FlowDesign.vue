@@ -9,15 +9,15 @@
             <Refresh />
           </el-icon>
         </el-button>
-        <el-button circle @click="zoomIn">
-          <el-icon>
-            <Plus />
-          </el-icon>
-        </el-button>
-        <span class="zoom-text">{{ Math.round(zoom * 100) }}%</span>
         <el-button circle @click="zoomOut">
           <el-icon>
             <Minus />
+          </el-icon>
+        </el-button>
+        <span class="zoom-text">{{ Math.round(zoom * 100) }}%</span>
+        <el-button circle @click="zoomIn">
+          <el-icon>
+            <Plus />
           </el-icon>
         </el-button>
       </div>

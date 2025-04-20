@@ -22,6 +22,12 @@
                         {{ branch.name }}
                         <!-- 优先级标签 - 仅在条件分支类型时显示 -->
                         <div class="priority-tag" v-if="branchType === 'condition'">优先级{{ branch.priority }}</div>
+
+                        <!-- 复制按钮 - 只在非默认条件下显示 -->
+                        <el-icon class="node-copy" v-if="branch.name !== '默认条件'" @click.stop="copyBranch(branchIndex)">
+                            <CopyDocument />
+                        </el-icon>
+
                         <!-- 删除分支按钮 -->
                         <el-icon class="node-delete" @click.stop="deleteBranch(branchIndex)">
                             <Delete />
@@ -71,7 +77,7 @@
 </template>
 
 <script setup>
-import { Delete, Edit } from '@element-plus/icons-vue'
+import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
@@ -154,6 +160,17 @@ const editBranch = (branchIndex, branch) => {
     }
 }
 
+// 复制分支
+const copyBranch = (branchIndex) => {
+    if (branchType.value === 'condition') {
+        // 调用store中的复制方法
+        flowStore.copyConditionBranch(props.node, branchIndex);
+    } else {
+        // 其他类型分支的复制逻辑可在此扩展
+        ElMessage.info('尚未支持该类型分支的复制');
+    }
+}
+
 // ===== 条件分支特定操作 =====
 
 // 添加条件分支
@@ -176,8 +193,19 @@ const addConditionBranch = () => {
         props.node.props.conditions[defaultConditionIndex].priority = conditionsCount + 1;
     }
 
-    // 在倒数第二位(默认条件之前)插入新条件
-    props.node.props.conditions.splice(conditionsCount - 1, 0, newCondition);
+    // 在数组中插入新条件（紧挨着第一个条件的右侧）
+    // 确保至少插入在默认条件之前
+    const insertIndex = Math.min(1, conditionsCount - 1);
+    props.node.props.conditions.splice(insertIndex, 0, newCondition);
+
+    // 重新计算所有条件的优先级
+    props.node.props.conditions.forEach((condition, idx) => {
+        if (condition.name !== '默认条件') {
+            condition.priority = idx + 1;
+        } else {
+            condition.priority = props.node.props.conditions.length; // 默认条件优先级最低
+        }
+    });
 
     console.log('添加条件分支成功', newCondition);
     // 不再向上传递事件，只在本地处理即可
@@ -250,6 +278,13 @@ const editCondition = (condIndex, condition) => {
         font-size: 13px;
         padding: 8px 20px;
         height: auto;
+        transition: all 0.3s;
+
+        &:hover {
+            color: #fff;
+            background-color: #409eff;
+            border-color: #409eff;
+        }
     }
 }
 
@@ -371,6 +406,21 @@ const editCondition = (condIndex, condition) => {
         transition: visibility 0s, opacity 0.2s ease-in-out;
     }
 
+    /* 复制图标样式 */
+    .node-copy {
+        position: absolute;
+        top: 8px;
+        right: 32px;
+        /* 位于删除按钮左侧 */
+        color: #409eff;
+        cursor: pointer;
+        font-size: 16px;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s, opacity 0.2s ease-in-out;
+        z-index: 2;
+    }
+
     /* 删除图标样式 */
     .node-delete {
         position: absolute;
@@ -407,10 +457,16 @@ const editCondition = (condIndex, condition) => {
             opacity: 0;
         }
 
+        .node-copy,
         .node-delete {
             visibility: visible;
             opacity: 1;
         }
+    }
+
+    /* 复制图标悬停样式 */
+    .node-copy:hover {
+        color: #66b1ff;
     }
 
     /* 删除图标样式 */
@@ -419,7 +475,8 @@ const editCondition = (condIndex, condition) => {
     }
 
     .branch-content {
-        padding: 14px 16px;
+        padding: 10px 12px;
+        /* 修改padding与普通节点一致 */
         display: flex;
         justify-content: space-between;
         align-items: center;

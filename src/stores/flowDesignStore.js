@@ -206,6 +206,44 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     console.log('编辑条件表达式', node, condIndex, condition)
   }
 
+  // 复制条件分支
+  const copyConditionBranch = (node, condIndex) => {
+    // 获取要复制的条件
+    const conditions = node.props.conditions
+    const sourceBranch = conditions[condIndex]
+
+    // 如果是默认条件，不允许复制
+    if (sourceBranch.name === '默认条件') {
+      ElMessage.warning('默认条件不能复制')
+      return
+    }
+
+    // 创建深拷贝
+    const copiedBranch = JSON.parse(JSON.stringify(sourceBranch))
+
+    // 修改名称，避免重名
+    const baseName = copiedBranch.name.replace(/\s*\(\d+\)$/, '') // 移除可能已有的 (数字) 后缀
+    copiedBranch.name = `${baseName} (复制)`
+
+    // 生成新的优先级（插入在原条件右侧，即索引+1的位置）
+    const insertPosition = condIndex + 1
+
+    // 更新优先级
+    conditions.splice(insertPosition, 0, copiedBranch)
+
+    // 重新计算所有条件的优先级
+    conditions.forEach((condition, idx) => {
+      if (condition.name !== '默认条件') {
+        condition.priority = idx + 1
+      } else {
+        condition.priority = conditions.length // 默认条件优先级最低
+      }
+    })
+
+    ElMessage.success('复制条件分支成功')
+    return copiedBranch
+  }
+
   // 显示人员选择器
   const showPersonSelector = () => {
     console.log('显示人员选择器')
@@ -254,5 +292,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     selectApprovers,
     selectUsers,
     selectProcessors,
+    copyConditionBranch, // 添加新函数到返回对象
   }
 })

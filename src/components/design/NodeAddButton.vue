@@ -3,7 +3,7 @@
         <el-popover placement="right-start" :width="280" trigger="click" :hide-after="0" :show-arrow="true" :offset="12"
             popper-class="node-popover" v-model:visible="popoverVisible">
             <template #reference>
-                <el-button circle class="add-btn">
+                <el-button type="primary" plain circle class="add-btn">
                     <el-icon>
                         <Plus />
                     </el-icon>
@@ -207,7 +207,6 @@ const handleNodeAdd = (type) => {
 
     .add-btn {
         background-color: #fff;
-        border: 1px dashed #c0c4cc;
         color: #409eff;
         transition: all 0.3s;
 
