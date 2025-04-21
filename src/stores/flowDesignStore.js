@@ -42,6 +42,33 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     { type: 'payment', label: '付款人', icon: 'Money', color: '#52c41a', headerBg: '#f6ffed' },
   ]
 
+  // 当前选中的节点
+  const selectedNode = ref(null)
+  // 控制抽屉层显示
+  const drawerVisible = ref(false)
+
+  // 选择节点
+  const selectNode = (node, index, branch = null) => {
+    selectedNode.value = {
+      node,
+      index,
+      branch,
+    }
+    drawerVisible.value = true
+  }
+
+  // 关闭抽屉层
+  const closeDrawer = () => {
+    drawerVisible.value = false
+    // 选中状态保留，只是关闭抽屉
+  }
+
+  // 清除选中节点
+  const clearSelectedNode = () => {
+    selectedNode.value = null
+    drawerVisible.value = false
+  }
+
   // 导出完整流程数据
   const exportFlowData = () => {
     return {
@@ -277,6 +304,11 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   return {
     flowData,
     nodeOptions,
+    selectedNode,
+    drawerVisible,
+    selectNode,
+    closeDrawer,
+    clearSelectedNode,
     exportFlowData,
     importFlowData,
     validateFlowData,
@@ -292,6 +324,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     selectApprovers,
     selectUsers,
     selectProcessors,
-    copyConditionBranch, // 添加新函数到返回对象
+    copyConditionBranch,
   }
 })

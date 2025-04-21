@@ -1,5 +1,5 @@
 <template>
-    <div class="flow-node" :class="[node.type]" :style="nodeStyle">
+    <div class="flow-node" :class="[node.type]" :style="nodeStyle" @click="handleNodeClick">
         <!-- 节点头部 -->
         <div class="node-header" :style="nodeHeaderStyle">
             <span class="node-icon">
@@ -16,7 +16,7 @@
         <!-- 节点内容 - 根据节点类型渲染不同内容 -->
         <div class="node-content">
             <!-- 审批人节点 -->
-            <div v-if="node.type === 'approver'" class="node-item" @click="selectApprovers">
+            <div v-if="node.type === 'approver'" class="node-item" @click.stop="selectApprovers">
                 <span>{{ node.props.approvers?.length > 0 ? formatUserNames(node.props.approvers) : '请选择审批人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -24,7 +24,7 @@
             </div>
 
             <!-- 抄送人节点 -->
-            <div v-else-if="node.type === 'copyTo'" class="node-item" @click="selectUsers">
+            <div v-else-if="node.type === 'copyTo'" class="node-item" @click.stop="selectUsers">
                 <span>{{ node.props.users?.length > 0 ? formatUserNames(node.props.users) : '请选择抄送人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -32,7 +32,7 @@
             </div>
 
             <!-- 办理节点 -->
-            <div v-else-if="node.type === 'process'" class="node-item" @click="selectProcessors">
+            <div v-else-if="node.type === 'process'" class="node-item" @click.stop="selectProcessors">
                 <span>{{ node.props.processors?.length > 0 ? formatUserNames(node.props.processors) : '请选择办理人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -40,7 +40,7 @@
             </div>
 
             <!-- 默认内容 -->
-            <div v-else class="node-item" @click="configureNode">
+            <div v-else class="node-item" @click.stop="configureNode">
                 <span>点击配置</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -102,6 +102,12 @@ const nodeHeaderStyle = computed(() => {
     return option ? { backgroundColor: option.headerBg } : {}
 })
 
+// 点击节点，选中并显示抽屉层
+const handleNodeClick = () => {
+    // 调用store的selectNode方法
+    flowStore.selectNode(props.node, props.index, props.branch);
+}
+
 // 删除当前节点
 const deleteNode = () => {
     console.log('删除节点', props.node);
@@ -113,6 +119,8 @@ const deleteNode = () => {
 const configureNode = () => {
     console.log('配置节点', props.node);
     flowStore.configureNode(props.node);
+    // 同时选中节点打开抽屉
+    flowStore.selectNode(props.node, props.index, props.branch);
 };
 
 // 选择审批人（适用于审批节点）
@@ -120,6 +128,8 @@ const selectApprovers = () => {
     if (props.node.type === 'approver') {
         console.log('选择审批人', props.node);
         flowStore.selectApprovers(props.node);
+        // 同时选中节点打开抽屉
+        flowStore.selectNode(props.node, props.index, props.branch);
     }
 };
 
@@ -128,6 +138,8 @@ const selectUsers = () => {
     if (props.node.type === 'copyTo') {
         console.log('选择抄送人', props.node);
         flowStore.selectUsers(props.node);
+        // 同时选中节点打开抽屉
+        flowStore.selectNode(props.node, props.index, props.branch);
     }
 };
 
@@ -136,6 +148,8 @@ const selectProcessors = () => {
     if (props.node.type === 'process') {
         console.log('选择办理人', props.node);
         flowStore.selectProcessors(props.node);
+        // 同时选中节点打开抽屉
+        flowStore.selectNode(props.node, props.index, props.branch);
     }
 };
 
@@ -207,6 +221,15 @@ const formatUserNames = (users = []) => {
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
     margin-left: auto;
     margin-right: auto;
+    cursor: pointer;
+    /* 添加指针样式表示可点击 */
+    transition: box-shadow 0.3s;
+    /* 添加过渡效果 */
+
+    &:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        /* 鼠标悬停时增强阴影效果 */
+    }
 }
 
 .node-header {

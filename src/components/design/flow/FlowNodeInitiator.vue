@@ -1,5 +1,5 @@
 <template>
-    <div class="flow-node initiator">
+    <div class="flow-node initiator" @click="handleNodeClick">
         <div class="node-header">
             <span class="node-icon">
                 <el-icon>
@@ -9,7 +9,7 @@
             <span class="node-title">{{ initiator.name }}</span>
         </div>
         <div class="node-content">
-            <div class="node-item" @click="selectInitiator">
+            <div class="node-item" @click.stop="selectInitiator">
                 <span>{{ initiator.props.initiator || '所有人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -33,6 +33,14 @@ const initiator = computed(() => flowStore.flowData.initiator)
 // 选择发起人
 const selectInitiator = () => {
     flowStore.showPersonSelector()
+    // 同时选中节点打开抽屉
+    flowStore.selectNode(initiator.value, -1)
+}
+
+// 点击节点，选中并显示抽屉层
+const handleNodeClick = () => {
+    // 调用store的selectNode方法选中发起人节点
+    flowStore.selectNode(initiator.value, -1)
 }
 </script>
 
@@ -46,6 +54,15 @@ const selectInitiator = () => {
     margin-left: auto;
     margin-right: auto;
     border-left: 3px solid #409eff;
+    cursor: pointer;
+    /* 添加指针样式表示可点击 */
+    transition: box-shadow 0.3s;
+    /* 添加过渡效果 */
+
+    &:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        /* 鼠标悬停时增强阴影效果 */
+    }
 
     .node-header {
         background-color: #ecf5ff;
@@ -82,8 +99,7 @@ const selectInitiator = () => {
             font-size: 14px;
             cursor: pointer;
 
-            &:hover {
-                background-color: #f5f7fa;
+            &:hover {            background-color: #f5f7fa;
             }
 
             .chevron-icon {
