@@ -45,16 +45,27 @@
     </div>
 
     <!-- 节点设置抽屉层 -->
-    <el-drawer v-model="flowStore.drawerVisible" title="节点设置" size="30%" :destroy-on-close="false" :with-header="true"
-      direction="rtl" :before-close="handleDrawerClose">
+    <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="false"
+      :with-header="true" direction="rtl" :before-close="saveNodeSettings">
       <template #header>
         <div class="drawer-header">
-          <span class="drawer-title">{{ drawerTitle }}</span>
-          <el-button type="text" @click="handleDrawerClose" class="drawer-close">
-            <el-icon>
-              <Close />
-            </el-icon>
-          </el-button>
+          <div class="drawer-title-container">
+            <!-- 只保留节点名称编辑部分，移除节点类型标题 -->
+            <div class="node-name-edit">
+              <el-input v-if="isEditingName" v-model="tempNodeName" size="medium" placeholder="请输入节点名称"
+                ref="nodeNameInput" @blur="finishEditName">
+              </el-input>
+              <div v-else class="current-node-name" @click="startEditName">
+                {{ tempNodeName || '' }}
+                <el-icon>
+                  <Edit />
+                </el-icon>
+              </div>
+            </div>
+          </div>
+          <el-icon class="drawer-close" @click="handleDrawerClose">
+            <Close />
+          </el-icon>
         </div>
       </template>
 
@@ -62,17 +73,20 @@
         <!-- 根据节点类型显示不同的设置表单 -->
         <template v-if="flowStore.selectedNode.node.type === 'initiator'">
           <div class="node-setting-form">
-            <h3 class="setting-section-title">发起人设置</h3>
+            <!-- <h3 class="setting-section-title">发起人设置</h3> -->
             <el-form label-position="top">
-              <el-form-item label="发起人范围">
+              <el-form-item label="谁可以提交该审批">
                 <el-select v-model="initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
                   <el-option label="所有人" value="all"></el-option>
                   <el-option label="指定人员" value="specified"></el-option>
-                  <el-option label="指定部门" value="department"></el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item v-if="initiatorScope !== 'all'" label="选择人员/部门">
-                <el-button type="primary" @click="showPersonSelector('initiator')">选择</el-button>
+              <el-form-item v-if="initiatorScope !== 'all'" label="指定人员" label-position="left" required>
+                <el-button class="select-personnel" type="primary" @click="showPersonSelector('initiator')">
+                  <el-icon>
+                    <Plus />
+                  </el-icon>
+                  添加</el-button>
                 <div v-if="selectedInitiators.length" class="selected-users">
                   <el-tag v-for="(user, idx) in selectedInitiators" :key="idx" closable
                     @close="removeSelectedItem(idx, 'initiator')">
@@ -86,10 +100,38 @@
 
         <template v-else-if="flowStore.selectedNode.node.type === 'approver'">
           <div class="node-setting-form">
-            <h3 class="setting-section-title">审批人设置</h3>
+            <!-- <h3 class="setting-section-title">审批人设置</h3> -->
             <el-form label-position="top">
-              <el-form-item label="审批人">
-                <el-button type="primary" @click="showPersonSelector('approver')">选择审批人</el-button>
+              <el-form-item label="请选择审批人">
+                <el-radio-group v-model="approverType" class="approver-type-selector">
+                  <el-radio label="designated">
+                    <div class="option-content">指定人员</div>
+                  </el-radio>
+                  <el-radio label="initiator_select">
+                    <div class="option-content">发起人自选</div>
+                  </el-radio>
+                  <el-radio label="multi_level_manager">
+                    <div class="option-content">连续多级主管</div>
+                  </el-radio>
+                  <el-radio label="department_manager">
+                    <div class="option-content">部门主管</div>
+                  </el-radio>
+                  <el-radio label="role">
+                    <div class="option-content">角色</div>
+                  </el-radio>
+                  <el-radio label="initiator_self">
+                    <div class="option-content">发起人自己</div>
+                  </el-radio>
+                </el-radio-group>
+              </el-form-item>
+
+              <!-- 根据选择的审批人类型显示不同的设置 -->
+              <el-form-item v-if="approverType === 'designated'" label="指定人员" label-position="left" required>
+                <el-button class="select-personnel" type="primary" @click="showPersonSelector('approver')">
+                  <el-icon>
+                    <Plus />
+                  </el-icon>
+                  添加</el-button>
                 <div v-if="flowStore.selectedNode.node.props.approvers?.length" class="selected-users">
                   <el-tag v-for="(user, idx) in flowStore.selectedNode.node.props.approvers" :key="idx" closable
                     @close="removeUser(idx, 'approvers')">
@@ -97,12 +139,141 @@
                   </el-tag>
                 </div>
               </el-form-item>
-              <el-form-item label="审批方式">
-                <el-radio-group v-model="approvalMode">
-                  <el-radio label="anyone">任意一人通过即可</el-radio>
-                  <el-radio label="all">所有人通过</el-radio>
+
+              <!-- 新增：发起人自选的子选项 -->
+              <el-form-item v-if="approverType === 'initiator_select'" label="选择方式">
+                <div class="initiator-select-options">
+                  <el-button :class="{ 'active': initiatorSelectMode === 'single' }"
+                    @click="initiatorSelectMode = 'single'">
+                    自选一个人
+                  </el-button>
+                  <el-button :class="{ 'active': initiatorSelectMode === 'multiple' }"
+                    @click="initiatorSelectMode = 'multiple'">
+                    自选多个人
+                  </el-button>
+                </div>
+              </el-form-item>
+
+              <!-- 新增：发起人自选范围类型选择 -->
+              <el-form-item v-if="approverType === 'initiator_select'" label="用户可选范围">
+                <el-select v-model="rangeType" placeholder="请选择范围" style="width: 100%">
+                  <el-option label="所有人" value="all"></el-option>
+                  <el-option label="指定人员" value="specified"></el-option>
+                </el-select>
+              </el-form-item>
+
+              <!-- 新增：发起人自选需要从哪些人中选择 -->
+              <el-form-item v-if="approverType === 'initiator_select' && rangeType === 'specified'" label="指定人员"
+                label-position="left" required>
+                <el-button class="select-personnel" type="primary" @click="showPersonSelector('initiatorSelectRange')">
+                  <el-icon>
+                    <Plus />
+                  </el-icon>
+                  添加</el-button>
+                <div v-if="flowStore.selectedNode.node.props.selectRange?.length" class="selected-users">
+                  <el-tag v-for="(user, idx) in flowStore.selectedNode.node.props.selectRange" :key="idx" closable
+                    @close="removeUser(idx, 'selectRange')">
+                    {{ user.name }}
+                  </el-tag>
+                </div>
+              </el-form-item>
+
+              <!-- 新增：主管类型选择 -->
+              <el-form-item v-if="approverType === 'department_manager'" label="部门主管">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span>发起人的</span>
+                  <el-select v-model="managerType" placeholder="请选择主管类型" style="width: 200px;">
+                    <el-option v-for="i in 20" :key="i" :label="i === 1 ? '直接主管' : `第${i}级主管`" :value="i"></el-option>
+                  </el-select>
+                </div>
+                <el-checkbox v-model="fallbackToHigherManager">
+                  找不到主管时，由上级主管代审批
+                  <el-tooltip content="当无法找到指定主管时，自动转交给上级主管处理" placement="top">
+                    <el-icon>
+                      <QuestionFilled />
+                    </el-icon>
+                  </el-tooltip>
+                </el-checkbox>
+              </el-form-item>
+
+              <el-form-item v-if="approverType === 'initiator_self'" label="发起人自己">
+                <span style="color: #909399;">发起人自己作为审批人进行审批</span>
+              </el-form-item>
+              <el-divider></el-divider>
+              <el-form-item label="多人审批时的审批方式">
+                <el-radio-group v-model="approvalMode" class="approval-mode-radio-group">
+                  <div class="radio-item">
+                    <el-radio label="顺序会签 (按选择顺序审批，每个人必须同意)" value="sequential"></el-radio>
+                  </div>
+                  <div class="radio-item">
+                    <el-radio label="会签 (可同时审批，每个人必须同意)" value="parallel"></el-radio>
+                  </div>
+                  <div class="radio-item">
+                    <el-radio label="或签 (有一人同意即可)" value="anyone"></el-radio>
+                  </div>
                 </el-radio-group>
               </el-form-item>
+              <el-divider></el-divider>
+
+              <!-- 高级设置部分 -->
+              <div class="advanced-settings-section">
+                <div class="section-title">高级设置</div>
+
+                <!-- 审批人为空时 -->
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <span class="icon-user">👤</span> 审批人为空时
+                  </div>
+                  <div class="setting-options">
+                    <el-radio-group v-model="emptyApproverAction">
+                      <el-radio label="auto_pass">自动通过</el-radio>
+                      <el-radio label="auto_reject">自动驳回</el-radio>
+                      <el-radio label="transfer_manager">转交审批管理员</el-radio>
+                      <el-radio label="transfer_specific">转交到指定人员</el-radio>
+                    </el-radio-group>
+                  </div>
+                </div>
+
+                <!-- 审批同意时是否需要签字 -->
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <span class="icon-signature">✍️</span> 审批同意时是否需要签字
+                  </div>
+                  <div class="setting-options">
+                    <el-switch v-model="requireSignature" active-text="需要" inactive-text="不用" :active-value="true"
+                      :inactive-value="false">
+                    </el-switch>
+                  </div>
+                </div>
+
+                <!-- 审批期限 -->
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <span class="icon-clock">⏱️</span> 审批期限（为 0 则不生效）
+                  </div>
+                  <div class="setting-options time-limit-input">
+                    <el-input-number v-model="approvalTimeLimit" :min="0" controls-position="right"></el-input-number>
+                    <el-select v-model="approvalTimeUnit" style="width: 80px;">
+                      <el-option label="小时" value="hour"></el-option>
+                      <el-option label="天" value="day"></el-option>
+                    </el-select>
+                  </div>
+                </div>
+
+                <!-- 如果审批被驳回 -->
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <span class="icon-reject">👎</span> 如果审批被驳回
+                  </div>
+                  <div class="setting-options">
+                    <el-radio-group v-model="rejectAction">
+                      <el-radio label="end_flow">直接结束流程</el-radio>
+                      <el-radio label="back_previous">驳回到上一级审批节点</el-radio>
+                      <el-radio label="back_specific">驳回到指定节点</el-radio>
+                    </el-radio-group>
+                  </div>
+                </div>
+              </div>
             </el-form>
           </div>
         </template>
@@ -205,38 +376,10 @@
           </div>
         </template>
 
-        <!-- 高级设置部分 - 所有节点类型通用 -->
-        <div class="node-advanced-settings">
-          <el-divider>高级设置</el-divider>
-          <el-collapse>
-            <el-collapse-item title="超时设置" name="timeout">
-              <el-form>
-                <el-form-item label="启用超时提醒">
-                  <el-switch v-model="enableTimeout"></el-switch>
-                </el-form-item>
-                <template v-if="enableTimeout">
-                  <el-form-item label="超时时间">
-                    <el-input-number v-model="timeoutHours" :min="0" :max="168"></el-input-number>
-                    <span class="unit-label">小时</span>
-                  </el-form-item>
-                </template>
-              </el-form>
-            </el-collapse-item>
-
-            <el-collapse-item title="事件回调" name="callback">
-              <el-form>
-                <el-form-item label="回调 URL">
-                  <el-input v-model="callbackUrl" placeholder="请输入回调地址"></el-input>
-                </el-form-item>
-              </el-form>
-            </el-collapse-item>
-          </el-collapse>
-        </div>
-
         <!-- 底部操作按钮 -->
         <div class="drawer-footer">
           <el-button @click="handleDrawerClose">取消</el-button>
-          <el-button type="primary" @click="saveNodeSettings">确定</el-button>
+          <el-button type="primary" @click="saveNodeSettings">保存</el-button>
         </div>
       </div>
     </el-drawer>
@@ -266,7 +409,7 @@ import NodeAddButton from './NodeAddButton.vue'
 import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
 import PersonSelector from '../common/PersonSelector.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 // 使用 Pinia store
@@ -343,11 +486,68 @@ const approvalMode = ref('anyone');
 const processMode = ref('sequential');
 const automationAction = ref('notification');
 const nodeName = ref('');
-const enableTimeout = ref(false);
-const timeoutHours = ref(24);
-const callbackUrl = ref('');
 const selectedBranchItem = ref(null);
 const activeConditionIndex = ref(0);
+const isEditingName = ref(false); // 是否正在编辑节点名称
+const tempNodeName = ref(''); // 临时存储节点名称
+const approverType = ref('designated'); // 审批人类型
+const initiatorSelectMode = ref('single'); // 发起人自选模式
+const emptyApproverAction = ref('auto_pass'); // 审批人为空时的处理方式
+const requireSignature = ref(false); // 审批同意时是否需要签字
+const approvalTimeLimit = ref(0); // 审批期限
+const approvalTimeUnit = ref('hour'); // 审批时间单位
+const rejectAction = ref('end_flow'); // 审批被驳回时的处理方式
+const rangeType = ref('all'); // 发起人自选范围类型
+const managerType = ref(1); // 主管类型
+const fallbackToHigherManager = ref(false); // 是否由上级主管代审批
+
+// 当selectedNode变化时初始化表单数据
+const initFormData = () => {
+  if (!flowStore.selectedNode) return;
+
+  const { node } = flowStore.selectedNode;
+
+  // 初始化节点名称
+  nodeName.value = node.name || '';
+  tempNodeName.value = node.name || '';
+
+  // 根据节点类型初始化其他表单数据
+  if (node.type === 'approver' && node.props) {
+    approvalMode.value = node.props.mode || 'anyone';
+    approverType.value = node.props.approverType || 'designated';
+    initiatorSelectMode.value = node.props.initiatorSelectMode || 'single';
+    emptyApproverAction.value = node.props.emptyApproverAction || 'auto_pass';
+    requireSignature.value = node.props.requireSignature || false;
+    approvalTimeLimit.value = node.props.approvalTimeLimit || 0;
+    approvalTimeUnit.value = node.props.approvalTimeUnit || 'hour';
+    rejectAction.value = node.props.rejectAction || 'end_flow';
+    rangeType.value = node.props.rangeType || 'all';
+    managerType.value = node.props.managerType || 1;
+    fallbackToHigherManager.value = node.props.fallbackToHigherManager || false;
+  } else if (node.type === 'process' && node.props) {
+    processMode.value = node.props.mode || 'sequential';
+  } else if (node.type === 'initiator' && node.props) {
+    initiatorScope.value = node.props.initiatorScope || 'all';
+    selectedInitiators.value = node.props.initiators || [];
+  } else if (node.type === 'automation' && node.props) {
+    automationAction.value = node.props.actionType || 'notification';
+  }
+}
+
+// 监听抽屉显示状态，初始化表单数据
+watch(() => flowStore.drawerVisible, (visible) => {
+  if (visible) {
+    initFormData();
+    isEditingName.value = false; // 重置编辑状态
+  }
+}, { immediate: true });
+
+// 监听selectedNode变化，初始化表单数据
+watch(() => flowStore.selectedNode, (node) => {
+  if (node) {
+    initFormData();
+  }
+});
 
 // 发起人数据
 const selectedInitiators = ref([]);
@@ -402,6 +602,12 @@ const showPersonSelector = (type) => {
       title = '选择发起人范围';
       currentIds = selectedInitiators.value.map(user => user.id);
       break;
+    case 'initiatorSelectRange':
+      title = '选择发起人自选范围';
+      if (flowStore.selectedNode.node.props.selectRange) {
+        currentIds = flowStore.selectedNode.node.props.selectRange.map(user => user.id);
+      }
+      break;
   }
 
   personSelectorTitle.value = title;
@@ -434,6 +640,10 @@ const handlePersonConfirm = (result) => {
       selectedInitiators.value = result.selectedUsers;
       ElMessage.success('发起人范围设置成功');
       break;
+    case 'initiatorSelectRange':
+      node.props.selectRange = result.selectedUsers;
+      ElMessage.success('发起人自选范围设置成功');
+      break;
   }
 }
 
@@ -455,12 +665,44 @@ const removeSelectedItem = (index, type) => {
 // 保存节点设置
 const saveNodeSettings = () => {
   if (!flowStore.selectedNode) return;
-  
+
   const { node } = flowStore.selectedNode;
-  
+
   // 根据不同节点类型保存不同设置
   if (node.type === 'approver') {
     node.props.mode = approvalMode.value;
+    node.props.approverType = approverType.value;
+
+    // 确保节点props中有approverType字段
+    if (!node.props) {
+      node.props = {};
+    }
+    node.props.approverType = approverType.value;
+
+    // 如果选择了"指定人员"但没有选择人员，提醒用户
+    if (approverType.value === 'designated' && (!node.props.approvers || node.props.approvers.length === 0)) {
+      ElMessage.warning('请选择至少一名审批人');
+      return;
+    }
+
+    // 保存发起人自选模式
+    if (approverType.value === 'initiator_select') {
+      node.props.initiatorSelectMode = initiatorSelectMode.value;
+      node.props.rangeType = rangeType.value;
+    }
+
+    // 保存主管类型和上级主管代审批设置
+    if (approverType.value === 'department_manager') {
+      node.props.managerType = managerType.value;
+      node.props.fallbackToHigherManager = fallbackToHigherManager.value;
+    }
+
+    // 保存高级设置
+    node.props.emptyApproverAction = emptyApproverAction.value;
+    node.props.requireSignature = requireSignature.value;
+    node.props.approvalTimeLimit = approvalTimeLimit.value;
+    node.props.approvalTimeUnit = approvalTimeUnit.value;
+    node.props.rejectAction = rejectAction.value;
   } else if (node.type === 'process') {
     node.props.mode = processMode.value;
   } else if (node.type === 'initiator') {
@@ -470,16 +712,36 @@ const saveNodeSettings = () => {
       node.props.initiators = selectedInitiators.value;
     }
   }
-  
-  // 更新节点名称
-  if (nodeName.value) {
-    node.name = nodeName.value;
+
+  // 更新节点名称 - 使用临时保存的名称
+  if (tempNodeName.value) {
+    node.name = tempNodeName.value;
   }
-  
+
   // 关闭抽屉
   ElMessage.success('节点设置已保存');
   handleDrawerClose();
 }
+
+// 开始编辑节点名称
+const startEditName = () => {
+  isEditingName.value = true;
+  nextTick(() => {
+    if (nodeNameInput.value) {
+      nodeNameInput.value.focus();
+    }
+  });
+}
+
+// 完成编辑节点名称
+const finishEditName = () => {
+  isEditingName.value = false;
+  // 仅修改临时存储的名称，不立即同步到节点
+  // 点击抽屉底部的确定按钮时才会保存
+}
+
+// 节点名称输入框引用
+const nodeNameInput = ref(null);
 </script>
 
 <style scoped lang="scss">
@@ -528,6 +790,11 @@ const saveNodeSettings = () => {
   }
 }
 
+.select-personnel.el-button .el-icon {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 /* 抽屉层样式 */
 .drawer-header {
   display: flex;
@@ -536,10 +803,49 @@ const saveNodeSettings = () => {
   padding: 10px 15px;
   border-bottom: 1px solid #e4e7ed;
 
-  .drawer-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: #303133;
+  .drawer-title-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .drawer-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .node-name-edit {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      .current-node-name {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        color: #303133;
+        /* 修改为正常文本颜色，不再使用蓝色 */
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: color 0.3s;
+
+        &:hover {
+          color: #409EFF;
+
+          .el-icon {
+            color: #409EFF;
+          }
+        }
+
+        .el-icon {
+          font-size: 14px;
+          color: #909399;
+          /* 图标使用灰色 */
+          transition: color 0.3s;
+        }
+      }
+    }
   }
 
   .drawer-close {
@@ -550,8 +856,6 @@ const saveNodeSettings = () => {
 
 .drawer-content {
   padding: 20px;
-  height: calc(100vh - 120px);
-  overflow-y: auto;
 }
 
 .node-setting-form {
@@ -589,7 +893,7 @@ const saveNodeSettings = () => {
 }
 
 .drawer-footer {
-  position: sticky;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
@@ -598,7 +902,7 @@ const saveNodeSettings = () => {
   text-align: right;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   border-top: 1px solid #e4e7ed;
-  margin: 0 -20px;
+  z-index: 10;
 }
 
 .branch-list {
@@ -608,6 +912,93 @@ const saveNodeSettings = () => {
     margin-bottom: 10px;
     font-size: 14px;
     font-weight: normal;
-    color: #606266;}
+    color: #606266;
+  }
+}
+
+.approver-type-selector {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px 0px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+
+  .el-radio {
+    margin-right: 0;
+    padding: 10px;
+    width: 33.33%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+
+    .option-content {
+      margin-left: 5px;
+    }
+  }
+}
+
+.initiator-select-options {
+  display: flex;
+  gap: 10px;
+
+  .el-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+
+    &.active {
+      background-color: #409EFF;
+      color: #fff;
+    }
+  }
+}
+
+.approval-mode-radio-group {
+  display: block;
+  /* 确保整个组是块级元素 */
+}
+
+.advanced-settings-section {
+  padding-top: 20px;
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #303133;
+    margin-bottom: 15px;
+  }
+
+  .setting-item {
+    margin-bottom: 20px;
+
+    .setting-label {
+      font-size: 14px;
+      color: #606266;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      .icon-user,
+      .icon-signature,
+      .icon-clock,
+      .icon-reject {
+        font-size: 16px;
+      }
+    }
+
+    .setting-options {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .time-limit-input {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+    }
+  }
 }
 </style>
