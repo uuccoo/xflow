@@ -6,11 +6,11 @@
             <div class="drawer-header">
                 <div class="drawer-title-container">
                     <div class="node-name-edit">
-                        <el-input v-if="isEditingName" v-model="tempNodeName" size="medium" placeholder="请输入节点名称"
-                            ref="nodeNameInput" @blur="finishEditName">
+                        <el-input v-if="isEditingName" v-model="flowStore.editingNodeData.name" size="medium"
+                            placeholder="请输入节点名称" ref="nodeNameInput" @blur="finishEditName">
                         </el-input>
                         <div v-else class="current-node-name" @click="startEditName">
-                            {{ tempNodeName || '' }}
+                            {{ flowStore.editingNodeData?.name || '' }}
                             <el-icon>
                                 <Edit />
                             </el-icon>
@@ -27,9 +27,9 @@
         <div class="drawer-content-container" v-if="flowStore.selectedNode">
             <!-- 滚动内容区域 -->
             <div class="drawer-content">
-                <!-- 根据节点类型动态加载不同的设置组件 -->
-                <component :is="currentSettingComponent" v-if="currentSettingComponent"
-                    :node="flowStore.selectedNode.node" />
+                <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
+                <component :is="nodeComponent" v-if="nodeComponent" :node="flowStore.editingNodeData"
+                    ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
                 </div>
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
@@ -64,14 +64,16 @@ const flowStore = useFlowDesignStore()
 
 // 节点名称编辑状态
 const isEditingName = ref(false)
-const tempNodeName = ref('')
 const nodeNameInput = ref(null)
 
-// 根据当前选中节点类型，返回对应的设置组件
-const currentSettingComponent = computed(() => {
-    if (!flowStore.selectedNode) return null
+// 添加对当前设置组件的ref引用
+const nodeComponentRef = ref(null)
 
-    const nodeType = flowStore.selectedNode.node.type
+// 根据当前选中节点类型，返回对应的设置组件
+const nodeComponent = computed(() => {
+    if (!flowStore.selectedNode || !flowStore.editingNodeData) return null
+
+    const nodeType = flowStore.editingNodeData.type
 
     // 根据节点类型返回对应的组件
     switch (nodeType) {
@@ -82,15 +84,6 @@ const currentSettingComponent = computed(() => {
         case 'condition': return ConditionSettings
         case 'automation': return AutomationSettings
         default: return DefaultSettings
-    }
-})
-
-// 监听抽屉显示状态
-watch(() => flowStore.drawerVisible, (visible) => {
-    if (visible && flowStore.selectedNode) {
-        // 初始化临时节点名称
-        tempNodeName.value = flowStore.selectedNode.node.name || ''
-        isEditingName.value = false
     }
 })
 
@@ -111,24 +104,37 @@ const finishEditName = () => {
 
 // 处理取消
 const handleCancel = () => {
-    flowStore.closeDrawer()
+    flowStore.cancelNodeEdit()
 }
 
-// 处理保存
+// 处理保存 - 使用ref获取组件实例
 const handleSave = () => {
     if (!flowStore.selectedNode) return
 
-    // 更新节点名称
-    if (tempNodeName.value) {
-        flowStore.selectedNode.node.name = tempNodeName.value
+    // 使用ref直接获取当前设置组件实例
+    const componentInstance = nodeComponentRef.value
+
+    if (componentInstance && typeof componentInstance.saveSettings === 'function') {
+        // 调用组件的saveSettings方法
+        const valid = componentInstance.saveSettings()
+
+        // 如果验证通过，则保存节点设置
+        if (valid) {
+            // 调用store保存节点设置
+            flowStore.saveNodeSettings()
+            ElMessage.success('节点设置已保存')
+            flowStore.closeDrawer()
+        }
+    } else {
+        // 如果没有saveSettings方法，给出提示
+        const nodeTypeName = flowStore.editingNodeData?.type || '未知'
+        const nodeName = flowStore.editingNodeData?.name || '未命名节点'
+
+        ElMessage.warning('无法保存设置')
+        console.warn(`组件 ${nodeTypeName} 未实现 saveSettings 方法`)
+
+        // 不关闭抽屉，让用户有机会查看提示
     }
-
-    // 这里我们通过事件通知当前活跃的子组件进行保存
-    // 由于具体数据已经存储在 store 中，这里只需触发通知即可
-    flowStore.saveNodeSettings()
-
-    ElMessage.success('节点设置已保存')
-    flowStore.closeDrawer()
 }
 </script>
 
@@ -221,8 +227,7 @@ const handleSave = () => {
 <!-- 添加全局样式以覆盖 Element Plus 抽屉组件的默认内边距 -->
 <style>
 .node-settings-drawer .el-drawer__body {
-    padding: 0;
-    overflow: hidden;
+    padding: 0;   overflow: hidden;
     /* 防止内容区域出现双重滚动条 */
 }
 </style>

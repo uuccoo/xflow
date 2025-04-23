@@ -96,6 +96,27 @@
                 </el-checkbox>
             </el-form-item>
 
+            <!-- 连续多级主管设置 -->
+            <el-form-item v-if="approverType === 'multi_level_manager'" label="审批终点">
+                <el-radio-group v-model="approvalEndPoint" class="approval-endpoint-group">
+                    <div class="radio-item">
+                        <el-radio label="top_manager">
+                            <span class="radio-label">直到最上层主管</span>
+                        </el-radio>
+                    </div>
+                    <div class="radio-item">
+                        <el-radio label="specific_level">
+                            <span class="radio-label">不超过发起人的</span>
+                            <el-select v-model="specificLevel" placeholder="请选择级别"
+                                style="width: 200px; margin-left: 8px;">
+                                <el-option v-for="i in 20" :key="i" :label="i === 1 ? '直接主管' : `第${i}级主管`"
+                                    :value="i"></el-option>
+                            </el-select>
+                        </el-radio>
+                    </div>
+                </el-radio-group>
+            </el-form-item>
+
             <!-- 发起人自己 -->
             <el-form-item v-if="approverType === 'initiator_self'" label="发起人自己">
                 <span style="color: #909399;">发起人自己作为审批人进行审批</span>
@@ -213,6 +234,8 @@ const requireSignature = ref(false) // 是否需要签字
 const approvalTimeLimit = ref(0) // 审批期限
 const approvalTimeUnit = ref('hour') // 时间单位
 const rejectAction = ref('end_flow') // 驳回处理方式
+const approvalEndPoint = ref('top_manager') // 审批终点
+const specificLevel = ref(1) // 具体级别
 
 // 人员列表
 const approvers = ref([]) // 审批人列表
@@ -245,6 +268,10 @@ const initFormData = () => {
     approvalTimeLimit.value = props.node.props.approvalTimeLimit || 0
     approvalTimeUnit.value = props.node.props.approvalTimeUnit || 'hour'
     rejectAction.value = props.node.props.rejectAction || 'end_flow'
+
+    // 初始化审批终点
+    approvalEndPoint.value = props.node.props.approvalEndPoint || 'top_manager'
+    specificLevel.value = props.node.props.specificLevel || 1
 
     // 初始化人员列表
     approvers.value = props.node.props.approvers || []
@@ -329,6 +356,12 @@ const saveSettings = () => {
     if (approverType.value === 'department_manager') {
         props.node.props.managerType = managerType.value
         props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
+    }
+
+    // 保存连续多级主管相关
+    if (approverType.value === 'multi_level_manager') {
+        props.node.props.approvalEndPoint = approvalEndPoint.value
+        props.node.props.specificLevel = specificLevel.value
     }
 
     // 保存高级设置
@@ -453,6 +486,25 @@ defineExpose({
                 align-items: center;
                 gap: 5px;
             }
+        }
+    }
+}
+
+.approval-endpoint-group {
+    display: block;
+
+    .radio-item {
+        margin-bottom: 10px;
+
+        .radio-label {
+            display: inline-block;
+            vertical-align: middle;
+            min-width: 100px;
+        }
+
+        .el-radio {
+            display: flex;
+            align-items: center;
         }
     }
 }

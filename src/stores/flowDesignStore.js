@@ -46,6 +46,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   const selectedNode = ref(null)
   // 控制抽屉层显示
   const drawerVisible = ref(false)
+  // 编辑中的节点数据，用于实际编辑操作
+  const editingNodeData = ref(null)
 
   // 人员选择器配置
   const personSelector = reactive({
@@ -58,11 +60,15 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 选择节点
   const selectNode = (node, index, branch = null) => {
+    // 创建编辑用的节点数据副本
+    editingNodeData.value = JSON.parse(JSON.stringify(node))
+
     selectedNode.value = {
-      node,
+      node, // 保存对原始节点的引用
       index,
       branch,
     }
+
     drawerVisible.value = true
   }
 
@@ -72,17 +78,30 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 选中状态保留，只是关闭抽屉
   }
 
-  // 清除选中节点
-  const clearSelectedNode = () => {
-    selectedNode.value = null
+  // 取消节点编辑
+  const cancelNodeEdit = () => {
+    editingNodeData.value = null
     drawerVisible.value = false
   }
 
-  // 保存节点设置 - 由抽屉组件调用，用于通知各节点设置组件保存数据
+  // 清除选中节点
+  const clearSelectedNode = () => {
+    selectedNode.value = null
+    editingNodeData.value = null
+    drawerVisible.value = false
+  }
+
+  // 保存节点设置 - 将编辑中的数据同步回原始节点
   const saveNodeSettings = () => {
-    // 实际保存操作由各个子组件完成，这里作为一个通知机制
-    // 在新的组件架构中，数据已经直接更新到 node 对象，无需额外处理
-    return true
+    if (selectedNode.value && selectedNode.value.node && editingNodeData.value) {
+      // 将编辑后的数据同步到原始节点
+      Object.assign(selectedNode.value.node, editingNodeData.value)
+
+      // 清除编辑副本
+      editingNodeData.value = null
+      return true
+    }
+    return false
   }
 
   // 打开人员选择器
@@ -323,9 +342,11 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     nodeOptions,
     selectedNode,
     drawerVisible,
+    editingNodeData,
     personSelector,
     selectNode,
     closeDrawer,
+    cancelNodeEdit,
     clearSelectedNode,
     saveNodeSettings,
     openPersonSelector,
