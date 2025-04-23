@@ -47,6 +47,15 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 控制抽屉层显示
   const drawerVisible = ref(false)
 
+  // 人员选择器配置
+  const personSelector = reactive({
+    visible: false,
+    title: '选择人员',
+    type: '', // 当前选择的类型：approver, copyTo, process 等
+    selectedIds: [], // 当前已选的ID列表
+    onConfirm: null, // 确认选择后的回调函数
+  })
+
   // 选择节点
   const selectNode = (node, index, branch = null) => {
     selectedNode.value = {
@@ -67,6 +76,39 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   const clearSelectedNode = () => {
     selectedNode.value = null
     drawerVisible.value = false
+  }
+
+  // 保存节点设置 - 由抽屉组件调用，用于通知各节点设置组件保存数据
+  const saveNodeSettings = () => {
+    // 实际保存操作由各个子组件完成，这里作为一个通知机制
+    // 在新的组件架构中，数据已经直接更新到 node 对象，无需额外处理
+    return true
+  }
+
+  // 打开人员选择器
+  const openPersonSelector = (options) => {
+    personSelector.visible = true
+    personSelector.title = options.title || '选择人员'
+    personSelector.type = options.type || ''
+    personSelector.selectedIds = options.selectedIds || []
+    personSelector.onConfirm = options.onConfirm || null
+  }
+
+  // 关闭人员选择器
+  const closePersonSelector = () => {
+    personSelector.visible = false
+    personSelector.onConfirm = null
+  }
+
+  // 确认人员选择
+  const confirmPersonSelector = (selectedUsers) => {
+    if (personSelector.onConfirm && typeof personSelector.onConfirm === 'function') {
+      personSelector.onConfirm({
+        selectedUsers,
+        type: personSelector.type,
+      })
+    }
+    closePersonSelector()
   }
 
   // 导出完整流程数据
@@ -271,34 +313,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     return copiedBranch
   }
 
-  // 显示人员选择器
-  const showPersonSelector = () => {
-    console.log('显示人员选择器')
-  }
-
   // 格式化用户名称
   const formatUserNames = (users) => {
     return users.map((user) => user.name).join(', ')
-  }
-
-  // 配置节点
-  const configureNode = (node) => {
-    console.log('配置节点', node)
-  }
-
-  // 选择审批人
-  const selectApprovers = (node) => {
-    console.log('选择审批人', node)
-  }
-
-  // 选择抄送人
-  const selectUsers = (node) => {
-    console.log('选择抄送人', node)
-  }
-
-  // 选择办理人
-  const selectProcessors = (node) => {
-    console.log('选择办理人', node)
   }
 
   return {
@@ -306,9 +323,14 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     nodeOptions,
     selectedNode,
     drawerVisible,
+    personSelector,
     selectNode,
     closeDrawer,
     clearSelectedNode,
+    saveNodeSettings,
+    openPersonSelector,
+    closePersonSelector,
+    confirmPersonSelector,
     exportFlowData,
     importFlowData,
     validateFlowData,
@@ -318,12 +340,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     getNodeHeaderStyle,
     deleteNode,
     editCondition,
-    showPersonSelector,
     formatUserNames,
-    configureNode,
-    selectApprovers,
-    selectUsers,
-    selectProcessors,
     copyConditionBranch,
   }
 })

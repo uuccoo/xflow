@@ -16,7 +16,7 @@
         <!-- 节点内容 - 根据节点类型渲染不同内容 -->
         <div class="node-content">
             <!-- 审批人节点 -->
-            <div v-if="node.type === 'approver'" class="node-item" @click.stop="selectApprovers">
+            <div v-if="node.type === 'approver'" class="node-item">
                 <span>{{ node.props.approvers?.length > 0 ? formatUserNames(node.props.approvers) : '请选择审批人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -24,7 +24,7 @@
             </div>
 
             <!-- 抄送人节点 -->
-            <div v-else-if="node.type === 'copyTo'" class="node-item" @click.stop="selectUsers">
+            <div v-else-if="node.type === 'copyTo'" class="node-item">
                 <span>{{ node.props.users?.length > 0 ? formatUserNames(node.props.users) : '请选择抄送人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -32,7 +32,7 @@
             </div>
 
             <!-- 办理节点 -->
-            <div v-else-if="node.type === 'process'" class="node-item" @click.stop="selectProcessors">
+            <div v-else-if="node.type === 'process'" class="node-item">
                 <span>{{ node.props.processors?.length > 0 ? formatUserNames(node.props.processors) : '请选择办理人' }}</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -40,7 +40,7 @@
             </div>
 
             <!-- 默认内容 -->
-            <div v-else class="node-item" @click.stop="configureNode">
+            <div v-else class="node-item">
                 <span>点击配置</span>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
@@ -80,10 +80,6 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits([
-    // 所有操作已直接使用store处理，不再需要任何事件定义
-])
-
 // 节点图标
 const nodeIcon = computed(() => {
     const option = nodeOptions.value.find(option => option.type === props.node.type)
@@ -115,98 +111,12 @@ const deleteNode = () => {
     flowStore.deleteNode(props.node, props.index, props.branch);
 };
 
-// 配置当前节点
-const configureNode = () => {
-    console.log('配置节点', props.node);
-    flowStore.configureNode(props.node);
-    // 同时选中节点打开抽屉
-    flowStore.selectNode(props.node, props.index, props.branch);
-};
-
-// 选择审批人（适用于审批节点）
-const selectApprovers = () => {
-    if (props.node.type === 'approver') {
-        console.log('选择审批人', props.node);
-        flowStore.selectApprovers(props.node);
-        // 同时选中节点打开抽屉
-        flowStore.selectNode(props.node, props.index, props.branch);
-    }
-};
-
-// 选择抄送人（适用于抄送节点）
-const selectUsers = () => {
-    if (props.node.type === 'copyTo') {
-        console.log('选择抄送人', props.node);
-        flowStore.selectUsers(props.node);
-        // 同时选中节点打开抽屉
-        flowStore.selectNode(props.node, props.index, props.branch);
-    }
-};
-
-// 选择办理人（适用于办理节点）
-const selectProcessors = () => {
-    if (props.node.type === 'process') {
-        console.log('选择办理人', props.node);
-        flowStore.selectProcessors(props.node);
-        // 同时选中节点打开抽屉
-        flowStore.selectNode(props.node, props.index, props.branch);
-    }
-};
-
-// 根据节点类型获取操作列表
-const getNodeActions = () => {
-    const actions = [];
-
-    // 基础操作-删除
-    actions.push({
-        name: '删除',
-        icon: 'Delete',
-        action: deleteNode
-    });
-
-    // 根据节点类型添加特定操作
-    if (props.node.type === 'approver') {
-        actions.push({
-            name: '选择审批人',
-            icon: 'User',
-            action: selectApprovers
-        });
-    } else if (props.node.type === 'copyTo') {
-        actions.push({
-            name: '选择抄送人',
-            icon: 'Document',
-            action: selectUsers
-        });
-    } else if (props.node.type === 'process') {
-        actions.push({
-            name: '选择办理人',
-            icon: 'Edit',
-            action: selectProcessors
-        });
-    } else if (props.node.type === 'payment') {
-        actions.push({
-            name: '设置付款人',
-            icon: 'Money',
-            action: () => flowStore.configureNode(props.node)
-        });
-    }
-
-    // 高级配置选项
-    actions.push({
-        name: '高级设置',
-        icon: 'Setting',
-        action: configureNode
-    });
-
-    return actions;
-};
-
 // 格式化人员名称列表显示
 const formatUserNames = (users = []) => {
     if (!Array.isArray(users) || users.length === 0) {
         return '未设置';
     }
-    return users.map(user => user.name).join(', ');
+    return flowStore.formatUserNames(users);
 };
 </script>
 
