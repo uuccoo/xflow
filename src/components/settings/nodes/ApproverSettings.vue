@@ -33,7 +33,7 @@
                     添加
                 </el-button>
                 <div v-if="approvers.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in approvers" :key="idx" closable @close="removeApprover(idx)">
+                    <el-tag v-for="(user, idx) in approvers" :key="user" closable @close="removeApprover(idx)">
                         {{ user.name }}
                     </el-tag>
                 </div>
@@ -71,7 +71,7 @@
                     添加
                 </el-button>
                 <div v-if="selectRange.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in selectRange" :key="idx" closable @close="removeSelectRangeUser(idx)">
+                    <el-tag v-for="(user, idx) in selectRange" :key="user" closable @close="removeSelectRangeUser(idx)">
                         {{ user.name }}
                     </el-tag>
                 </div>
@@ -334,6 +334,17 @@ const removeSelectRangeUser = (index) => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
+    // 验证必填项
+    if (approverType.value === 'designated' && approvers.value.length === 0) {
+        ElMessage.warning('请至少选择一名审批人')
+        return false
+    }
+
+    if (approverType.value === 'initiator_select' && rangeType.value === 'specified' && selectRange.value.length === 0) {
+        ElMessage.warning('请至少选择一名发起人自选范围人员')
+        return false
+    }
+
     // 确保节点有 props 属性
     if (!props.node.props) {
         props.node.props = {}
@@ -370,16 +381,9 @@ const saveSettings = () => {
     props.node.props.approvalTimeUnit = approvalTimeUnit.value
     props.node.props.rejectAction = rejectAction.value
 
-    // 验证必填项
-    if (approverType.value === 'designated' && approvers.value.length === 0) {
-        ElMessage.warning('请至少选择一名审批人')
-        return false
-    }
-
-    if (approverType.value === 'initiator_select' && rangeType.value === 'specified' && selectRange.value.length === 0) {
-        ElMessage.warning('请至少选择一名发起人自选范围人员')
-        return false
-    }
+    // 保存人员列表
+    props.node.props.approvers = approvers.value
+    props.node.props.selectRange = selectRange.value
 
     return true
 }
@@ -417,9 +421,13 @@ defineExpose({
     }
 }
 
-.select-personnel.el-button .el-icon {
-    margin-right: 4px;
-    vertical-align: middle;
+.select-personnel.el-button {
+    margin-right: 10px;
+
+    .el-icon {
+        margin-right: 4px;
+        vertical-align: middle;
+    }
 }
 
 .selected-users {

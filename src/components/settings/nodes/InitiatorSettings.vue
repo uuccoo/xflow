@@ -15,7 +15,7 @@
                     添加
                 </el-button>
                 <div v-if="selectedInitiators.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in selectedInitiators" :key="idx" closable @close="removeUser(idx)">
+                    <el-tag v-for="(user, idx) in selectedInitiators" :key="user" closable @close="removeUser(idx)">
                         {{ user.name }}
                     </el-tag>
                 </div>
@@ -109,9 +109,13 @@ defineExpose({
     margin-bottom: 40px;
 }
 
-.select-personnel.el-button .el-icon {
-    margin-right: 4px;
-    vertical-align: middle;
+.select-personnel.el-button {
+    margin-right: 10px;
+
+    .el-icon {
+        margin-right: 4px;
+        vertical-align: middle;
+    }
 }
 
 .selected-users {

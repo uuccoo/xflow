@@ -1,16 +1,16 @@
 <template>
     <div class="node-setting-form">
-        <h3 class="setting-section-title">抄送人设置</h3>
         <el-form label-position="top">
-            <el-form-item label="抄送人">
-                <el-button type="primary" @click="showPersonSelector">
+            <!-- 发起人自选需要从哪些人中选择 -->
+            <el-form-item label="指定人员" label-position="left" required>
+                <el-button class="select-personnel" type="primary" @click="showPersonSelector">
                     <el-icon>
                         <Plus />
                     </el-icon>
-                    选择抄送人
+                    添加
                 </el-button>
                 <div v-if="users.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in users" :key="idx" closable @close="removeUser(idx)">
+                    <el-tag v-for="(user, idx) in users" :key="user" closable @close="removeUser(idx)">
                         {{ user.name }}
                     </el-tag>
                 </div>
@@ -23,7 +23,6 @@
 import { ref, watch, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
-import { ElMessage } from 'element-plus'
 
 // 接收节点数据
 const props = defineProps({
@@ -106,6 +105,15 @@ defineExpose({
     font-size: 16px;
     font-weight: 500;
     color: #303133;
+}
+
+.select-personnel.el-button {
+    margin-right: 10px;
+
+    .el-icon {
+        margin-right: 4px;
+        vertical-align: middle;
+    }
 }
 
 .selected-users {

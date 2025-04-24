@@ -118,6 +118,29 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
+    // 根据动作类型进行验证
+    if (actionType.value === 'notification') {
+        // 验证必填项
+        if (!notificationTitle.value) {
+            ElMessage.warning('请填写通知标题')
+            return false
+        }
+    }
+    else if (actionType.value === 'update') {
+        // 验证必填项
+        if (!dataSource.value) {
+            ElMessage.warning('请填写数据源信息')
+            return false
+        }
+    }
+    else if (actionType.value === 'external') {
+        // 验证必填项
+        if (!externalApi.value) {
+            ElMessage.warning('请填写外部系统 API')
+            return false
+        }
+    }
+
     // 确保节点有 props 属性
     if (!props.node.props) {
         props.node.props = {}
@@ -131,32 +154,14 @@ const saveSettings = () => {
         props.node.props.notificationType = notificationType.value
         props.node.props.notificationTitle = notificationTitle.value
         props.node.props.notificationContent = notificationContent.value
-
-        // 验证必填项
-        if (!notificationTitle.value) {
-            ElMessage.warning('请填写通知标题')
-            return false
-        }
     }
     else if (actionType.value === 'update') {
         props.node.props.dataOperation = dataOperation.value
         props.node.props.dataSource = dataSource.value
-
-        // 验证必填项
-        if (!dataSource.value) {
-            ElMessage.warning('请填写数据源信息')
-            return false
-        }
     }
     else if (actionType.value === 'external') {
         props.node.props.externalApi = externalApi.value
         props.node.props.externalTriggerMethod = externalTriggerMethod.value
-
-        // 验证必填项
-        if (!externalApi.value) {
-            ElMessage.warning('请填写外部系统 API')
-            return false
-        }
     }
 
     return true

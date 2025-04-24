@@ -37,9 +37,14 @@ const initiatorContentText = computed(() => {
     const initiatorProps = initiator.value.props;
 
     // 根据发起人类型处理不同内容
-    if (initiatorProps.initiatorScope === 'specified' && Array.isArray(initiatorProps.initiators) && initiatorProps.initiators.length > 0) {
-        return formatUserNames(initiatorProps.initiators);
-    } else {
+    if (initiatorProps.initiatorScope === 'specified') {
+        if (Array.isArray(initiatorProps.initiators) && initiatorProps.initiators.length > 0) {
+            return formatUserNames(initiatorProps.initiators);
+        } else {
+            return '未指定人员';
+        }
+    }
+    else {
         return '所有人';
     }
 });

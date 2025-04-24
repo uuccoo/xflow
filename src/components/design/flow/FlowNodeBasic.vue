@@ -87,7 +87,7 @@ const nodeContentText = computed(() => {
         case 'copyTo':
             return nodeProps.users?.length > 0 ? formatUserNames(nodeProps.users) : '请选择抄送人';
         case 'process':
-            return nodeProps.processors?.length > 0 ? formatUserNames(nodeProps.processors) : '请选择办理人';
+            return getProcessorContent(nodeProps);
         default:
             return '点击配置';
     }
@@ -98,7 +98,7 @@ const getApproverContent = (nodeProps) => {
     // 根据审批人类型返回不同内容
     switch (nodeProps.approverType) {
         case 'designated':
-            return nodeProps.approvers?.length > 0 ? formatUserNames(nodeProps.approvers) : '请选择指定审批人';
+            return nodeProps.approvers?.length > 0 ? formatUserNames(nodeProps.approvers) : '未指定人员';
         case 'initiator_select':
             return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
         case 'multi_level_manager':
@@ -117,6 +117,33 @@ const getApproverContent = (nodeProps) => {
             return '发起人自己';
         default:
             return '请选择审批人';
+    }
+};
+
+// 获取办理人节点内容
+const getProcessorContent = (nodeProps) => {
+    // 根据办理人类型返回不同内容
+    switch (nodeProps.processorType) {
+        case 'designated':
+            return nodeProps.processors?.length > 0 ? formatUserNames(nodeProps.processors) : '未指定人员';
+        case 'initiator_select':
+            return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
+        case 'multi_level_manager':
+            let text = '连续多级主管';
+            if (nodeProps.approvalEndPoint === 'specific_level') {
+                text += nodeProps.specificLevel === 1
+                    ? '(直接主管)'
+                    : `(不超过第${nodeProps.specificLevel}级主管)`;
+            }
+            return text;
+        case 'department_manager':
+            return nodeProps.managerType === 1 ? '直接主管' : `第${nodeProps.managerType}级主管`;
+        case 'role':
+            return '角色办理';
+        case 'initiator_self':
+            return '发起人自己';
+        default:
+            return '请选择办理人';
     }
 };
 
