@@ -10,7 +10,9 @@
         </div>
         <div class="node-content">
             <div class="node-item">
-                <span>{{ initiator.props.initiator || '所有人' }}</span>
+                <div class="node-item-content">
+                    <span>{{ initiatorContentText }}</span>
+                </div>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
                 </el-icon>
@@ -30,11 +32,30 @@ const flowStore = useFlowDesignStore()
 // 从 store 获取发起人节点数据
 const initiator = computed(() => flowStore.flowData.initiator)
 
+// 计算发起人内容文本 - 简化为只有所有人和指定人员两种情况
+const initiatorContentText = computed(() => {
+    const initiatorProps = initiator.value.props;
+
+    // 根据发起人类型处理不同内容
+    if (initiatorProps.initiatorScope === 'specified' && Array.isArray(initiatorProps.initiators) && initiatorProps.initiators.length > 0) {
+        return formatUserNames(initiatorProps.initiators);
+    } else {
+        return '所有人';
+    }
+});
+
 // 点击节点，选中并显示抽屉层
 const handleNodeClick = () => {
     // 调用store的selectNode方法选中发起人节点
     flowStore.selectNode(initiator.value, -1)
 }
+
+const formatUserNames = (users = []) => {
+    if (!Array.isArray(users) || users.length === 0) {
+        return '未设置';
+    }
+    return flowStore.formatUserNames(users);
+};
 </script>
 
 <style scoped lang="scss">
@@ -87,7 +108,7 @@ const handleNodeClick = () => {
             padding: 10px 12px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             color: #606266;
             font-size: 14px;
             cursor: pointer;
@@ -96,9 +117,26 @@ const handleNodeClick = () => {
                 background-color: #f5f7fa;
             }
 
+            .node-item-content {
+                flex-grow: 1;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+                /* 限制最多显示3行 */
+                line-clamp: 3;
+                /* 标准属性，限制最多显示3行 */
+                text-overflow: ellipsis;
+                line-height: 20px;
+                /* 设定行高 */
+            }
+
             .chevron-icon {
+                margin-left: 8px;
+                flex-shrink: 0;
                 color: #c0c4cc;
-                font-size: 12px;
+                align-self: center;
+                /* 使箭头垂直居中对齐 */
             }
         }
     }

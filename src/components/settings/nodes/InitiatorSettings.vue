@@ -80,9 +80,7 @@ const showPersonSelector = () => {
         // 处理选择结果的回调
         onConfirm: (result) => {
             selectedInitiators.value = result.selectedUsers
-            // 同步到节点数据
-            props.node.props.initiators = result.selectedUsers
-            ElMessage.success('发起人范围设置成功')
+            ElMessage.success('发起人范围已选择，请点击保存生效')
         }
     })
 }
@@ -90,8 +88,6 @@ const showPersonSelector = () => {
 // 删除已选择的用户
 const removeUser = (index) => {
     selectedInitiators.value.splice(index, 1)
-    // 同步到节点数据
-    props.node.props.initiators = [...selectedInitiators.value]
 }
 
 // 向父组件暴露保存方法，由父组件在保存时调用

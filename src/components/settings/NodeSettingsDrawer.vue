@@ -6,11 +6,11 @@
             <div class="drawer-header">
                 <div class="drawer-title-container">
                     <div class="node-name-edit">
-                        <el-input v-if="isEditingName" v-model="flowStore.editingNodeData.name" size="medium"
-                            placeholder="请输入节点名称" ref="nodeNameInput" @blur="finishEditName">
+                        <el-input v-if="isEditingName" v-model="localNodeName" size="medium" placeholder="请输入节点名称"
+                            ref="nodeNameInput" @blur="finishEditName">
                         </el-input>
                         <div v-else class="current-node-name" @click="startEditName">
-                            {{ flowStore.editingNodeData?.name || '' }}
+                            {{ localNodeName }}
                             <el-icon>
                                 <Edit />
                             </el-icon>
@@ -28,7 +28,7 @@
             <!-- 滚动内容区域 -->
             <div class="drawer-content">
                 <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
-                <component :is="nodeComponent" v-if="nodeComponent" :node="flowStore.editingNodeData"
+                <component :is="nodeComponent" v-if="nodeComponent" :node="flowStore.selectedNode.node"
                     ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
@@ -65,15 +65,33 @@ const flowStore = useFlowDesignStore()
 // 节点名称编辑状态
 const isEditingName = ref(false)
 const nodeNameInput = ref(null)
+const localNodeName = ref('')
 
 // 添加对当前设置组件的ref引用
 const nodeComponentRef = ref(null)
 
+// 初始化表单数据
+const initFormData = () => {
+    if (flowStore.selectedNode?.node) {
+        localNodeName.value = flowStore.selectedNode.node.name || ''
+    }
+}
+
+// 监听节点变化
+watch(() => flowStore.selectedNode?.node, () => {
+    initFormData()
+}, { immediate: true, deep: true })
+
+// 组件挂载时初始化数据
+onMounted(() => {
+    initFormData()
+})
+
 // 根据当前选中节点类型，返回对应的设置组件
 const nodeComponent = computed(() => {
-    if (!flowStore.selectedNode || !flowStore.editingNodeData) return null
+    if (!flowStore.selectedNode) return null
 
-    const nodeType = flowStore.editingNodeData.type
+    const nodeType = flowStore.selectedNode.node.type
 
     // 根据节点类型返回对应的组件
     switch (nodeType) {
@@ -100,11 +118,13 @@ const startEditName = () => {
 // 完成编辑节点名称
 const finishEditName = () => {
     isEditingName.value = false
+    // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
 // 处理取消
 const handleCancel = () => {
-    flowStore.cancelNodeEdit()
+    flowStore.closeDrawer()
+    initFormData()
 }
 
 // 处理保存 - 使用ref获取组件实例
@@ -120,15 +140,17 @@ const handleSave = () => {
 
         // 如果验证通过，则保存节点设置
         if (valid) {
-            // 调用store保存节点设置
-            flowStore.saveNodeSettings()
+            // 将节点名称应用到原始节点
+            if (flowStore.selectedNode?.node && localNodeName.value) {
+                flowStore.selectedNode.node.name = localNodeName.value
+            }
             ElMessage.success('节点设置已保存')
             flowStore.closeDrawer()
         }
     } else {
         // 如果没有saveSettings方法，给出提示
-        const nodeTypeName = flowStore.editingNodeData?.type || '未知'
-        const nodeName = flowStore.editingNodeData?.name || '未命名节点'
+        const nodeTypeName = flowStore.selectedNode?.node?.type || '未知'
+        const nodeName = flowStore.selectedNode?.node?.name || '未命名节点'
 
         ElMessage.warning('无法保存设置')
         console.warn(`组件 ${nodeTypeName} 未实现 saveSettings 方法`)
@@ -227,7 +249,8 @@ const handleSave = () => {
 <!-- 添加全局样式以覆盖 Element Plus 抽屉组件的默认内边距 -->
 <style>
 .node-settings-drawer .el-drawer__body {
-    padding: 0;   overflow: hidden;
+    padding: 0;
+    overflow: hidden;
     /* 防止内容区域出现双重滚动条 */
 }
 </style>

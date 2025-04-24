@@ -143,27 +143,43 @@
 
             <!-- 高级设置部分 -->
             <div class="advanced-settings-section">
-                <div class="section-title">高级设置</div>
+                <!-- <div class="section-title">高级设置</div> -->
 
                 <!-- 审批人为空时 -->
                 <div class="setting-item">
                     <div class="setting-label">
-                        <span class="icon-user">👤</span> 审批人为空时
+                        <span class="icon-user">审批人为空时</span>
                     </div>
                     <div class="setting-options">
                         <el-radio-group v-model="emptyApproverAction">
                             <el-radio label="auto_pass">自动通过</el-radio>
                             <el-radio label="auto_reject">自动驳回</el-radio>
-                            <el-radio label="transfer_manager">转交审批管理员</el-radio>
+                            <el-radio label="transfer_manager">转交到管理员</el-radio>
                             <el-radio label="transfer_specific">转交到指定人员</el-radio>
                         </el-radio-group>
                     </div>
                 </div>
+                <el-divider></el-divider>
+
+                <!-- 如果审批被驳回 -->
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>如果审批被驳回</span>
+                    </div>
+                    <div class="setting-options">
+                        <el-radio-group v-model="rejectAction">
+                            <el-radio label="end_flow">直接结束流程</el-radio>
+                            <el-radio label="back_previous">驳回到上一级审批节点</el-radio>
+                            <el-radio label="back_specific">驳回到指定节点</el-radio>
+                        </el-radio-group>
+                    </div>
+                </div>
+                <el-divider></el-divider>
 
                 <!-- 审批同意时是否需要签字 -->
                 <div class="setting-item">
                     <div class="setting-label">
-                        <span class="icon-signature">✍️</span> 审批同意时是否需要签字
+                        <span>审批同意时是否需要签字</span>
                     </div>
                     <div class="setting-options">
                         <el-switch v-model="requireSignature" active-text="需要" inactive-text="不用" :active-value="true"
@@ -171,11 +187,12 @@
                         </el-switch>
                     </div>
                 </div>
+                <el-divider></el-divider>
 
                 <!-- 审批期限 -->
                 <div class="setting-item">
                     <div class="setting-label">
-                        <span class="icon-clock">⏱️</span> 审批期限（为 0 则不生效）
+                        <span>审批期限（为 0 则不生效）</span>
                     </div>
                     <div class="setting-options time-limit-input">
                         <el-input-number v-model="approvalTimeLimit" :min="0"
@@ -184,20 +201,6 @@
                             <el-option label="小时" value="hour"></el-option>
                             <el-option label="天" value="day"></el-option>
                         </el-select>
-                    </div>
-                </div>
-
-                <!-- 如果审批被驳回 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span class="icon-reject">👎</span> 如果审批被驳回
-                    </div>
-                    <div class="setting-options">
-                        <el-radio-group v-model="rejectAction">
-                            <el-radio label="end_flow">直接结束流程</el-radio>
-                            <el-radio label="back_previous">驳回到上一级审批节点</el-radio>
-                            <el-radio label="back_specific">驳回到指定节点</el-radio>
-                        </el-radio-group>
                     </div>
                 </div>
             </div>
@@ -310,12 +313,10 @@ const showPersonSelector = (type) => {
         onConfirm: (result) => {
             if (type === 'approver') {
                 approvers.value = result.selectedUsers
-                props.node.props.approvers = result.selectedUsers
-                ElMessage.success('审批人设置成功')
+                ElMessage.success('审批人已选择，请点击保存生效')
             } else if (type === 'initiatorSelectRange') {
                 selectRange.value = result.selectedUsers
-                props.node.props.selectRange = result.selectedUsers
-                ElMessage.success('发起人自选范围设置成功')
+                ElMessage.success('发起人自选范围已选择，请点击保存生效')
             }
         }
     })
@@ -324,13 +325,11 @@ const showPersonSelector = (type) => {
 // 删除审批人
 const removeApprover = (index) => {
     approvers.value.splice(index, 1)
-    props.node.props.approvers = [...approvers.value]
 }
 
 // 删除发起人自选范围人员
 const removeSelectRangeUser = (index) => {
     selectRange.value.splice(index, 1)
-    props.node.props.selectRange = [...selectRange.value]
 }
 
 // 向父组件暴露保存方法

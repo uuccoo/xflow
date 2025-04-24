@@ -72,8 +72,7 @@ const showPersonSelector = () => {
         // 处理选择结果的回调
         onConfirm: (result) => {
             users.value = result.selectedUsers
-            props.node.props.users = result.selectedUsers
-            ElMessage.success('抄送人设置成功')
+            ElMessage.success('抄送人已选择，请点击保存生效')
         }
     })
 }
@@ -81,7 +80,6 @@ const showPersonSelector = () => {
 // 删除抄送人
 const removeUser = (index) => {
     users.value.splice(index, 1)
-    props.node.props.users = [...users.value]
 }
 
 // 向父组件暴露保存方法

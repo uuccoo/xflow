@@ -13,7 +13,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
       type: 'initiator',
       name: '发起人',
       props: {
-        initiator: 'zc企业',
+        initiator: [],
       },
     },
     nodes: [],
@@ -46,8 +46,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   const selectedNode = ref(null)
   // 控制抽屉层显示
   const drawerVisible = ref(false)
-  // 编辑中的节点数据，用于实际编辑操作
-  const editingNodeData = ref(null)
 
   // 人员选择器配置
   const personSelector = reactive({
@@ -60,9 +58,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 选择节点
   const selectNode = (node, index, branch = null) => {
-    // 创建编辑用的节点数据副本
-    editingNodeData.value = JSON.parse(JSON.stringify(node))
-
     selectedNode.value = {
       node, // 保存对原始节点的引用
       index,
@@ -80,28 +75,13 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 取消节点编辑
   const cancelNodeEdit = () => {
-    editingNodeData.value = null
     drawerVisible.value = false
   }
 
   // 清除选中节点
   const clearSelectedNode = () => {
     selectedNode.value = null
-    editingNodeData.value = null
     drawerVisible.value = false
-  }
-
-  // 保存节点设置 - 将编辑中的数据同步回原始节点
-  const saveNodeSettings = () => {
-    if (selectedNode.value && selectedNode.value.node && editingNodeData.value) {
-      // 将编辑后的数据同步到原始节点
-      Object.assign(selectedNode.value.node, editingNodeData.value)
-
-      // 清除编辑副本
-      editingNodeData.value = null
-      return true
-    }
-    return false
   }
 
   // 打开人员选择器
@@ -342,13 +322,11 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     nodeOptions,
     selectedNode,
     drawerVisible,
-    editingNodeData,
     personSelector,
     selectNode,
     closeDrawer,
     cancelNodeEdit,
     clearSelectedNode,
-    saveNodeSettings,
     openPersonSelector,
     closePersonSelector,
     confirmPersonSelector,

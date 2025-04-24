@@ -15,33 +15,11 @@
 
         <!-- 节点内容 - 根据节点类型渲染不同内容 -->
         <div class="node-content">
-            <!-- 审批人节点 -->
-            <div v-if="node.type === 'approver'" class="node-item">
-                <span>{{ node.props.approvers?.length > 0 ? formatUserNames(node.props.approvers) : '请选择审批人' }}</span>
-                <el-icon class="chevron-icon">
-                    <ArrowRight />
-                </el-icon>
-            </div>
-
-            <!-- 抄送人节点 -->
-            <div v-else-if="node.type === 'copyTo'" class="node-item">
-                <span>{{ node.props.users?.length > 0 ? formatUserNames(node.props.users) : '请选择抄送人' }}</span>
-                <el-icon class="chevron-icon">
-                    <ArrowRight />
-                </el-icon>
-            </div>
-
-            <!-- 办理节点 -->
-            <div v-else-if="node.type === 'process'" class="node-item">
-                <span>{{ node.props.processors?.length > 0 ? formatUserNames(node.props.processors) : '请选择办理人' }}</span>
-                <el-icon class="chevron-icon">
-                    <ArrowRight />
-                </el-icon>
-            </div>
-
-            <!-- 默认内容 -->
-            <div v-else class="node-item">
-                <span>点击配置</span>
+            <!-- 使用计算属性来展示节点内容 -->
+            <div class="node-item">
+                <div class="node-item-content">
+                    <span>{{ nodeContentText }}</span>
+                </div>
                 <el-icon class="chevron-icon">
                     <ArrowRight />
                 </el-icon>
@@ -97,6 +75,50 @@ const nodeHeaderStyle = computed(() => {
     const option = nodeOptions.value.find(option => option.type === props.node.type)
     return option ? { backgroundColor: option.headerBg } : {}
 })
+
+// 计算节点内容文本
+const nodeContentText = computed(() => {
+    const { type, props: nodeProps } = props.node;
+
+    // 根据节点类型处理不同内容
+    switch (type) {
+        case 'approver':
+            return getApproverContent(nodeProps);
+        case 'copyTo':
+            return nodeProps.users?.length > 0 ? formatUserNames(nodeProps.users) : '请选择抄送人';
+        case 'process':
+            return nodeProps.processors?.length > 0 ? formatUserNames(nodeProps.processors) : '请选择办理人';
+        default:
+            return '点击配置';
+    }
+});
+
+// 获取审批人节点内容
+const getApproverContent = (nodeProps) => {
+    // 根据审批人类型返回不同内容
+    switch (nodeProps.approverType) {
+        case 'designated':
+            return nodeProps.approvers?.length > 0 ? formatUserNames(nodeProps.approvers) : '请选择指定审批人';
+        case 'initiator_select':
+            return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
+        case 'multi_level_manager':
+            let text = '连续多级主管';
+            if (nodeProps.approvalEndPoint === 'specific_level') {
+                text += nodeProps.specificLevel === 1
+                    ? '(直接主管)'
+                    : `(不超过第${nodeProps.specificLevel}级主管)`;
+            }
+            return text;
+        case 'department_manager':
+            return nodeProps.managerType === 1 ? '直接主管' : `第${nodeProps.managerType}级主管`;
+        case 'role':
+            return '角色审批';
+        case 'initiator_self':
+            return '发起人自己';
+        default:
+            return '请选择审批人';
+    }
+};
 
 // 点击节点，选中并显示抽屉层
 const handleNodeClick = () => {
@@ -188,13 +210,33 @@ const formatUserNames = (users = []) => {
     .node-item {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         color: #606266;
         font-size: 14px;
         cursor: pointer;
+        max-height: 60px;
+        /* 限制最大高度，大约3行文本的高度 */
+
+        .node-item-content {
+            flex-grow: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            /* 限制最多显示3行 */
+            line-clamp: 3;
+            /* 标准属性，限制最多显示3行 */
+            text-overflow: ellipsis;
+            line-height: 20px;
+            /* 设定行高 */
+        }
 
         .chevron-icon {
+            margin-left: 8px;
+            flex-shrink: 0;
             color: #c0c4cc;
+            align-self: center;
+            /* 使箭头垂直居中对齐 */
         }
     }
 }
