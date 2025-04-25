@@ -3,17 +3,8 @@
         <el-form label-position="top">
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item label="指定人员" label-position="left" required>
-                <el-button class="select-personnel" type="primary" @click="showPersonSelector">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                    添加
-                </el-button>
-                <div v-if="users.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in users" :key="user" closable @close="removeUser(idx)">
-                        {{ user.name }}
-                    </el-tag>
-                </div>
+                <designated-person-selector v-model="users" title="选择抄送人" button-text="添加" selector-type="copyTo"
+                    :required="true" />
             </el-form-item>
         </el-form>
     </div>
@@ -21,8 +12,9 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { ElMessage } from 'element-plus'
+import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 
 // 接收节点数据
 const props = defineProps({
@@ -59,30 +51,14 @@ onMounted(() => {
     initFormData()
 })
 
-// 显示人员选择器
-const showPersonSelector = () => {
-    const selectedIds = users.value.map(user => user.id)
-
-    // 使用 store 中的方法打开人员选择器
-    flowStore.openPersonSelector({
-        title: '选择抄送人',
-        type: 'copyTo',
-        selectedIds,
-        // 处理选择结果的回调
-        onConfirm: (result) => {
-            users.value = result.selectedUsers
-            ElMessage.success('抄送人已选择，请点击保存生效')
-        }
-    })
-}
-
-// 删除抄送人
-const removeUser = (index) => {
-    users.value.splice(index, 1)
-}
-
 // 向父组件暴露保存方法
 const saveSettings = () => {
+    // 验证是否选择了抄送人
+    if (users.value.length === 0) {
+        ElMessage.warning('请至少选择一名抄送人')
+        return false
+    }
+
     // 保存抄送人列表
     props.node.props.users = users.value
     return true
@@ -105,21 +81,5 @@ defineExpose({
     font-size: 16px;
     font-weight: 500;
     color: #303133;
-}
-
-.select-personnel.el-button {
-    margin-right: 10px;
-
-    .el-icon {
-        margin-right: 4px;
-        vertical-align: middle;
-    }
-}
-
-.selected-users {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
 }
 </style>

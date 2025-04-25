@@ -46,10 +46,6 @@
 
     <!-- 引入节点设置抽屉组件 -->
     <node-settings-drawer />
-
-    <!-- 人员选择组件 -->
-    <person-selector v-model="flowStore.personSelector.visible" :title="flowStore.personSelector.title"
-      :selected-ids="flowStore.personSelector.selectedIds" @confirm="handlePersonConfirm" />
   </div>
 </template>
 
@@ -57,7 +53,6 @@
 import { Connection, Document, Edit, Money, Setting, Sort, TurnOff, User, Plus, Minus, Refresh } from '@element-plus/icons-vue'
 import NodeAddButton from './NodeAddButton.vue'
 import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
-import PersonSelector from '../common/PersonSelector.vue'
 import NodeSettingsDrawer from '../settings/NodeSettingsDrawer.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { ref, computed } from 'vue'
@@ -100,12 +95,6 @@ const zoomOut = () => {
 
 const resetZoom = () => {
   zoom.value = 1
-}
-
-// 处理人员选择确认
-const handlePersonConfirm = (result) => {
-  // 调用 store 中的确认方法
-  flowStore.confirmPersonSelector(result.selectedUsers)
 }
 </script>
 

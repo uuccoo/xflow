@@ -26,17 +26,8 @@
 
             <!-- 指定人员的设置 -->
             <el-form-item v-if="processorType === 'designated'" label="指定人员" label-position="left" required>
-                <el-button class="select-personnel" type="primary" @click="showPersonSelector">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                    添加
-                </el-button>
-                <div v-if="processors.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in processors" :key="idx" closable @close="removeUser(idx)">
-                        {{ user.name }}
-                    </el-tag>
-                </div>
+                <designated-person-selector v-model="processors" title="选择办理人" button-text="添加" selector-type="process"
+                    :required="true" />
             </el-form-item>
 
             <!-- 发起人自选的子选项 -->
@@ -64,17 +55,8 @@
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item v-if="processorType === 'initiator_select' && rangeType === 'specified'" label="指定人员"
                 label-position="left" required>
-                <el-button class="select-personnel" type="primary" @click="showRangePersonSelector">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                    添加
-                </el-button>
-                <div v-if="selectRange.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in selectRange" :key="idx" closable @close="removeSelectRangeUser(idx)">
-                        {{ user.name }}
-                    </el-tag>
-                </div>
+                <personnel-selector v-model="selectRange" title="选择发起人自选范围" button-text="添加"
+                    selector-type="processRange" :required="true" />
             </el-form-item>
 
             <!-- 部门主管设置 -->
@@ -143,9 +125,10 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { Plus, QuestionFilled } from '@element-plus/icons-vue'
+import { QuestionFilled } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
+import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 
 // 接收节点数据
 const props = defineProps({
@@ -218,50 +201,6 @@ watch(() => props.node, () => {
 onMounted(() => {
     initFormData()
 })
-
-// 显示人员选择器
-const showPersonSelector = () => {
-    const selectedIds = processors.value.map(user => user.id)
-
-    // 使用 store 中的方法打开人员选择器
-    flowStore.openPersonSelector({
-        title: '选择办理人',
-        type: 'process',
-        selectedIds,
-        // 处理选择结果的回调
-        onConfirm: (result) => {
-            processors.value = result.selectedUsers
-            ElMessage.success('办理人已选择，请点击保存生效')
-        }
-    })
-}
-
-// 显示范围人员选择器
-const showRangePersonSelector = () => {
-    const selectedIds = selectRange.value.map(user => user.id)
-
-    // 使用 store 中的方法打开人员选择器
-    flowStore.openPersonSelector({
-        title: '选择发起人自选范围',
-        type: 'processRange',
-        selectedIds,
-        // 处理选择结果的回调
-        onConfirm: (result) => {
-            selectRange.value = result.selectedUsers
-            ElMessage.success('发起人自选范围已选择，请点击保存生效')
-        }
-    })
-}
-
-// 删除办理人
-const removeUser = (index) => {
-    processors.value.splice(index, 1)
-}
-
-// 删除发起人自选范围人员
-const removeSelectRangeUser = (index) => {
-    selectRange.value.splice(index, 1)
-}
 
 // 向父组件暴露保存方法
 const saveSettings = () => {

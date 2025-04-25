@@ -47,15 +47,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 控制抽屉层显示
   const drawerVisible = ref(false)
 
-  // 人员选择器配置
-  const personSelector = reactive({
-    visible: false,
-    title: '选择人员',
-    type: '', // 当前选择的类型：approver, copyTo, process 等
-    selectedIds: [], // 当前已选的ID列表
-    onConfirm: null, // 确认选择后的回调函数
-  })
-
   // 选择节点
   const selectNode = (node, index, branch = null) => {
     selectedNode.value = {
@@ -82,32 +73,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   const clearSelectedNode = () => {
     selectedNode.value = null
     drawerVisible.value = false
-  }
-
-  // 打开人员选择器
-  const openPersonSelector = (options) => {
-    personSelector.visible = true
-    personSelector.title = options.title || '选择人员'
-    personSelector.type = options.type || ''
-    personSelector.selectedIds = options.selectedIds || []
-    personSelector.onConfirm = options.onConfirm || null
-  }
-
-  // 关闭人员选择器
-  const closePersonSelector = () => {
-    personSelector.visible = false
-    personSelector.onConfirm = null
-  }
-
-  // 确认人员选择
-  const confirmPersonSelector = (selectedUsers) => {
-    if (personSelector.onConfirm && typeof personSelector.onConfirm === 'function') {
-      personSelector.onConfirm({
-        selectedUsers,
-        type: personSelector.type,
-      })
-    }
-    closePersonSelector()
   }
 
   // 导出完整流程数据
@@ -322,14 +287,10 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     nodeOptions,
     selectedNode,
     drawerVisible,
-    personSelector,
     selectNode,
     closeDrawer,
     cancelNodeEdit,
     clearSelectedNode,
-    openPersonSelector,
-    closePersonSelector,
-    confirmPersonSelector,
     exportFlowData,
     importFlowData,
     validateFlowData,

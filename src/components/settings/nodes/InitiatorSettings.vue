@@ -8,17 +8,8 @@
                 </el-select>
             </el-form-item>
             <el-form-item v-if="initiatorScope !== 'all'" label="指定人员" label-position="left" required>
-                <el-button class="select-personnel" type="primary" @click="showPersonSelector">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                    添加
-                </el-button>
-                <div v-if="selectedInitiators.length" class="selected-users">
-                    <el-tag v-for="(user, idx) in selectedInitiators" :key="user" closable @close="removeUser(idx)">
-                        {{ user.name }}
-                    </el-tag>
-                </div>
+                <designated-person-selector v-model="selectedInitiators" title="选择发起人范围" button-text="添加"
+                    selector-type="initiator" :required="true" />
             </el-form-item>
         </el-form>
     </div>
@@ -26,9 +17,9 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
+import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 
 // 接收节点数据作为属性
 const props = defineProps({
@@ -69,29 +60,14 @@ onMounted(() => {
     initFormData()
 })
 
-// 显示人员选择器
-const showPersonSelector = () => {
-    const currentIds = selectedInitiators.value.map(user => user.id)
-    // 使用 store 中的方法打开人员选择器
-    flowStore.openPersonSelector({
-        title: '选择发起人范围',
-        type: 'initiator',
-        selectedIds: currentIds,
-        // 处理选择结果的回调
-        onConfirm: (result) => {
-            selectedInitiators.value = result.selectedUsers
-            ElMessage.success('发起人范围已选择，请点击保存生效')
-        }
-    })
-}
-
-// 删除已选择的用户
-const removeUser = (index) => {
-    selectedInitiators.value.splice(index, 1)
-}
-
 // 向父组件暴露保存方法，由父组件在保存时调用
 const saveSettings = () => {
+    // 验证：如果选择了指定人员但没有选择人员
+    if (initiatorScope.value === 'specified' && selectedInitiators.value.length === 0) {
+        ElMessage.warning('请至少选择一名发起人')
+        return false
+    }
+
     // 保存发起人范围设置到节点
     props.node.props.initiatorScope = initiatorScope.value
     props.node.props.initiators = selectedInitiators.value
@@ -107,21 +83,5 @@ defineExpose({
 <style scoped lang="scss">
 .node-setting-form {
     margin-bottom: 40px;
-}
-
-.select-personnel.el-button {
-    margin-right: 10px;
-
-    .el-icon {
-        margin-right: 4px;
-        vertical-align: middle;
-    }
-}
-
-.selected-users {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
 }
 </style>

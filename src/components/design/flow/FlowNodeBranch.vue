@@ -78,7 +78,6 @@
 
 <script setup>
 import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '../../../stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
@@ -249,8 +248,11 @@ const deleteConditionBranch = (condIndex) => {
 
 // 编辑条件表达式
 const editCondition = (condIndex, condition) => {
-    // 使用 store 中的方法处理
-    flowStore.editCondition(props.node, condIndex, condition);
+    condition = { ...condition, type: 'condition' }; // 确保条件对象包含类型信息
+    // 直接将条件作为node传递给selectNode方法
+    flowStore.selectNode(condition, condIndex, null);
+
+    console.log('编辑条件', condIndex, condition);
 }
 
 </script>
