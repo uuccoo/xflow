@@ -35,7 +35,9 @@
                     </div>
 
                     <!-- 分支内容 - 根据分支类型显示不同内容 -->
-                    <div class="node-content branch-content" @click="editBranch(branchIndex, branch)">
+                    <div class="node-content branch-content"
+                        @click="branch.name !== '默认条件' ? editBranch(branchIndex, branch) : undefined"
+                        :class="{ 'default-condition': branch.name === '默认条件' }">
                         <!-- 条件分支内容 -->
                         <template v-if="branchType === 'condition'">
                             <span v-if="branch.name === '默认条件'">其他条件进入此流程</span>
@@ -45,7 +47,7 @@
                         <template v-else>
                             <span>{{ branch.description || '请配置分支' }}</span>
                         </template>
-                        <el-icon class="chevron-icon">
+                        <el-icon class="chevron-icon" v-if="branch.name !== '默认条件'">
                             <Edit />
                         </el-icon>
                     </div>
