@@ -63,7 +63,7 @@
         <!-- 分栏组件属性设置 -->
         <template v-if="activeItem.type === 'columns'">
           <el-form-item label="栏目布局">
-            <el-select v-model="activeColumnLayout" @change="updateColumnsLayout" style="width: 100%">
+            <el-select v-model="activeColumnsLayout" @change="updateColumnsLayout" style="width: 100%">
               <el-option label="两等分" value="1:1"></el-option>
               <el-option label="三等分" value="1:1:1"></el-option>
               <el-option label="左窄右宽" value="1:2"></el-option>
@@ -143,7 +143,7 @@ const formItems = ref([])
 const activeItem = ref(null)
 
 // 当前选中的分栏布局
-const activeColumnLayout = ref('1:1')
+const activeColumnsLayout = ref('1:1')
 
 // 克隆组件
 const cloneComponent = (component) => {
@@ -176,21 +176,21 @@ const addComponent = (component) => {
 const selectItem = (item, index) => {
   activeItem.value = item
 
-  // 如果选中的是分栏组件，根据当前列数设置activeColumnLayout
+  // 如果选中的是分栏组件，根据当前列数设置activeColumnsLayout
   if (item.type === 'columns') {
     if (item.columns.length === 2) {
       if (item.columns[0].width === 50 && item.columns[1].width === 50) {
-        activeColumnLayout.value = '1:1'
+        activeColumnsLayout.value = '1:1'
       } else if (item.columns[0].width === 33 && item.columns[1].width === 67) {
-        activeColumnLayout.value = '1:2'
+        activeColumnsLayout.value = '1:2'
       } else if (item.columns[0].width === 67 && item.columns[1].width === 33) {
-        activeColumnLayout.value = '2:1'
+        activeColumnsLayout.value = '2:1'
       }
     } else if (item.columns.length === 3) {
       if (item.columns[0].width === 33 && item.columns[1].width === 34 && item.columns[2].width === 33) {
-        activeColumnLayout.value = '1:1:1'
+        activeColumnsLayout.value = '1:1:1'
       } else if (item.columns[0].width === 25 && item.columns[1].width === 50 && item.columns[2].width === 25) {
-        activeColumnLayout.value = '1:2:1'
+        activeColumnsLayout.value = '1:2:1'
       }
     }
   }
@@ -218,14 +218,17 @@ const copyItem = (index) => {
 }
 
 // 递归更新组件和所有子组件的ID和编码
+// 优化组件ID生成算法，避免依赖简单的随机数
 const updateComponentIds = (component) => {
-  // 为当前组件生成新的ID
-  component.id = Date.now() + Math.floor(Math.random() * 1000)
+  // 生成更可靠的唯一ID
+  const timestamp = Date.now()
+  const randomChars = Math.random().toString(36).substring(2, 8)
+  component.id = `${timestamp}-${randomChars}`
 
   // 更新不同类型组件的编码
   if (component.type !== 'columns') {
     // 保持类型不变，但生成新的编码
-    component.field = component.type + component.id
+    component.field = `${component.type}_${timestamp}`
   }
 
   // 如果是分栏容器，递归处理其中的子组件
@@ -603,9 +606,11 @@ const handleDeleteComponent = (component, parentInfo) => {
   0% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(64, 158, 255, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
   }

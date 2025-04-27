@@ -8,7 +8,7 @@ let defaultActive = ref('basicSettings')
   <header>
     <el-menu :default-active="defaultActive" active-text-color="#409eff" mode="horizontal" :ellipsis="false"
       :router="true">
-      <el-menu-item index="basicSettings" route="/design/basicSettings">基础信息</el-menu-item>
+      <el-menu-item index="basicSettings" route="/design/basicSettings">基础设置</el-menu-item>
       <el-menu-item index="formDesign" route="/design/formDesign">表单设计</el-menu-item>
       <el-menu-item index="flowDesign" route="/design/flowDesign">流程设计</el-menu-item>
       <el-menu-item index="moreSettings" route="/design/moreSettings">更多设置</el-menu-item>

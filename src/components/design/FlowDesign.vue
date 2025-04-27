@@ -4,7 +4,7 @@
       <!-- 流程图缩放控制 -->
       <div class="zoom-control">
         <!-- 新增：重置到 100% 的按钮，只在缩放不为100%时显示，且位于放大按钮左边 -->
-        <el-button v-if="zoom !== 1" circle @click="resetZoom" class="reset-btn">
+        <el-button v-if="flowZoomScale !== 1" circle @click="resetZoom" class="reset-btn">
           <el-icon>
             <Refresh />
           </el-icon>
@@ -14,7 +14,7 @@
             <Minus />
           </el-icon>
         </el-button>
-        <span class="zoom-text">{{ Math.round(zoom * 100) }}%</span>
+        <span class="zoom-text">{{ Math.round(flowZoomScale * 100) }}%</span>
         <el-button circle @click="zoomIn">
           <el-icon>
             <Plus />
@@ -77,24 +77,35 @@ flowStore.nodeOptions.forEach(option => {
   option.icon = iconMap[option.icon] || null
 })
 
-// 缩放相关逻辑
-const zoom = ref(1)
+// 缩放相关常量和变量
+const ZOOM_STEP = 0.1 // 缩放步长
+const MIN_ZOOM = 0.5 // 最小缩放比例
+const MAX_ZOOM = 2.0 // 最大缩放比例
+const DEFAULT_ZOOM = 1.0 // 默认缩放比例
+
+// 将zoom更名为flowZoomScale，更明确表示是流程图的缩放比例
+const flowZoomScale = ref(DEFAULT_ZOOM)
+
+// 计算缩放样式
 const zoomStyle = computed(() => ({
-  transform: `scale(${zoom.value})`,
+  transform: `scale(${flowZoomScale.value})`,
   transformOrigin: 'center top',
   margin: '0 auto'  // 保证水平居中
 }))
 
+// 放大流程图
 const zoomIn = () => {
-  zoom.value = Math.min(zoom.value + 0.1, 2)
+  flowZoomScale.value = Math.min(flowZoomScale.value + ZOOM_STEP, MAX_ZOOM)
 }
 
+// 缩小流程图
 const zoomOut = () => {
-  zoom.value = Math.max(zoom.value - 0.1, 0.5)
+  flowZoomScale.value = Math.max(flowZoomScale.value - ZOOM_STEP, MIN_ZOOM)
 }
 
+// 重置缩放到默认比例
 const resetZoom = () => {
-  zoom.value = 1
+  flowZoomScale.value = DEFAULT_ZOOM
 }
 </script>
 
