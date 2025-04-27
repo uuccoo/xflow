@@ -3,52 +3,25 @@ import { ref, computed } from 'vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import PersonSelector from '../common/PersonSelector.vue'
 import DesignatedPersonSelector from '../common/DesignatedPersonSelector.vue'
+import { useBasicSettingsStore } from '../../stores/basicSettingsStore'
 
-// 将value更名为groupValue，更明确表示是表单分组的选择值
-const groupValue = ref('')
-// 将options更名为groupOptions，更明确表示是表单分组的选项
-const groupOptions = [
-  {
-    value: 'Option1',
-    label: 'Option1',
-  },
-  {
-    value: 'Option2',
-    label: 'Option2',
-  },
-  {
-    value: 'Option3',
-    label: 'Option3',
-  },
-  {
-    value: 'Option4',
-    label: 'Option4',
-  },
-  {
-    value: 'Option5',
-    label: 'Option5',
-  },
-]
-
-// 将textarea更名为formDescription，更明确表示是表单说明文本
-const formDescription = ref('')
-// 移除未使用的options1变量
-
-const color = ref('#FF8800')  // 默认橙色，与图中一致
-
-// 图标选择器相关
-const selectedIcon = ref('Promotion') // 默认选择的图标是"纸飞机"图标
-const popoverVisible = ref(false) // 控制弹出框可见性
+// 使用 Pinia store
+const basicStore = useBasicSettingsStore()
 
 // 从ElementPlusIconsVue中获取所有图标
-const iconList = ref([])
-// 将所有图标添加到列表中
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  iconList.value.push({ name: key, component })
-}
+const iconList = computed(() => {
+  const icons = []
+  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    icons.push({ name: key, component })
+  }
+  return icons
+})
+
+// 图标选择器相关
+const popoverVisible = ref(false) // 控制弹出框可见性
 
 const selectIcon = (iconName) => {
-  selectedIcon.value = iconName
+  basicStore.selectedIcon = iconName
   popoverVisible.value = false // 选择后关闭弹窗
 }
 
@@ -67,14 +40,14 @@ const selectedAdmins = ref([])
       <el-form class="form-container" label-position="top" label-width="100px">
         <el-form-item label="表单图标">
           <div class="icon-selection">
-            <div class="icon-box" :style="{ backgroundColor: color }">
+            <div class="icon-box" :style="{ backgroundColor: basicStore.iconColor }">
               <el-icon size="32" color="#ffffff">
-                <component :is="selectedIcon" />
+                <component :is="basicStore.selectedIcon" />
               </el-icon>
             </div>
             <div class="option-item">
               <span>选择背景色</span>
-              <el-color-picker v-model="color" size="small"
+              <el-color-picker v-model="basicStore.iconColor" size="small"
                 :predefine="['#FF8800', '#409EFF', '#67C23A', '#E6A23C', '#F56C6C']" />
             </div>
             <div class="option-item">
@@ -82,7 +55,7 @@ const selectedAdmins = ref([])
               <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
                 <template #reference>
                   <el-icon size="20">
-                    <component :is="selectedIcon" />
+                    <component :is="basicStore.selectedIcon" />
                   </el-icon>
                 </template>
                 <div class="icon-picker-container">
@@ -100,11 +73,11 @@ const selectedAdmins = ref([])
           </div>
         </el-form-item>
         <el-form-item label="表单名称" required>
-          <el-input placeholder="请输入"></el-input>
+          <el-input v-model="basicStore.formInfo.name" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="所在分组" required>
           <div class="group-selection-container">
-            <el-select v-model="groupValue" placeholder="请选择" size="large" class="group-select">
+            <el-select v-model="basicStore.formInfo.groupValue" placeholder="请选择" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <el-button type="primary" :icon="ElementPlusIconsVue.Plus" size="large"
@@ -112,32 +85,32 @@ const selectedAdmins = ref([])
           </div>
         </el-form-item>
         <el-form-item label="表单说明">
-          <el-input v-model="formDescription" maxlength="500" style="width: 100%" placeholder="请输入表单说明" show-word-limit
-            type="textarea" />
+          <el-input v-model="basicStore.formInfo.description" maxlength="500" style="width: 100%" placeholder="请输入表单说明"
+            show-word-limit type="textarea" />
         </el-form-item>
 
         <!-- 谁可以发起设置 -->
         <el-form-item label="谁可以发起">
-          <el-select v-model="initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
+          <el-select v-model="basicStore.initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
             <el-option label="所有人" value="all"></el-option>
             <el-option label="指定人员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="initiatorScope !== 'all'" label="指定人员" required>
-          <designated-person-selector v-model="selectedInitiators" title="选择发起人范围" button-text="添加"
+        <el-form-item v-if="basicStore.initiatorScope !== 'all'" label="指定人员" required>
+          <designated-person-selector v-model="basicStore.selectedInitiators" title="选择发起人范围" button-text="添加"
             selector-type="initiator" :required="true" />
         </el-form-item>
 
         <!-- 模板管理员设置 -->
         <el-form-item label="模板管理员">
-          <el-select v-model="adminScope" placeholder="请选择模板管理员" style="width: 100%">
+          <el-select v-model="basicStore.adminScope" placeholder="请选择模板管理员" style="width: 100%">
             <el-option label="所有管理员" value="all"></el-option>
             <el-option label="指定管理员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="adminScope === 'specified'" label="指定管理员" required>
-          <designated-person-selector v-model="selectedAdmins" title="选择管理员" button-text="添加" selector-type="admin"
-            :required="true" />
+        <el-form-item v-if="basicStore.adminScope === 'specified'" label="指定管理员" required>
+          <designated-person-selector v-model="basicStore.selectedAdmins" title="选择管理员" button-text="添加"
+            selector-type="admin" :required="true" />
         </el-form-item>
       </el-form>
     </div>

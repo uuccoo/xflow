@@ -3,19 +3,19 @@
     <div class="flow-canvas">
       <!-- 流程图缩放控制 -->
       <div class="zoom-control">
-        <!-- 新增：重置到 100% 的按钮，只在缩放不为100%时显示，且位于放大按钮左边 -->
-        <el-button v-if="flowZoomScale !== 1" circle @click="resetZoom" class="reset-btn">
+        <!-- 重置到 100% 的按钮，只在缩放不为100%时显示 -->
+        <el-button v-if="flowStore.flowZoomScale !== 1" circle @click="flowStore.resetZoom" class="reset-btn">
           <el-icon>
             <Refresh />
           </el-icon>
         </el-button>
-        <el-button circle @click="zoomOut">
+        <el-button circle @click="flowStore.zoomOut">
           <el-icon>
             <Minus />
           </el-icon>
         </el-button>
-        <span class="zoom-text">{{ Math.round(flowZoomScale * 100) }}%</span>
-        <el-button circle @click="zoomIn">
+        <span class="zoom-text">{{ Math.round(flowStore.flowZoomScale * 100) }}%</span>
+        <el-button circle @click="flowStore.zoomIn">
           <el-icon>
             <Plus />
           </el-icon>
@@ -55,7 +55,7 @@ import NodeAddButton from './NodeAddButton.vue'
 import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
 import NodeSettingsDrawer from '../settings/NodeSettingsDrawer.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -77,36 +77,12 @@ flowStore.nodeOptions.forEach(option => {
   option.icon = iconMap[option.icon] || null
 })
 
-// 缩放相关常量和变量
-const ZOOM_STEP = 0.1 // 缩放步长
-const MIN_ZOOM = 0.5 // 最小缩放比例
-const MAX_ZOOM = 2.0 // 最大缩放比例
-const DEFAULT_ZOOM = 1.0 // 默认缩放比例
-
-// 将zoom更名为flowZoomScale，更明确表示是流程图的缩放比例
-const flowZoomScale = ref(DEFAULT_ZOOM)
-
-// 计算缩放样式
+// 计算缩放样式 - 使用 store 中的缩放比例
 const zoomStyle = computed(() => ({
-  transform: `scale(${flowZoomScale.value})`,
+  transform: `scale(${flowStore.flowZoomScale})`,
   transformOrigin: 'center top',
   margin: '0 auto'  // 保证水平居中
 }))
-
-// 放大流程图
-const zoomIn = () => {
-  flowZoomScale.value = Math.min(flowZoomScale.value + ZOOM_STEP, MAX_ZOOM)
-}
-
-// 缩小流程图
-const zoomOut = () => {
-  flowZoomScale.value = Math.max(flowZoomScale.value - ZOOM_STEP, MIN_ZOOM)
-}
-
-// 重置缩放到默认比例
-const resetZoom = () => {
-  flowZoomScale.value = DEFAULT_ZOOM
-}
 </script>
 
 <style scoped lang="scss">
