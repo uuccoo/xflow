@@ -9,8 +9,7 @@ const routes = [
   {
     path: '/design',
     component: () => import('@/views/DesignView.vue'),
-    // redirect: '/design/basicSettings',
-    redirect: '/design/formDesign',
+    redirect: '/design/basicSettings',
     children: [
       {
         path: 'basicSettings',
