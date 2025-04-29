@@ -84,3 +84,14 @@ export function getPermissions() {
     method: 'get',
   })
 }
+
+/**
+ * 获取组织架构树
+ * @returns {Promise}
+ */
+export function getOrganizationTree() {
+  return request({
+    url: '/api/organizations/tree',
+    method: 'get',
+  })
+}

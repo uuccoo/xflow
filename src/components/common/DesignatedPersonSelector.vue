@@ -16,8 +16,14 @@
         </div>
 
         <!-- 集成的PersonSelector组件 -->
-        <person-selector v-model="selectorVisible" :title="title" :selected-ids="selectedIds" @confirm="handleConfirm"
-            @cancel="handleCancel" />
+        <person-selector 
+            v-model="selectorVisible" 
+            :title="title" 
+            :selected-ids="selectedIds"
+            @confirm="handleConfirm"
+            @cancel="handleCancel" 
+            ref="personSelectorRef"
+        />
     </div>
 </template>
 
@@ -66,6 +72,9 @@ const emit = defineEmits(['update:modelValue', 'change'])
 // 选择器可见状态
 const selectorVisible = ref(false)
 
+// PersonSelector组件引用
+const personSelectorRef = ref(null)
+
 // 选中的人员ID列表（用于传递给PersonSelector）
 const selectedIds = computed(() => {
     return props.modelValue.map(user => user.id)
@@ -104,6 +113,18 @@ const handleRemove = (index) => {
     // 触发change事件
     emit('change', newList)
 }
+
+// 暴露方法，允许父组件手动触发选择器初始化
+defineExpose({
+    openSelector: handleOpenSelector,
+    clearSelected: () => {
+        if (personSelectorRef.value) {
+            personSelectorRef.value.clearSelected()
+        }
+        emit('update:modelValue', [])
+        emit('change', [])
+    }
+})
 </script>
 
 <style scoped lang="scss">

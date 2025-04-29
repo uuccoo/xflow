@@ -1,8 +1,17 @@
 <template>
     <!-- 人员选择弹窗 -->
-    <el-dialog v-model="visible" :title="title" width="35%" :close-on-click-modal="false" align-center
+    <el-dialog v-model="visible" :title="title" width="600" :close-on-click-modal="false" align-center
         @closed="handleDialogClosed">
-        <div class="person-selector-container">
+        <div class="person-selector-container" v-loading="loading">
+            <!-- 显示加载错误提示 -->
+            <el-alert
+                v-if="loadingError"
+                title="组织架构数据加载失败，已使用默认数据"
+                type="warning"
+                :closable="false"
+                show-icon
+                style="margin-bottom: 10px;"
+            />
             <div class="selector-main">
                 <!-- 左侧部门列表 -->
                 <div class="department-list">
@@ -116,8 +125,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ArrowRight, Close, Search, User, Folder, ArrowLeft } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { userApi } from '@/api'
 
 const props = defineProps({
     // 控制弹窗是否显示
@@ -134,11 +145,6 @@ const props = defineProps({
     selectedIds: {
         type: Array,
         default: () => []
-    },
-    // 机构数据 - 允许从外部传入不同的数据源
-    organizationData: {
-        type: Object,
-        default: null
     }
 })
 
@@ -155,129 +161,98 @@ const searchText = ref('')
 const filteredNodesFlat = ref([])
 const isSearchMode = computed(() => searchText.value.trim().length > 0)
 
-// 部门数据 - 如果没有外部传入，则使用默认模拟数据
-const defaultOrganizationData = {
-    id: 'company-1',
-    name: 'xx科技有限公司',
-    checked: false,
-    indeterminate: false,
-    type: 'company',
-    children: [
-        {
-            name: '生产管理部',
-            id: 'dept-1',
+// 加载状态
+const loading = ref(false)
+const loadingError = ref(false)
+
+// 组织机构数据
+const companyDepartments = ref(null)
+
+// 转换API返回的数据格式为组件需要的格式
+const transformApiData = (apiData) => {
+    if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+        return null
+    }
+
+    // 通常API返回的是一个数组，我们取第一个组织
+    const organization = apiData[0]
+    
+    // 递归转换数据结构
+    const transformNode = (node) => {
+        const result = {
+            id: node.id,
+            name: node.name,
             checked: false,
             indeterminate: false,
-            type: 'department',
-            children: [
-                {
-                    name: '生产一组',
-                    id: 'dept-1-1',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                },
-                {
-                    name: '生产二组',
-                    id: 'dept-1-2',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                },
-                {
-                    name: '张经理',
-                    id: 'user-1-1',
-                    checked: false,
-                    type: 'user',
-                }
-            ]
-        },
-        {
-            name: '行政人事部',
-            id: 'dept-2',
-            checked: false,
-            indeterminate: false,
-            type: 'department',
-            children: [
-                {
-                    name: '人事组',
-                    id: 'dept-2-1',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                },
-                {
-                    name: '行政组',
-                    id: 'dept-2-2',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                },
-                {
-                    name: '李主管',
-                    id: 'user-2-1',
-                    checked: false,
-                    type: 'user',
-                }
-            ]
-        },
-        {
-            name: '营销服务部',
-            id: 'dept-3',
-            checked: false,
-            indeterminate: false,
-            type: 'department',
+            type: node.nodeType || node.type,
             children: []
-        },
-        {
-            name: '研发部',
-            id: 'dept-4',
-            checked: false,
-            indeterminate: false,
-            type: 'department',
-            children: [
-                {
-                    name: '前端组',
-                    id: 'dept-4-1',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                },
-                {
-                    name: '后端组',
-                    id: 'dept-4-2',
-                    checked: false,
-                    indeterminate: false,
-                    type: 'department',
-                    children: []
-                }
-            ]
-        },
-        {
-            name: '王总',
-            id: 'user-1',
-            checked: false,
-            type: 'user',
         }
-    ]
+
+        // 如果有子节点，递归转换
+        if (node.children && Array.isArray(node.children)) {
+            result.children = node.children
+                .filter(child => child.status === 1) // 只保留状态正常的节点
+                .map(transformNode)
+        }
+
+        return result
+    }
+
+    return transformNode(organization)
 }
 
-// 组织机构数据 - 深拷贝以避免外部引用被修改
-const companyDepartments = ref(
-    JSON.parse(JSON.stringify(props.organizationData || defaultOrganizationData))
-)
+// 从API获取组织架构数据
+const fetchOrganizationData = async () => {
+    loading.value = true
+    loadingError.value = false
+    
+    try {
+        const response = await userApi.getOrganizationTree()
+        
+        if (response && response.success && Array.isArray(response.data)) {
+            const transformedData = transformApiData(response.data)
+            if (transformedData) {
+                return transformedData
+            }
+        }
+        
+        // 如果数据结构不对或为空，抛出错误
+        throw new Error('组织架构数据格式不正确')
+    } catch (error) {
+        console.error('获取组织架构数据失败:', error)
+        loadingError.value = true
+        
+        // 如果API请求失败，返回空数据结构
+        return {
+            id: 'empty',
+            name: '组织架构',
+            checked: false,
+            indeterminate: false,
+            type: 'company',
+            children: []
+        }
+    } finally {
+        loading.value = false
+    }
+}
+
+// 初始化组织架构数据
+const initOrganizationData = async () => {
+    // 从API获取数据
+    companyDepartments.value = await fetchOrganizationData()
+    
+    // 初始化当前路径
+    if (companyDepartments.value) {
+        currentPath.value = [companyDepartments.value]
+    }
+}
 
 // 当前浏览的部门路径
-const currentPath = ref([companyDepartments.value])
+const currentPath = ref([])
 
 // 当前显示的部门内容
 const currentDepartment = computed(() => {
-    return currentPath.value[currentPath.value.length - 1]
+    return currentPath.value[currentPath.value.length - 1] || {}
 })
 
 // 已选择的用户和部门列表
@@ -551,9 +526,11 @@ const handleDialogClosed = () => {
 }
 
 // 监听visible变化，当打开弹窗时初始化
-watch(() => visible.value, (newVal) => {
+watch(() => visible.value, async (newVal) => {
     if (newVal) {
-        // 当弹窗显示时初始化
+        // 当弹窗显示时初始化组织数据
+        await initOrganizationData()
+        // 然后初始化选择状态
         initSelector()
     }
 })
