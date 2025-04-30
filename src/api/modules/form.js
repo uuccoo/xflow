@@ -115,4 +115,17 @@ export default {
       method: 'get',
     })
   },
+
+  /**
+   * 批量更新表单分组
+   * @param {Object} data 包含formIds和groupId
+   * @returns {Promise<Object>}
+   */
+  batchUpdateGroup(data) {
+    return request({
+      url: '/forms/batch-update-group',
+      method: 'post',
+      data,
+    })
+  },
 }
