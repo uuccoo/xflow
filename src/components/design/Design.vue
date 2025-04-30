@@ -33,7 +33,8 @@ const loading = ref(false)
 const loadDialogVisible = ref(false)
 const inputJsonData = ref('')
 const formIdInput = ref('')
-const loadMethod = ref('json') // 'json' 或 'api'
+const formCodeInput = ref('') // 新增表单编码输入
+const loadMethod = ref('json') // 'json', 'api-id' 或 'api-code'
 
 // 打开加载对话框
 const openLoadDialog = () => {
@@ -41,6 +42,7 @@ const openLoadDialog = () => {
   loadMethod.value = 'json'
   inputJsonData.value = ''
   formIdInput.value = ''
+  formCodeInput.value = ''
 }
 
 // 确认加载数据
@@ -59,7 +61,7 @@ const confirmLoadData = async () => {
     } catch (error) {
       ElMessage.error('JSON解析错误: ' + error.message)
     }
-  } else if (loadMethod.value === 'api') {
+  } else if (loadMethod.value === 'api-id') {
     if (!formIdInput.value.trim()) {
       ElMessage.warning('请输入表单ID')
       return
@@ -68,6 +70,28 @@ const confirmLoadData = async () => {
     loading.value = true
     try {
       const result = await formApi.getFormDetail(formIdInput.value.trim())
+      if (result && result.data) {
+        if (loadExistingData(result.data)) {
+          loadDialogVisible.value = false
+        }
+      } else {
+        ElMessage.error('未找到表单数据')
+      }
+    } catch (error) {
+      console.error('从API加载数据失败:', error)
+      ElMessage.error('加载失败: ' + (error.message || '未知错误'))
+    } finally {
+      loading.value = false
+    }
+  } else if (loadMethod.value === 'api-code') {
+    if (!formCodeInput.value.trim()) {
+      ElMessage.warning('请输入表单编码')
+      return
+    }
+
+    loading.value = true
+    try {
+      const result = await formApi.getFormByCode(formCodeInput.value.trim())
       if (result && result.data) {
         if (loadExistingData(result.data)) {
           loadDialogVisible.value = false
@@ -162,6 +186,35 @@ const publish = async () => {
   publishing.value = true
 
   try {
+    // 数据验证
+    if (!basicSettingsStore.formInfo.name) {
+      ElMessage.error('请设置表单名称')
+      router.push('/design/basicSettings')
+      return
+    }
+
+    // 判断是否为修改已有表单
+    const isEditingExistingForm = !!basicSettingsStore.formInfo.id
+
+    // 只对已有表单进行编码校验
+    if (isEditingExistingForm && !basicSettingsStore.formInfo.code) {
+      ElMessage.error('请设置表单编码')
+      router.push('/design/basicSettings')
+      return
+    }
+
+    if (formDesignStore.formItems.length === 0) {
+      ElMessage.error('表单内容不能为空')
+      router.push('/design/formDesign')
+      return
+    }
+
+    if (flowDesignStore.flowData.nodes.length < 1) {
+      ElMessage.error('流程至少需要两个节点')
+      router.push('/design/flowDesign')
+      return
+    }
+
     // 收集所有数据
     const finalData = {
       // 基础设置数据
@@ -215,6 +268,9 @@ const publish = async () => {
       message: '表单已成功发布',
       duration: 3000
     })
+
+    // 可以添加保存后的逻辑，如跳转到表单列表页
+    // router.push('/form/list')
   } catch (error) {
     console.error('发布失败:', error)
     ElMessage.error('发布失败: ' + (error.message || '未知错误'))
@@ -224,9 +280,11 @@ const publish = async () => {
   }
 }
 
-// 页面加载时，检查URL是否包含表单ID，如果有则自动加载
+// 页面加载时，检查URL是否包含表单ID或表单编码，如果有则自动加载
 onMounted(async () => {
   const formId = route.query.id
+  const formCode = route.query.code
+
   if (formId) {
     try {
       loading.value = true
@@ -234,6 +292,21 @@ onMounted(async () => {
       if (result && result.data) {
         loadExistingData(result.data)
         // 更新URL，移除ID参数，避免刷新重复加载
+        router.replace({ query: {} })
+      }
+    } catch (error) {
+      console.error('加载表单数据失败:', error)
+      ElMessage.error('加载表单数据失败: ' + (error.message || '未知错误'))
+    } finally {
+      loading.value = false
+    }
+  } else if (formCode) {
+    try {
+      loading.value = true
+      const result = await formApi.getFormByCode(formCode)
+      if (result && result.data) {
+        loadExistingData(result.data)
+        // 更新URL，移除code参数，避免刷新重复加载
         router.replace({ query: {} })
       }
     } catch (error) {
@@ -272,7 +345,8 @@ onMounted(async () => {
         <el-form-item label="加载方式">
           <el-radio-group v-model="loadMethod">
             <el-radio label="json">从JSON文本加载</el-radio>
-            <el-radio label="api">从后端加载</el-radio>
+            <el-radio label="api-id">通过表单ID加载</el-radio>
+            <el-radio label="api-code">通过表单编码加载</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -280,8 +354,12 @@ onMounted(async () => {
           <el-input type="textarea" :rows="10" placeholder="请粘贴JSON数据" v-model="inputJsonData"></el-input>
         </el-form-item>
 
-        <el-form-item v-if="loadMethod === 'api'" label="表单ID">
+        <el-form-item v-if="loadMethod === 'api-id'" label="表单ID">
           <el-input placeholder="请输入表单ID" v-model="formIdInput"></el-input>
+        </el-form-item>
+
+        <el-form-item v-if="loadMethod === 'api-code'" label="表单编码">
+          <el-input placeholder="请输入表单编码" v-model="formCodeInput"></el-input>
         </el-form-item>
       </el-form>
 

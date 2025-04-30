@@ -1,79 +1,118 @@
 import request from '@/utils/request'
 
 /**
- * 获取表单列表
- * @param {Object} params - 查询参数
- * @returns {Promise}
+ * 表单相关API
  */
-export function getFormList(params) {
-  return request({
-    url: '/forms',
-    method: 'get',
-    params,
-  })
-}
+export default {
+  /**
+   * 获取表单列表
+   * @param {Object} params 查询参数
+   * @returns {Promise<Object>}
+   */
+  getFormList(params) {
+    return request({
+      url: '/forms',
+      method: 'get',
+      params,
+    })
+  },
 
-/**
- * 获取表单详情
- * @param {string|number} id - 表单ID
- * @returns {Promise}
- */
-export function getFormDetail(id) {
-  return request({
-    url: `/forms/${id}`,
-    method: 'get',
-  })
-}
+  /**
+   * 获取表单详情
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  getFormDetail(id) {
+    return request({
+      url: `/forms/${id}`,
+      method: 'get',
+    })
+  },
 
-/**
- * 保存表单
- * @param {Object} data - 表单数据
- * @returns {Promise}
- */
-export function saveForm(data) {
-  return request({
-    url: '/forms',
-    method: 'post',
-    data,
-  })
-}
+  /**
+   * 根据表单编码获取表单详情
+   * @param {String} code 表单编码
+   * @returns {Promise<Object>}
+   */
+  getFormByCode(code) {
+    return request({
+      url: `/forms/code/${code}`,
+      method: 'get',
+    })
+  },
 
-/**
- * 更新表单
- * @param {string|number} id - 表单ID
- * @param {Object} data - 表单数据
- * @returns {Promise}
- */
-export function updateForm(id, data) {
-  return request({
-    url: `/forms/${id}`,
-    method: 'put',
-    data,
-  })
-}
+  /**
+   * 创建新表单
+   * @param {Object} data 表单数据
+   * @returns {Promise<Object>}
+   */
+  saveForm(data) {
+    return request({
+      url: '/forms',
+      method: 'post',
+      data,
+    })
+  },
 
-/**
- * 删除表单
- * @param {string|number} id - 表单ID
- * @returns {Promise}
- */
-export function deleteForm(id) {
-  return request({
-    url: `/forms/${id}`,
-    method: 'delete',
-  })
-}
+  /**
+   * 更新表单
+   * @param {String} id 表单ID
+   * @param {Object} data 表单数据
+   * @returns {Promise<Object>}
+   */
+  updateForm(id, data) {
+    return request({
+      url: `/forms/${id}`,
+      method: 'put',
+      data,
+    })
+  },
 
-/**
- * 发布表单
- * @param {string|number} id - 表单ID
- * @param {Object} data - 发布参数
- * @returns {Promise}
- */
-export function publishForm(id, data) {
-  return request({
-    url: `/forms/${id}/publish`,
-    method: 'post',
-    data,
-  })
+  /**
+   * 删除表单
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  deleteForm(id) {
+    return request({
+      url: `/forms/${id}`,
+      method: 'delete',
+    })
+  },
+
+  /**
+   * 发布表单
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  publishForm(id) {
+    return request({
+      url: `/forms/${id}/publish`,
+      method: 'post',
+    })
+  },
+
+  /**
+   * 停用表单
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  disableForm(id) {
+    return request({
+      url: `/forms/${id}/disable`,
+      method: 'post',
+    })
+  },
+
+  /**
+   * 获取表单历史版本
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  getFormVersions(id) {
+    return request({
+      url: `/forms/${id}/versions`,
+      method: 'get',
+    })
+  },
 }

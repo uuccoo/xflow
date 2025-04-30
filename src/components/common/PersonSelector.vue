@@ -271,11 +271,49 @@ const getAllNodesFlat = (node) => {
 
 // 更新已选列表
 const updateSelectedList = () => {
-    // 从树形结构中找出所有选中的节点
+    // 从树形结构中找出所有直接勾选的节点（不包括因父节点勾选而自动勾选的子节点）
     const allNodes = getAllNodesFlat(companyDepartments.value)
-
+    
+    // 收集所有父节点，用于判断哪些节点是因为父节点的勾选而自动勾选的
+    const checkedParentIds = new Set()
+    
+    // 找到所有被勾选的父节点
+    allNodes.forEach(node => {
+        if (node.checked && node.children && node.children.length > 0) {
+            // 判断是否所有子节点都被选中
+            const allChildrenChecked = node.children.every(child => child.checked)
+            if (allChildrenChecked) {
+                // 如果所有子节点都被选中，我们认为这是一个勾选的父节点
+                checkedParentIds.add(node.id)
+            }
+        }
+    })
+    
+    // 过滤出用户直接勾选的节点（不包括因父节点勾选而自动勾选的子节点）
     selectedUsers.value = allNodes
-        .filter(item => item.checked && item.id !== 'company-1') // 排除根公司节点
+        .filter(item => {
+            // 排除根公司节点
+            if (item.id === 'company-1' || !item.checked) {
+                return false
+            }
+            
+            // 获取当前节点的所有父节点
+            const nodePath = getNodePath(item.id)
+            if (!nodePath || nodePath.length <= 1) {
+                // 节点没有父节点或只有根节点作为父节点
+                return item.checked
+            }
+            
+            // 检查是否有父节点被勾选。如果有，则说明当前节点是因父节点勾选而自动勾选的
+            for (let i = 0; i < nodePath.length - 1; i++) {
+                if (checkedParentIds.has(nodePath[i].id)) {
+                    return false
+                }
+            }
+            
+            // 通过上述检查，说明该节点是用户直接勾选的
+            return true
+        })
         .map(item => ({
             id: item.id,
             name: item.name,

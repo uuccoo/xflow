@@ -91,7 +91,19 @@ export function getPermissions() {
  */
 export function getOrganizationTree() {
   return request({
-    url: '/api/organizations/tree',
+    url: '/organizations/tree',
     method: 'get',
   })
+}
+
+// 默认导出所有方法
+export default {
+  login,
+  logout,
+  getUserInfo,
+  getUserList,
+  getDepartmentList,
+  getRoleList,
+  getPermissions,
+  getOrganizationTree,
 }

@@ -1,14 +1,15 @@
-// 统一导出所有API模块
-import * as formApi from './modules/form'
-import * as flowApi from './modules/flow'
-import * as userApi from './modules/user'
+import flow from './modules/flow'
+import form from './modules/form'
+import user from './modules/user'
 
-// 导出所有API模块
-export { formApi, flowApi, userApi }
+// 重命名导出
+export const formApi = form
+export const flowApi = flow
+export const userApi = user
 
 // 导出默认API对象
 export default {
-  form: formApi,
-  flow: flowApi,
-  user: userApi,
+  form,
+  flow,
+  user,
 }

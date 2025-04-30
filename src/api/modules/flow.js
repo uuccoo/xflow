@@ -103,3 +103,15 @@ export function saveFlowNodes(flowId, data) {
     data,
   })
 }
+
+// 默认导出所有方法
+export default {
+  getFlowList,
+  getFlowDetail,
+  saveFlow,
+  updateFlow,
+  deleteFlow,
+  publishFlow,
+  getFlowNodes,
+  saveFlowNodes,
+}
