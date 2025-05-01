@@ -16,6 +16,13 @@ const formDesignStore = useFormDesignStore()
 const flowDesignStore = useFlowDesignStore()
 const moreSettingsStore = useMoreSettingsStore()
 
+// 返回上一页的功能
+const backUrl = computed(() => route.query.backUrl || '/') // 默认返回首页
+
+const handleBack = () => {
+  router.push(backUrl.value)
+}
+
 // 根据当前路径计算活动菜单项
 const defaultActive = computed(() => {
   const path = route.path
@@ -265,6 +272,12 @@ onMounted(() => {
         {{ publishing ? '发布中...' : '发布' }}
       </el-button>
     </div>
+    <div class="back">
+      <div class="back-btn" @click="handleBack">
+        <el-icon><arrow-left /></el-icon>
+        <span>返回</span>
+      </div>
+    </div>
   </header>
   <router-view />
 </template>
@@ -272,6 +285,7 @@ onMounted(() => {
 <style scoped lang="scss">
 header {
   background-color: #ffffff;
+  position: relative; // 添加相对定位以便子元素使用绝对定位
 
   .el-menu {
     display: flex;
@@ -295,6 +309,39 @@ header {
 
     .el-icon {
       margin-right: 7px;
+    }
+  }
+}
+
+.back {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #606266;
+    
+    &:hover {
+      color: #409eff;
+    }
+    
+    .el-icon {
+      margin-right: 4px;
+      font-size: 14px;
+    }
+    
+    span {
+      font-size: 14px;
     }
   }
 }

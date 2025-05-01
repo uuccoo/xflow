@@ -9,7 +9,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
   // 表单基础信息
   const formInfo = reactive({
     name: '', // 表单名称
-    groupValue: '', // 所在分组
+    groupId: '', // 所在分组
     description: '', // 表单说明
   })
 

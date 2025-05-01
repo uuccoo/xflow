@@ -21,6 +21,12 @@ const routes = [
         name: 'approval-center',
         component: () => import('@/views/home/ApprovalCenter.vue'),
       },
+      // 管理相关路由
+      {
+        path: 'manage-forms',
+        name: 'manage-forms',
+        component: () => import('@/views/home/ManageForms.vue'),
+      },
     ],
   },
   {

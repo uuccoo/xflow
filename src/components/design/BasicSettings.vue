@@ -84,7 +84,7 @@ const saveNewGroup = async () => {
         label: res.data.name
       })
       // 设置当前选中的分组为新建的分组
-      basicStore.formInfo.groupValue = res.data.id
+      basicStore.formInfo.groupId = res.data.id
       // 关闭对话框
       newGroupDialogVisible.value = false
     } else {
@@ -147,7 +147,7 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="所在分组" required>
           <div class="group-selection-container">
-            <el-select v-model="basicStore.formInfo.groupValue" placeholder="请选择分组" size="large" class="group-select">
+            <el-select v-model="basicStore.formInfo.groupId" placeholder="请选择分组" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <el-button type="primary" :icon="ElementPlusIconsVue.Plus" size="large"

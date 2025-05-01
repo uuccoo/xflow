@@ -16,10 +16,9 @@
             <span class="form-count">({{ group.forms.length }})</span>
           </div>
           <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <el-icon>
+              <arrow-down />
+            </el-icon>
           </span>
         </div>
 
@@ -27,26 +26,10 @@
           <div class="form-items">
             <div v-for="(form, formIndex) in group.forms" :key="formIndex" class="form-item"
               @click="startApproval(form)">
-              <div class="form-item-icon">
-                <!-- 根据表单icon字段渲染不同图标 -->
-                <svg v-if="form.icon === 'file-text'" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                  viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                <!-- 默认图标 -->
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                  stroke="#1677ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
+              <div class="form-item-icon" :style="{ backgroundColor: form.iconColor || '#1677ff' }">
+                <el-icon color="#ffffff" size="20">
+                  <component :is="getIconComponent(form.icon)" />
+                </el-icon>
               </div>
               <div class="form-item-name">{{ form.name }}</div>
             </div>
@@ -61,11 +44,18 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms } from '@/api/modules/formGroup';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
 const router = useRouter();
 const formGroups = ref([]);
 const searchKeyword = ref('');
 let searchTimer = null;
+
+// 获取图标组件
+const getIconComponent = (iconName) => {
+  // 直接返回图标组件，如果不存在则返回Document组件作为默认值
+  return ElementPlusIconsVue[iconName] || ElementPlusIconsVue.Document;
+};
 
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
@@ -239,6 +229,10 @@ onMounted(() => {
   /* 添加flex布局 */
   align-items: center;
   /* 垂直居中图标 */
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
 }
 
 .form-item-name {
