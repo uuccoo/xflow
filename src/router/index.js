@@ -4,7 +4,24 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    redirect: '/design',
+    redirect: '/home',
+  },
+  {
+    path: '/home',
+    component: () => import('@/views/home/HomeView.vue'),
+    redirect: '/home/initiate',
+    children: [
+      {
+        path: 'initiate',
+        name: 'initiate-approval',
+        component: () => import('@/views/home/InitiateApproval.vue'),
+      },
+      {
+        path: 'approvals',
+        name: 'approval-center',
+        component: () => import('@/views/home/ApprovalCenter.vue'),
+      },
+    ],
   },
   {
     path: '/design',
@@ -28,6 +45,11 @@ const routes = [
         component: () => import('@/components/design/MoreSettings.vue'),
       },
     ],
+  },
+  {
+    path: '/approval-form',
+    name: 'approval-form',
+    component: () => import('@/views/ApprovalFormView.vue'),
   },
 ]
 

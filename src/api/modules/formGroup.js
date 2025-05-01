@@ -6,7 +6,19 @@ import request from '@/utils/request'
 export function getFormGroupList() {
   return request({
     url: '/form-groups',
-    method: 'get'
+    method: 'get',
+  })
+}
+
+/**
+ * 获取带表单列表的表单分组
+ * @param {String} keyword 可选的搜索关键字，根据表单名称进行筛选
+ */
+export function getFormGroupsWithForms(keyword) {
+  return request({
+    url: '/form-groups/with-forms',
+    method: 'get',
+    params: keyword ? { keyword } : {},
   })
 }
 
@@ -18,7 +30,7 @@ export function createFormGroup(data) {
   return request({
     url: '/form-groups',
     method: 'post',
-    data
+    data,
   })
 }
 
@@ -31,7 +43,7 @@ export function updateFormGroup(id, data) {
   return request({
     url: `/form-groups/${id}`,
     method: 'put',
-    data
+    data,
   })
 }
 
@@ -42,13 +54,14 @@ export function updateFormGroup(id, data) {
 export function deleteFormGroup(id) {
   return request({
     url: `/form-groups/${id}`,
-    method: 'delete'
+    method: 'delete',
   })
 }
 
 export default {
   getFormGroupList,
+  getFormGroupsWithForms,
   createFormGroup,
   updateFormGroup,
-  deleteFormGroup
+  deleteFormGroup,
 }
