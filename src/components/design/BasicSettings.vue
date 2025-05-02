@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import PersonSelector from '../common/PersonSelector.vue'
 import DesignatedPersonSelector from '../common/DesignatedPersonSelector.vue'
+import GroupCreator from '../common/GroupCreator.vue'
 import { useBasicSettingsStore } from '../../stores/basicSettingsStore'
 import { formGroupApi } from '../../api'
 import { ElMessage } from 'element-plus'
@@ -38,8 +39,6 @@ const selectedAdmins = ref([])
 // 分组相关
 const groupOptions = ref([]) // 分组选项
 const newGroupDialogVisible = ref(false) // 新建分组对话框可见性
-const newGroupName = ref('') // 新建分组名称
-const groupNameLoading = ref(false) // 保存按钮加载状态
 
 // 获取分组列表
 const fetchGroupList = async () => {
@@ -56,46 +55,15 @@ const fetchGroupList = async () => {
   }
 }
 
-// 打开新建分组对话框
-const openNewGroupDialog = () => {
-  newGroupName.value = ''
-  newGroupDialogVisible.value = true
-}
-
-// 保存新建分组
-const saveNewGroup = async () => {
-  if (!newGroupName.value.trim()) {
-    ElMessage.warning('请输入分组名称')
-    return
-  }
-  
-  groupNameLoading.value = true
-  try {
-    const res = await formGroupApi.createFormGroup({
-      name: newGroupName.value.trim(),
-      sortOrder: 0
-    })
-    
-    if (res.code === 200) {
-      ElMessage.success('分组创建成功')
-      // 添加新分组到选项列表
-      groupOptions.value.push({
-        value: res.data.id,
-        label: res.data.name
-      })
-      // 设置当前选中的分组为新建的分组
-      basicStore.formInfo.groupId = res.data.id
-      // 关闭对话框
-      newGroupDialogVisible.value = false
-    } else {
-      ElMessage.error(res.message || '分组创建失败')
-    }
-  } catch (error) {
-    ElMessage.error('分组创建失败')
-    console.error('创建分组失败:', error)
-  } finally {
-    groupNameLoading.value = false
-  }
+// 处理新分组创建成功
+const handleGroupCreated = (newGroup) => {
+  // 添加新分组到选项列表
+  groupOptions.value.push({
+    value: newGroup.id,
+    label: newGroup.name
+  })
+  // 设置当前选中的分组为新建的分组
+  basicStore.formInfo.groupId = newGroup.id
 }
 
 // 组件挂载时获取分组列表
@@ -150,8 +118,12 @@ onMounted(() => {
             <el-select v-model="basicStore.formInfo.groupId" placeholder="请选择分组" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
-            <el-button type="primary" :icon="ElementPlusIconsVue.Plus" size="large"
-              class="new-group-btn" @click="openNewGroupDialog">新建分组</el-button>
+            <GroupCreator 
+              v-model:visible="newGroupDialogVisible" 
+              @group-created="handleGroupCreated"
+              inline
+              buttonText="新建分组"
+            />
           </div>
         </el-form-item>
         <el-form-item label="表单说明">
@@ -184,34 +156,6 @@ onMounted(() => {
         </el-form-item>
       </el-form>
     </div>
-    
-    <!-- 新建分组对话框 -->
-    <el-dialog
-      v-model="newGroupDialogVisible"
-      title="新建分组"
-      width="500px"
-      center
-      append-to-body
-      destroy-on-close
-    >
-      <div class="new-group-dialog">
-        <el-input
-          v-model="newGroupName"
-          maxlength="50"
-          placeholder="请输入新的分组名"
-          clearable
-          @keyup.enter="saveNewGroup"
-        />
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="newGroupDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="saveNewGroup" :loading="groupNameLoading">
-            提交
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 

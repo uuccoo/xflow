@@ -4,17 +4,15 @@
       <div class="page-title">表单管理</div>
       <div class="action-area">
         <div class="search-box">
-          <input 
-            type="text" 
-            class="search-input"
-            placeholder="搜索表单" 
-            v-model="searchKeyword" 
-            @input="debounceSearch"
-          />
+          <input type="text" class="search-input" placeholder="搜索表单" v-model="searchKeyword" @input="debounceSearch" />
         </div>
         <button class="btn-create" @click="goToCreateForm">
           <span class="plus-icon">+</span> 创建表单
         </button>
+        <button class="btn-create-group" @click="newGroupDialogVisible = true">
+          <span class="plus-icon">+</span> 新建分组
+        </button>
+        <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" :inline="false" />
       </div>
     </div>
 
@@ -35,24 +33,47 @@
             <span class="group-title">{{ group.name }}</span>
             <span class="form-count">({{ group.forms.length }})</span>
           </div>
-          <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
-            <el-icon>
-              <arrow-down />
-            </el-icon>
-          </span>
+          <div class="group-actions">
+            <el-popover placement="bottom-end" :width="100" trigger="click" :hide-after="0"
+              popper-class="group-settings-popover" @show="handlePopoverShow" @hide="handlePopoverHide">
+              <template #reference>
+                <span class="group-settings" @click.stop>
+                  <el-icon>
+                    <setting />
+                  </el-icon>
+                </span>
+              </template>
+              <div class="group-settings-menu">
+                <div class="menu-item" @click="showRenameGroup(group)">
+                  <el-icon>
+                    <edit />
+                  </el-icon>
+                  <span>重命名</span>
+                </div>
+                <div class="menu-item" @click="confirmDeleteGroup(group)">
+                  <el-icon>
+                    <delete />
+                  </el-icon>
+                  <span>删除分组</span>
+                </div>
+              </div>
+            </el-popover>
+            <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
+              <el-icon>
+                <arrow-down />
+              </el-icon>
+            </span>
+          </div>
         </div>
 
         <div v-if="!group.collapsed" class="form-list">
           <div class="form-items">
             <div v-for="form in group.forms" :key="form.id" class="form-item">
               <div class="form-checkbox">
-                <input 
-                  type="checkbox" 
-                  :checked="selectedForms.includes(form.id)"
-                  @click.stop="toggleFormSelection(form.id)"
-                />
+                <input type="checkbox" :checked="selectedForms.includes(form.id)"
+                  @click.stop="toggleFormSelection(form.id)" />
               </div>
-              <div class="form-content" @click="editForm(form)">
+              <div class="form-content">
                 <div class="form-item-icon" :style="{ backgroundColor: form.iconColor || '#1677ff' }">
                   <el-icon color="#ffffff" size="20">
                     <component :is="getIconComponent(form.icon)" />
@@ -70,8 +91,10 @@
                 </div>
                 <div class="form-item-actions">
                   <button class="btn-action btn-edit" @click.stop="editForm(form)">编辑</button>
-                  <button class="btn-action btn-publish" @click.stop="publishForm(form)" v-if="form.status !== 'PUBLISHED'">发布</button>
-                  <button class="btn-action btn-disable" @click.stop="disableForm(form)" v-if="form.status === 'PUBLISHED'">停用</button>
+                  <button class="btn-action btn-publish" @click.stop="publishForm(form)"
+                    v-if="form.status !== 'PUBLISHED'">发布</button>
+                  <button class="btn-action btn-disable" @click.stop="disableForm(form)"
+                    v-if="form.status === 'PUBLISHED'">停用</button>
                   <button class="btn-action btn-delete" @click.stop="confirmDeleteForm(form)">删除</button>
                 </div>
               </div>
@@ -110,15 +133,39 @@
         </div>
       </div>
     </div>
+
+    <!-- 重命名分组对话框 -->
+    <div class="modal" v-if="showRenameDialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>重命名分组</h3>
+          <span class="close-modal" @click="showRenameDialog = false">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>分组名称</label>
+            <input type="text" class="form-input" v-model="editingGroupName" placeholder="请输入分组名称" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="showRenameDialog = false">取消</button>
+          <button class="btn-confirm" @click="renameGroup" :disabled="groupActionLoading">
+            {{ groupActionLoading ? '处理中...' : '确定' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getFormGroupsWithForms } from '@/api/modules/formGroup';
+import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import GroupCreator from '@/components/common/GroupCreator.vue';
 
 const router = useRouter();
 const formGroups = ref([]);
@@ -127,6 +174,17 @@ const showBatchMove = ref(false);
 const targetGroupId = ref('');
 const searchKeyword = ref('');
 let searchTimer = null;
+
+// 新建分组对话框相关
+const newGroupDialogVisible = ref(false); // 新建分组对话框可见性
+const newGroupName = ref(''); // 新建分组名称
+const groupNameLoading = ref(false); // 保存按钮加载状态
+
+// 重命名分组相关变量
+const showRenameDialog = ref(false); // 重命名分组对话框可见性
+const editingGroupName = ref(''); // 编辑中的分组名称
+const editingGroupId = ref(null); // 当前编辑的分组ID
+const groupActionLoading = ref(false); // 分组操作按钮加载状态
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -256,7 +314,7 @@ const deleteForm = async (id) => {
 // 确认批量删除
 const confirmBatchDelete = () => {
   if (selectedForms.value.length === 0) return;
-  
+
   if (confirm(`确定要删除选中的${selectedForms.value.length}个表单吗？此操作不可恢复。`)) {
     batchDeleteForms();
   }
@@ -282,7 +340,7 @@ const batchMoveToGroup = async () => {
     alert('请选择目标分组');
     return;
   }
-  
+
   try {
     await formApi.batchUpdateGroup({
       formIds: selectedForms.value,
@@ -299,7 +357,75 @@ const batchMoveToGroup = async () => {
 
 // 跳转到创建表单页面
 const goToCreateForm = () => {
-  router.push('/home/create-form');
+  router.push('/design/basicSettings');
+};
+
+// 处理新分组创建成功的回调
+const handleGroupCreated = () => {
+  fetchFormGroupsWithForms(searchKeyword.value);
+};
+
+const toggleGroupSettings = (group) => {
+  group.showSettings = !group.showSettings;
+};
+
+const showRenameGroup = (group) => {
+  editingGroupId.value = group.id; // 保存当前编辑的分组ID
+  editingGroupName.value = group.name;
+  showRenameDialog.value = true;
+  group.showSettings = false; // 关闭设置下拉菜单
+};
+
+const confirmDeleteGroup = (group) => {
+  if (confirm(`确定要删除分组"${group.name}"吗？此操作不可恢复。`)) {
+    deleteGroup(group.id);
+  }
+};
+
+// 删除分组
+const deleteGroup = async (id) => {
+  try {
+    await deleteFormGroup(id);
+    alert('分组删除成功！');
+    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+  } catch (error) {
+    console.error('删除分组失败:', error);
+    alert('删除分组失败，请稍后重试');
+  }
+};
+
+// 重命名分组
+const renameGroup = async () => {
+  if (!editingGroupName.value.trim()) {
+    alert('分组名称不能为空');
+    return;
+  }
+
+  groupActionLoading.value = true;
+  try {
+    // 传递分组ID和包含名称的数据对象
+    await updateFormGroup(editingGroupId.value, {
+      name: editingGroupName.value.trim()
+    });
+    alert('分组重命名成功！');
+    showRenameDialog.value = false;
+    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+  } catch (error) {
+    console.error('重命名分组失败:', error);
+    alert('重命名分组失败，请稍后重试');
+  } finally {
+    groupActionLoading.value = false;
+  }
+};
+
+// 处理弹出框显示
+const handlePopoverShow = () => {
+  // 可以在这里添加弹出框显示时的逻辑
+};
+
+// 处理弹出框隐藏
+const handlePopoverHide = () => {
+  // 可以在这里添加弹出框隐藏时的逻辑
 };
 
 onMounted(() => {
@@ -380,6 +506,23 @@ onMounted(() => {
   font-size: 16px;
   margin-right: 4px;
   font-weight: bold;
+}
+
+.btn-create-group {
+  background-color: #52c41a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.btn-create-group:hover {
+  background-color: #389e0d;
 }
 
 /* 批量操作栏 */
@@ -508,7 +651,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 12px;
-  cursor: pointer;
 }
 
 .form-item-icon {
@@ -741,5 +883,66 @@ select:focus {
   border-color: #1677ff;
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
   outline: none;
+}
+
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.group-settings {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.group-settings:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.group-settings-menu {
+  padding: 4px 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #606266;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.menu-item:hover {
+  background-color: #f5f7fa;
+}
+
+/* 为El-Popover添加自定义样式 */
+:deep(.group-settings-popover) {
+  padding: 0;
+  min-width: 100px;
 }
 </style>
