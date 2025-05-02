@@ -34,8 +34,9 @@
             <span class="form-count">({{ group.forms.length }})</span>
           </div>
           <div class="group-actions">
-            <el-popover placement="bottom-end" :width="100" trigger="click" :hide-after="0"
-              popper-class="group-settings-popover" @show="handlePopoverShow" @hide="handlePopoverHide">
+            <!-- 只有当分组id不是'disabled'时才显示设置按钮 -->
+            <el-popover v-if="group.id !== 'disabled'" placement="bottom-end" :width="100" trigger="click"
+              :hide-after="0" popper-class="group-settings-popover" @show="handlePopoverShow" @hide="handlePopoverHide">
               <template #reference>
                 <span class="group-settings" @click.stop>
                   <el-icon>
@@ -86,16 +87,19 @@
                     <span class="form-status" :class="getStatusClass(form.status)">
                       {{ getStatusText(form.status) }}
                     </span>
-                    <span class="form-date">{{ formatDate(form.createTime) }}</span>
+                    <span class="form-date">创建: {{ formatDate(form.createTime) }}</span>
+                    <span class="form-date">更新: {{ formatDate(form.updatedAt) }}</span>
                   </div>
                 </div>
                 <div class="form-item-actions">
                   <button class="btn-action btn-edit" @click.stop="editForm(form)">编辑</button>
                   <button class="btn-action btn-publish" @click.stop="publishForm(form)"
-                    v-if="form.status !== 'PUBLISHED'">发布</button>
+                    v-if="form.status === 2">启用</button>
                   <button class="btn-action btn-disable" @click.stop="disableForm(form)"
-                    v-if="form.status === 'PUBLISHED'">停用</button>
-                  <button class="btn-action btn-delete" @click.stop="confirmDeleteForm(form)">删除</button>
+                    v-if="form.status === 1">停用</button>
+                  <!-- 只有在已停用表单组中才显示删除按钮 -->
+                  <button class="btn-action btn-delete" @click.stop="confirmDeleteForm(form)"
+                    v-if="group.id === 'disabled'">删除</button>
                 </div>
               </div>
             </div>
@@ -226,9 +230,9 @@ const formatDate = (dateStr) => {
 // 获取状态对应的CSS类
 const getStatusClass = (status) => {
   switch (status) {
-    case 'DRAFT': return 'status-draft';
-    case 'PUBLISHED': return 'status-published';
-    case 'DISABLED': return 'status-disabled';
+    case 0: return 'status-draft';
+    case 1: return 'status-published';
+    case 2: return 'status-disabled';
     default: return '';
   }
 };
@@ -236,9 +240,9 @@ const getStatusClass = (status) => {
 // 获取状态对应的文本
 const getStatusText = (status) => {
   switch (status) {
-    case 'DRAFT': return '草稿';
-    case 'PUBLISHED': return '已发布';
-    case 'DISABLED': return '已停用';
+    case 0: return '草稿';
+    case 1: return '已发布';
+    case 2: return '已停用';
     default: return '未知状态';
   }
 };
@@ -911,7 +915,7 @@ select:focus {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  border-radius:4px;
   font-size: 14px;
   outline: none;
 }
