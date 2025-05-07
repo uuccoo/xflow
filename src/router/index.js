@@ -32,25 +32,6 @@ const routes = [
   {
     path: '/design',
     component: () => import('@/views/DesignView.vue'),
-    redirect: '/design/basicSettings',
-    children: [
-      {
-        path: 'basicSettings',
-        component: () => import('@/components/design/BasicSettings.vue'),
-      },
-      {
-        path: 'formDesign',
-        component: () => import('@/components/design/FormDesign.vue'),
-      },
-      {
-        path: 'flowDesign',
-        component: () => import('@/components/design/FlowDesign.vue'),
-      },
-      {
-        path: 'moreSettings',
-        component: () => import('@/components/design/MoreSettings.vue'),
-      },
-    ],
   },
   {
     path: '/approval-form',

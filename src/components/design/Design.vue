@@ -6,8 +6,15 @@ import { useBasicSettingsStore } from '../../stores/basicSettingsStore'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { useMoreSettingsStore } from '../../stores/moreSettingsStore'
+import { ArrowLeft } from '@element-plus/icons-vue'
 // 导入API
 import { formApi } from '@/api'
+
+// 导入各个组件
+import BasicSettings from './BasicSettings.vue'
+import FormDesign from './FormDesign.vue'
+import FlowDesign from './FlowDesign.vue'
+import MoreSettings from './MoreSettings.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,20 +23,19 @@ const formDesignStore = useFormDesignStore()
 const flowDesignStore = useFlowDesignStore()
 const moreSettingsStore = useMoreSettingsStore()
 
+// 当前激活的组件
+const activeComponent = ref('basicSettings')
+
 // 返回上一页的功能
-const backUrl = computed(() => route.query.backUrl || '/') // 默认返回首页
+const backUrl = computed(() => route.query.backUrl) // 默认返回首页
 
 const handleBack = () => {
-  router.push(backUrl.value)
+  if (backUrl.value) {
+    router.push(backUrl.value)
+  } else {
+    router.back()
+  }
 }
-
-// 根据当前路径计算活动菜单项
-const defaultActive = computed(() => {
-  const path = route.path
-  // 从路径中提取最后一部分作为活动菜单项（例如 /design/formDesign -> formDesign）
-  const parts = path.split('/')
-  return parts[parts.length - 1] || 'basicSettings'
-})
 
 // 是否正在发布
 const publishing = ref(false)
@@ -221,8 +227,6 @@ watch(
         const result = await formApi.getFormDetail(formId);
         if (result && result.data) {
           loadExistingData(result.data);
-          // 更新URL，移除ID参数，避免刷新重复加载
-          router.replace({ query: {} });
         }
       } catch (error) {
         console.error('加载表单数据失败:', error);
@@ -237,8 +241,6 @@ watch(
         const result = await formApi.getFormByCode(formCode);
         if (result && result.data) {
           loadExistingData(result.data);
-          // 更新URL，移除code参数，避免刷新重复加载
-          router.replace({ query: {} });
         }
       } catch (error) {
         console.error('加载表单数据失败:', error);
@@ -259,12 +261,11 @@ onMounted(() => {
 
 <template>
   <header>
-    <el-menu :default-active="defaultActive" active-text-color="#409eff" mode="horizontal" :ellipsis="false"
-      :router="true">
-      <el-menu-item index="basicSettings" route="/design/basicSettings">基础设置</el-menu-item>
-      <el-menu-item index="formDesign" route="/design/formDesign">表单设计</el-menu-item>
-      <el-menu-item index="flowDesign" route="/design/flowDesign">流程设计</el-menu-item>
-      <el-menu-item index="moreSettings" route="/design/moreSettings">更多设置</el-menu-item>
+    <el-menu :default-active="activeComponent" active-text-color="#409eff" mode="horizontal" :ellipsis="false">
+      <el-menu-item index="basicSettings" @click="activeComponent = 'basicSettings'">基础设置</el-menu-item>
+      <el-menu-item index="formDesign" @click="activeComponent = 'formDesign'">表单设计</el-menu-item>
+      <el-menu-item index="flowDesign" @click="activeComponent = 'flowDesign'">流程设计</el-menu-item>
+      <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
     </el-menu>
     <div class="publish">
       <el-button size="small" @click="preview">预览</el-button>
@@ -279,7 +280,12 @@ onMounted(() => {
       </div>
     </div>
   </header>
-  <router-view />
+  <main>
+    <BasicSettings v-show="activeComponent === 'basicSettings'" />
+    <FormDesign v-show="activeComponent === 'formDesign'" />
+    <FlowDesign v-show="activeComponent === 'flowDesign'" />
+    <MoreSettings v-show="activeComponent === 'moreSettings'" />
+  </main>
 </template>
 
 <style scoped lang="scss">
@@ -330,16 +336,16 @@ header {
     cursor: pointer;
     transition: all 0.3s;
     color: #606266;
-    
+
     &:hover {
       color: #409eff;
     }
-    
+
     .el-icon {
       margin-right: 4px;
       font-size: 14px;
     }
-    
+
     span {
       font-size: 14px;
     }

@@ -51,7 +51,7 @@ const menuItems = [
 
 // 管理相关的菜单项
 const adminMenuItems = [
-  { name: '创建新表单', route: '/design/basicSettings' },
+  { name: '创建新表单', route: '/design' },
   { name: '表单管理', route: '/home/manage-forms' }
 ];
 

@@ -31,9 +31,25 @@
     <el-main class="design-area">
       <div class="design-header">
         <h3>表单设计</h3>
+        <div class="view-controls">
+          <el-tooltip content="手机视图" placement="top">
+            <span class="view-icon" :class="{ active: viewMode === 'mobile' }" @click="switchView('mobile')">
+              <el-icon>
+                <Iphone />
+              </el-icon>
+            </span>
+          </el-tooltip>
+          <el-tooltip content="电脑视图" placement="top">
+            <span class="view-icon" :class="{ active: viewMode === 'pc' }" @click="switchView('pc')">
+              <el-icon>
+                <Monitor />
+              </el-icon>
+            </span>
+          </el-tooltip>
+        </div>
       </div>
       <div class="design-canvas">
-        <div class="phone-frame">
+        <div class="phone-frame" :class="{ 'pc-view': viewMode === 'pc' }">
           <draggable :list="formStore.formItems" group="components" item-key="id" class="form-container"
             @start="dragStart" @end="dragEnd" handle=".drag-handle" :animation="300" ghost-class="ghost-item"
             chosen-class="chosen-item" drag-class="dragging-item">
@@ -112,11 +128,19 @@
 import { ref } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from './ComponentRenderer.vue'
-import { Delete, CopyDocument } from '@element-plus/icons-vue'
+import { Delete, CopyDocument, Iphone, Monitor } from '@element-plus/icons-vue'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 
 // 使用 Pinia store
 const formStore = useFormDesignStore()
+
+// 视图模式状态（mobile/pc）
+const viewMode = ref('mobile')
+
+// 切换视图模式
+const switchView = (mode) => {
+  viewMode.value = mode
+}
 
 // 拖拽开始
 const dragStart = () => {
@@ -251,6 +275,36 @@ const handleDeleteComponent = (component, parentInfo) => {
       margin-left: 20px;
       color: #606266;
     }
+
+    .view-controls {
+      display: flex;
+      align-items: center;
+      margin-right: 20px;
+
+      .view-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &.active {
+          background-color: #409eff;
+          color: #fff;
+        }
+
+        &:hover {
+          background-color: #e6f7ff;
+        }
+
+        .el-icon {
+          font-size: 18px;
+        }
+      }
+    }
   }
 
   .design-canvas {
@@ -276,6 +330,16 @@ const handleDeleteComponent = (component, parentInfo) => {
       flex-direction: column;
       padding: 10px;
       color: #333;
+      transition: all 0.3s ease;
+
+      // 根据视图模式调整样式
+      &.pc-view {
+        width: 90%;
+        height: 90%;
+        max-width: 900px;
+        border-radius: 6px;
+        border-width: 1px;
+      }
     }
   }
 }
