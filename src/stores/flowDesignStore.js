@@ -47,30 +47,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 控制抽屉层显示
   const drawerVisible = ref(false)
 
-  // 缩放相关常量和变量
-  const ZOOM_STEP = 0.1 // 缩放步长
-  const MIN_ZOOM = 0.5 // 最小缩放比例
-  const MAX_ZOOM = 2.0 // 最大缩放比例
-  const DEFAULT_ZOOM = 1.0 // 默认缩放比例
-
-  // 流程图的缩放比例
-  const flowZoomScale = ref(DEFAULT_ZOOM)
-
-  // 放大流程图
-  const zoomIn = () => {
-    flowZoomScale.value = Math.min(flowZoomScale.value + ZOOM_STEP, MAX_ZOOM)
-  }
-
-  // 缩小流程图
-  const zoomOut = () => {
-    flowZoomScale.value = Math.max(flowZoomScale.value - ZOOM_STEP, MIN_ZOOM)
-  }
-
-  // 重置缩放到默认比例
-  const resetZoom = () => {
-    flowZoomScale.value = DEFAULT_ZOOM
-  }
-
   // 选择节点
   const selectNode = (node, index, branch = null) => {
     selectedNode.value = {
@@ -326,10 +302,5 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     editCondition,
     formatUserNames,
     copyConditionBranch,
-    // 添加缩放相关的状态和方法
-    flowZoomScale,
-    zoomIn,
-    zoomOut,
-    resetZoom,
   }
 })
