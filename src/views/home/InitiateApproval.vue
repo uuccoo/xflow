@@ -88,10 +88,14 @@ const toggleGroup = (group) => {
 
 // 开始审批流程
 const startApproval = (form) => {
-  // 跳转到审批表单填写页面
+  // 跳转到审批表单填写页面，传递表单ID、编码和名称
   router.push({
     path: '/approval-form',
-    query: { id: form.id, code: form.code, name: form.name }
+    query: {
+      id: form.id,
+      code: form.code,
+      name: form.name
+    }
   });
 };
 

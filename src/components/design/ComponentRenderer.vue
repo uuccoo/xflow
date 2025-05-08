@@ -13,14 +13,12 @@
               拖拽组件到此处
             </div>
             <div class="drag-handle form-item-wrapper nested-item"
-              :class="{ 'active': activeItem && activeItem.id === element.id }"
-              v-for="(element, idx) in column.children" :key="element.id"
-              @click.stop="handleSelect(element, { parentComponent: component, parentColumn: column, columnIndex: index, itemIndex: idx })">
+              :class="{ active: activeItem && activeItem.id === element.id }" v-for="(element, idx) in column.children"
+              :key="element.id" @click.stop="formStore.handleSelectComponent(element)">
               <div class="form-item-content">
                 <component-renderer :component="element" :showActions="showActions" :isNested="true"
-                  :parentInfo="{ parentComponent: component, parentColumn: column, columnIndex: index, itemIndex: idx }"
-                  :isActive="activeItem && activeItem.id === element.id" :activeItem="activeItem"
-                  @selectComponent="handleSelect" @copyComponent="handleCopy" @deleteComponent="handleDelete" />
+                  :parentColumn="column" :index="idx" :isActive="activeItem && activeItem.id === element.id"
+                  :activeItem="activeItem" />
               </div>
             </div>
           </draggable>
@@ -40,10 +38,10 @@
 
     <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
     <div v-if="showActions && isActive" class="form-item-actions">
-      <el-icon @click.stop="handleCopy(component, parentInfo)">
+      <el-icon @click.stop="formStore.handleCopyComponent(component, index, parentColumn)">
         <CopyDocument />
       </el-icon>
-      <el-icon @click.stop="handleDelete(component, parentInfo)" class="delete-button">
+      <el-icon @click.stop="formStore.handleDeleteComponent(component, index, parentColumn)" class="delete-button">
         <Delete class="delete-icon" />
       </el-icon>
     </div>
@@ -52,20 +50,12 @@
 
 <script setup>
 import { h, defineAsyncComponent } from 'vue';
-import {
-  ElInput,
-  ElRadioGroup,
-  ElRadio,
-  ElCheckboxGroup,
-  ElCheckbox,
-  ElDatePicker,
-  ElUpload,
-  ElButton,
-  ElIcon
-} from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
-import { Delete, CopyDocument } from '@element-plus/icons-vue';
+import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
+import { useFormDesignStore } from '../../stores/formDesignStore';
+
+// 获取 formDesignStore
+const formStore = useFormDesignStore();
 
 // 自引用组件（递归组件）
 const ComponentRenderer = defineAsyncComponent(() => import('./ComponentRenderer.vue'));
@@ -83,9 +73,13 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  parentInfo: {
+  index: {
+    type: Number,
+    default: undefined
+  },
+  parentColumn: {
     type: Object,
-    default: () => null
+    default: null
   },
   isActive: {
     type: Boolean,
@@ -96,24 +90,6 @@ const props = defineProps({
     default: null
   }
 });
-
-// 定义事件
-const emit = defineEmits(['selectComponent', 'copyComponent', 'deleteComponent']);
-
-// 处理选择组件事件
-const handleSelect = (component, parentInfo = null) => {
-  emit('selectComponent', component, parentInfo);
-};
-
-// 处理复制组件事件
-const handleCopy = (component, parentInfo = null) => {
-  emit('copyComponent', component, parentInfo);
-};
-
-// 处理删除组件事件
-const handleDelete = (component, parentInfo = null) => {
-  emit('deleteComponent', component, parentInfo);
-};
 
 const renderField = () => {
   switch (props.component.type) {

@@ -169,16 +169,19 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   }
 
   // 删除组件
-  const deleteItem = (index) => {
-    formItems.value.splice(index, 1)
-    if (activeItem.value && activeItem.value === formItems.value[index]) {
+  const deleteItem = (component, index, parentColumn) => {
+    const arr = parentColumn?.children || formItems.value
+    arr.splice(index, 1)
+    // 如果删除的是当前选中的组件，则取消选中
+    if (activeItem.value && activeItem.value === arr[index]) {
       activeItem.value = null
     }
   }
 
   // 复制组件
-  const copyItem = (index) => {
-    const sourceItem = formItems.value[index]
+  const copyItem = (component, index, parentColumn) => {
+    const arr = parentColumn?.children || formItems.value
+    const sourceItem = arr[index]
     // 深拷贝组件
     const newItem = JSON.parse(JSON.stringify(sourceItem))
 
@@ -186,7 +189,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     updateComponentIds(newItem)
 
     // 将复制的组件插入到原组件后面
-    formItems.value.splice(index + 1, 0, newItem)
+    arr.splice(index + 1, 0, newItem)
   }
 
   // 递归更新组件和所有子组件的ID和编码
@@ -284,6 +287,25 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     }
   }
 
+  // 处理组件选择事件
+  const handleSelectComponent = (component) => {
+    activeItem.value = component
+  }
+
+  // 处理组件复制事件
+  const handleCopyComponent = (component, index, parentColumn) => {
+    if (index !== undefined) {
+      copyItem(component, index, parentColumn)
+    }
+  }
+
+  // 处理组件删除事件
+  const handleDeleteComponent = (component, index, parentColumn) => {
+    if (index !== undefined) {
+      deleteItem(component, index, parentColumn)
+    }
+  }
+
   return {
     formItems,
     activeItem,
@@ -292,8 +314,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     cloneComponent,
     addComponent,
     selectItem,
-    deleteItem,
-    copyItem,
     updateColumnsLayout,
+    handleSelectComponent,
+    handleCopyComponent,
+    handleDeleteComponent,
   }
 })

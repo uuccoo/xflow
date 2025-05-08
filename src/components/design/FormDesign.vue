@@ -59,11 +59,10 @@
             <div class="drag-handle form-item-wrapper"
               :class="{ active: formStore.activeItem && formStore.activeItem.id === element.id }"
               v-for="(element, index) in formStore.formItems" :key="element.id" @click="formStore.selectItem(element)">
-              <!-- 动态组件渲染 - 组件本身已提供复制和删除按钮 -->
-              <component-renderer :component="element" :showActions="true" :isNested="false" :parentInfo="{ index }"
+              <!-- 动态组件渲染 - 不再传递事件处理程序 -->
+              <component-renderer :component="element" :showActions="true" :isNested="false" :index="index"
                 :isActive="formStore.activeItem && formStore.activeItem.id === element.id"
-                :activeItem="formStore.activeItem" @selectComponent="handleSelectComponent"
-                @copyComponent="handleCopyComponent" @deleteComponent="handleDeleteComponent" />
+                :activeItem="formStore.activeItem" />
             </div>
           </draggable>
         </div>
@@ -149,34 +148,6 @@ const dragStart = () => {
 
 // 拖拽结束
 const dragEnd = () => { }
-
-// 处理组件选择事件
-const handleSelectComponent = (component, parentInfo) => {
-  if (parentInfo) {
-    // 处理嵌套组件的选择
-    if (parentInfo.parentColumn && parentInfo.columnIndex !== undefined && parentInfo.itemIndex !== undefined) {
-      // 这是分栏内的嵌套组件
-      formStore.activeItem = component;
-    }
-  } else {
-    // 处理顶层组件的选择
-    formStore.activeItem = component;
-  }
-}
-
-// 处理组件复制事件
-const handleCopyComponent = (component, parentInfo) => {
-  if (parentInfo && parentInfo.index !== undefined) {
-    formStore.copyItem(parentInfo.index);
-  }
-};
-
-// 处理组件删除事件
-const handleDeleteComponent = (component, parentInfo) => {
-  if (parentInfo && parentInfo.index !== undefined) {
-    formStore.deleteItem(parentInfo.index);
-  }
-};
 </script>
 
 <style scoped lang="scss">
@@ -473,7 +444,7 @@ const handleDeleteComponent = (component, parentInfo) => {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
+    box-shadow: 00 0 0 rgba(64, 158, 255, 0.4);
   }
 
   70% {
