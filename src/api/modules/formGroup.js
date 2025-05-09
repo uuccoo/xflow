@@ -13,13 +13,17 @@ export function getFormGroupList() {
 /**
  * 获取带表单列表的表单分组
  * @param {String} keyword 可选的搜索关键字，根据表单名称进行筛选
+ * @param {Boolean} manager 可选参数，是否只获取管理员相关的表单分组
  */
-export function getFormGroupsWithForms(keyword) {
+export function getFormGroupsWithForms(keyword, manager) {
   return request({
     url: '/form-groups/with-forms',
     method: 'get',
-    params: keyword ? { keyword } : {},
-  })
+    params: {
+      ...(keyword ? { keyword } : {}),
+      ...(manager !== undefined ? { manager } : {}),
+    },
+  });
 }
 
 /**

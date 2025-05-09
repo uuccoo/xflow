@@ -199,7 +199,7 @@ const getIconComponent = (iconName) => {
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const response = await getFormGroupsWithForms(keyword);
+    const response = await getFormGroupsWithForms(keyword, true);
     if (response && response.data && Array.isArray(response.data)) {
       // 处理API返回的数据
       formGroups.value = response.data.map(group => ({
