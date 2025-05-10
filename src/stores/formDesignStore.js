@@ -15,14 +15,14 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   const components = reactive([
     {
       category: '布局组件',
-      items: [{ type: 'columns', icon: 'Cellphone', label: '分栏容器', columns: [] }],
+      items: [{ type: 'columns', icon: 'Grid', label: '分栏容器', columns: [] }],
     },
     {
       category: '基础组件',
       items: [
         {
           type: 'input',
-          icon: 'Document',
+          icon: 'EditPen',
           label: '单行文本',
           field: '',
           title: '',
@@ -33,7 +33,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           type: 'textarea',
-          icon: 'DocumentCopy',
+          icon: 'Tickets',
           label: '多行文本',
           field: '',
           title: '',
@@ -44,7 +44,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           type: 'number',
-          icon: 'Odometer',
+          icon: 'EditPen',
           label: '数字输入框',
           field: '',
           title: '',
@@ -55,6 +55,16 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           min: 0,
           max: 100,
           step: 1,
+        },
+        {
+          type: 'text',
+          icon: 'InfoFilled',
+          label: '说明文字',
+          field: '',
+          title: '说明标题',
+          content: '这里是说明文字内容',
+          fontSize: '14px',
+          color: '#606266',
         },
         {
           type: 'radio',
@@ -72,7 +82,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           type: 'checkbox',
-          icon: 'Select',
+          icon: 'CircleCheck',
           label: '多选框',
           field: '',
           title: '',
@@ -85,33 +95,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           defaultValue: [],
         },
         {
-          type: 'daterange',
-          icon: 'Timer',
-          label: '日期时间区间',
-          field: '',
-          title: '',
-          placeholder: '请选择日期时间区间',
-          required: false,
-          defaultValue: [],
-          format: 'YYYY-MM-DD HH:mm:ss',
-          rangeSeparator: '至',
-        },
-        {
-          type: 'text',
-          icon: 'InfoFilled',
-          label: '说明文字',
-          field: '',
-          title: '说明标题',
-          content: '这里是说明文字内容',
-          fontSize: '14px',
-          color: '#606266',
-        },
-      ],
-    },
-    {
-      category: '高级组件',
-      items: [
-        {
           type: 'date',
           icon: 'Calendar',
           label: '日期选择',
@@ -120,6 +103,18 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           placeholder: '请输入',
           required: false,
           defaultValue: '',
+        },
+        {
+          type: 'daterange',
+          icon: 'Calendar',
+          label: '日期区间',
+          field: '',
+          title: '',
+          placeholder: '请选择日期时间区间',
+          required: false,
+          defaultValue: [],
+          format: 'YYYY-MM-DD HH:mm:ss',
+          rangeSeparator: '至',
         },
         {
           type: 'upload',
@@ -142,6 +137,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           defaultValue: [],
         },
       ],
+    },
+    {
+      category: '高级组件',
+      items: [],
     },
   ])
 
