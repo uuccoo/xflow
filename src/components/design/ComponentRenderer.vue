@@ -106,6 +106,15 @@ const renderField = () => {
         modelValue: props.component.defaultValue,
         disabled: true
       });
+    case 'number':
+      return h(ElInputNumber, {
+        placeholder: props.component.placeholder || '请输入数字',
+        modelValue: props.component.defaultValue,
+        disabled: true,
+        min: props.component.min,
+        max: props.component.max,
+        step: props.component.step
+      });
     case 'radio':
       return h(ElRadioGroup, { modelValue: props.component.defaultValue, disabled: true },
         props.component.options.map(option =>
@@ -123,6 +132,18 @@ const renderField = () => {
         type: 'date',
         placeholder: props.component.placeholder || '请选择日期',
         modelValue: props.component.defaultValue,
+        disabled: true
+      });
+    case 'daterange':
+      return h(ElDatePicker, {
+        type: 'datetimerange',
+        placeholder: props.component.placeholder || '请选择日期时间区间',
+        rangeSeparator: props.component.rangeSeparator || '至',
+        startPlaceholder: '开始日期',
+        endPlaceholder: '结束日期',
+        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
+        modelValue: props.component.defaultValue,
+        style: { width: '100%' },
         disabled: true
       });
     case 'upload':
@@ -144,6 +165,17 @@ const renderField = () => {
       }, {
         default: () => h(ElIcon, {}, { default: () => h(Plus) })
       });
+    case 'text':
+      return h('div', {
+        style: {
+          fontSize: props.component.fontSize || '14px',
+          color: props.component.color || '#606266',
+          padding: '10px',
+          backgroundColor: '#f8f8f8',
+          borderRadius: '4px',
+          border: '1px solid #ebeef5'
+        }
+      }, props.component.content || '');
     default:
       return h('div', {}, '未知组件类型');
   }
@@ -286,5 +318,12 @@ const renderField = () => {
   100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
   }
+}
+
+.text-content {
+  padding: 10px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  border: 1px solid #ebeef5;
 }
 </style>

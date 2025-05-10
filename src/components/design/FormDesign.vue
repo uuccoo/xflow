@@ -89,6 +89,86 @@
             </el-select>
           </el-form-item>
         </template>
+
+        <!-- 说明文字组件属性设置 -->
+        <template v-else-if="formStore.activeItem.type === 'text'">
+          <el-form-item label="标题">
+            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
+          </el-form-item>
+          <el-form-item label="内容">
+            <el-input type="textarea" v-model="formStore.activeItem.content" placeholder="请输入说明文字内容"
+              :rows="4"></el-input>
+          </el-form-item>
+          <el-form-item label="字体大小">
+            <el-select v-model="formStore.activeItem.fontSize" style="width: 100%">
+              <el-option label="小" value="12px"></el-option>
+              <el-option label="中" value="14px"></el-option>
+              <el-option label="大" value="16px"></el-option>
+              <el-option label="超大" value="18px"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="文字颜色">
+            <el-color-picker v-model="formStore.activeItem.color"></el-color-picker>
+          </el-form-item>
+        </template>
+
+        <!-- 数字输入框组件属性设置 -->
+        <template v-else-if="formStore.activeItem.type === 'number'">
+          <el-form-item label="标题">
+            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
+          </el-form-item>
+          <el-form-item label="编码">
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+          </el-form-item>
+          <el-form-item label="提示文字">
+            <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
+          </el-form-item>
+          <el-form-item label="最小值">
+            <el-input-number v-model="formStore.activeItem.min" :step="1" style="width: 100%"></el-input-number>
+          </el-form-item>
+          <el-form-item label="最大值">
+            <el-input-number v-model="formStore.activeItem.max" :step="1" style="width: 100%"></el-input-number>
+          </el-form-item>
+          <el-form-item label="步长">
+            <el-input-number v-model="formStore.activeItem.step" :step="0.1" :precision="1"
+              style="width: 100%"></el-input-number>
+          </el-form-item>
+          <el-form-item label="是否必填">
+            <el-switch v-model="formStore.activeItem.required"></el-switch>
+          </el-form-item>
+          <el-form-item label="默认值">
+            <el-input-number v-model="formStore.activeItem.defaultValue" :step="1"
+              style="width: 100%"></el-input-number>
+          </el-form-item>
+        </template>
+
+        <!-- 日期时间区间组件属性设置 -->
+        <template v-else-if="formStore.activeItem.type === 'daterange'">
+          <el-form-item label="标题">
+            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
+          </el-form-item>
+          <el-form-item label="编码">
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+          </el-form-item>
+          <el-form-item label="提示文字">
+            <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
+          </el-form-item>
+          <el-form-item label="日期格式">
+            <el-select v-model="formStore.activeItem.format" style="width: 100%">
+              <el-option label="年-月-日 时:分:秒" value="YYYY-MM-DD HH:mm:ss"></el-option>
+              <el-option label="年-月-日" value="YYYY-MM-DD"></el-option>
+              <el-option label="年/月/日" value="YYYY/MM/DD"></el-option>
+              <el-option label="年年年年-月月-日日" value="YYYY-MM-DD"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="分隔符">
+            <el-input v-model="formStore.activeItem.rangeSeparator" placeholder="请输入日期区间分隔符"></el-input>
+          </el-form-item>
+          <el-form-item label="是否必填">
+            <el-switch v-model="formStore.activeItem.required"></el-switch>
+          </el-form-item>
+        </template>
+
         <!-- 普通组件属性设置 -->
         <template v-else>
           <el-form-item label="标题">

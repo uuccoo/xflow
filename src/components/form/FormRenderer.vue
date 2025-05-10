@@ -150,6 +150,41 @@ const renderField = () => {
         default: () => h(ElIcon, {}, { default: () => h(Plus) })
       });
 
+    case 'number':
+      return h(ElInputNumber, {
+        modelValue: getValue.value,
+        placeholder: props.component.placeholder || '请输入数字',
+        min: props.component.min,
+        max: props.component.max,
+        step: props.component.step,
+        'onUpdate:modelValue': handleValueChange
+      });
+
+    case 'daterange':
+      return h(ElDatePicker, {
+        type: 'datetimerange',
+        placeholder: props.component.placeholder || '请选择日期时间区间',
+        rangeSeparator: props.component.rangeSeparator || '至',
+        startPlaceholder: '开始日期',
+        endPlaceholder: '结束日期',
+        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
+        modelValue: getValue.value,
+        style: { width: '100%' },
+        'onUpdate:modelValue': handleValueChange
+      });
+
+    case 'text':
+      return h('div', {
+        style: {
+          fontSize: props.component.fontSize || '14px',
+          color: props.component.color || '#606266',
+          padding: '10px',
+          backgroundColor: '#f8f8f8',
+          borderRadius: '4px',
+          border: '1px solid #ebeef5'
+        }
+      }, props.component.content || '');
+
     default:
       return h('div', {}, '未知组件类型');
   }
