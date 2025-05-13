@@ -84,15 +84,30 @@ const renderField = () => {
       });
 
     case 'radio':
-      return h(ElRadioGroup,
-        {
-          modelValue: getValue.value,
-          'onUpdate:modelValue': handleValueChange
-        },
-        () => props.component.options?.map(option =>
-          h(ElRadio, { label: option.value }, { default: () => option.label })
-        ) || []
-      );
+      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
+      if (props.component.asDropdown) {
+        return h(ElSelect,
+          {
+            modelValue: getValue.value,
+            placeholder: props.component.placeholder || '请选择' + props.component.title,
+            style: { width: '100%' },
+            'onUpdate:modelValue': handleValueChange
+          },
+          () => props.component.options?.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          ) || []
+        );
+      } else {
+        return h(ElRadioGroup,
+          {
+            modelValue: getValue.value,
+            'onUpdate:modelValue': handleValueChange
+          },
+          () => props.component.options?.map(option =>
+            h(ElRadio, { label: option.value }, { default: () => option.label })
+          ) || []
+        );
+      }
 
     case 'checkbox':
       return h(ElCheckboxGroup,
@@ -140,6 +155,7 @@ const renderField = () => {
 
     case 'image':
       return h(ElUpload, {
+        class: 'avatar-uploader',
         action: '#',
         listType: 'picture-card',
         autoUpload: false,
@@ -157,6 +173,7 @@ const renderField = () => {
         min: props.component.min,
         max: props.component.max,
         step: props.component.step,
+        style: { width: '100%', "max-width": '220px' },
         'onUpdate:modelValue': handleValueChange
       });
 
@@ -238,5 +255,16 @@ const renderField = () => {
 
 .nested-item {
   padding: 0;
+}
+
+::v-deep .avatar-uploader .el-upload,
+.el-upload-list__item {
+  width: 50px;
+  height: 50px;
+}
+
+::v-deep .avatar-uploader .el-upload-list__item {
+  width: 80px;
+  height: 80px;
 }
 </style>

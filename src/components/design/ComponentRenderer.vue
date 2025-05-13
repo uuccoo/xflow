@@ -113,14 +113,29 @@ const renderField = () => {
         disabled: true,
         min: props.component.min,
         max: props.component.max,
-        step: props.component.step
+        step: props.component.step,
+        style: { width: '100%', "max-width": '220px' }
       });
     case 'radio':
-      return h(ElRadioGroup, { modelValue: props.component.defaultValue, disabled: true },
-        props.component.options.map(option =>
-          h(ElRadio, { label: option.value, disabled: true }, { default: () => option.label })
-        )
-      );
+      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
+      if (props.component.asDropdown) {
+        return h(ElSelect, {
+          modelValue: props.component.defaultValue,
+          placeholder: props.component.placeholder || '请选择' + props.component.title,
+          style: { width: '100%' },
+          disabled: true
+        }, {
+          default: () => props.component.options.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          )
+        });
+      } else {
+        return h(ElRadioGroup, { modelValue: props.component.defaultValue, disabled: true },
+          props.component.options.map(option =>
+            h(ElRadio, { label: option.value, disabled: true }, { default: () => option.label })
+          )
+        );
+      }
     case 'checkbox':
       return h(ElCheckboxGroup, { modelValue: props.component.defaultValue, disabled: true },
         props.component.options.map(option =>
@@ -157,6 +172,7 @@ const renderField = () => {
       });
     case 'image':
       return h(ElUpload, {
+        class: 'avatar-uploader',
         action: '#',
         disabled: true,
         listType: 'picture-card',
@@ -325,5 +341,10 @@ const renderField = () => {
   background-color: #f8f8f8;
   border-radius: 4px;
   border: 1px solid #ebeef5;
+}
+
+::v-deep .avatar-uploader .el-upload {
+  width: 50px;
+  height: 50px;
 }
 </style>

@@ -79,6 +79,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
             { label: '选项2', value: '2' },
           ],
           defaultValue: '',
+          asDropdown: false, // 新增属性：是否以下拉框形式展示
         },
         {
           type: 'checkbox',
@@ -341,6 +342,67 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     }
   }
 
+  // 添加单选/多选选项
+  const addOption = () => {
+    if (!activeItem.value) return
+    // 确保组件是单选框或多选框
+    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+      // 生成唯一的选项值
+      const timestamp = Date.now()
+      const randomStr = Math.random().toString(36).substring(2, 8)
+      const uniqueValue = `option_${timestamp}_${randomStr}`
+
+      const newOption = {
+        label: `选项${activeItem.value.options.length + 1}`,
+        value: uniqueValue,
+      }
+      activeItem.value.options.push(newOption)
+    }
+  }
+
+  // 移除单选/多选选项
+  const removeOption = (index) => {
+    if (!activeItem.value) return
+    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+      // 至少保留一个选项
+      if (activeItem.value.options.length > 1) {
+        activeItem.value.options.splice(index, 1)
+        // 如果删除的是当前选中的默认值，清空默认值
+        if (
+          activeItem.value.type === 'radio' &&
+          activeItem.value.defaultValue === activeItem.value.options[index]?.value
+        ) {
+          activeItem.value.defaultValue = ''
+        } else if (
+          activeItem.value.type === 'checkbox' &&
+          activeItem.value.defaultValue.includes(activeItem.value.options[index]?.value)
+        ) {
+          const valueIndex = activeItem.value.defaultValue.indexOf(
+            activeItem.value.options[index].value,
+          )
+          if (valueIndex > -1) {
+            activeItem.value.defaultValue.splice(valueIndex, 1)
+          }
+        }
+      }
+    }
+  }
+
+  // 移动选项位置
+  const moveOption = (index, direction) => {
+    if (!activeItem.value) return
+    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+      const options = activeItem.value.options
+      const newIndex = index + direction
+
+      // 确保新索引在有效范围内
+      if (newIndex >= 0 && newIndex < options.length) {
+        // 交换选项位置
+        ;[options[index], options[newIndex]] = [options[newIndex], options[index]]
+      }
+    }
+  }
+
   return {
     formItems,
     activeItem,
@@ -353,5 +415,8 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     handleSelectComponent,
     handleCopyComponent,
     handleDeleteComponent,
+    addOption,
+    removeOption,
+    moveOption,
   }
 })

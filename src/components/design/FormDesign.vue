@@ -142,6 +142,61 @@
           </el-form-item>
         </template>
 
+        <!-- 单选框组件属性设置 -->
+        <template v-else-if="formStore.activeItem.type === 'radio'">
+          <el-form-item label="标题">
+            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
+          </el-form-item>
+          <el-form-item label="编码">
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+          </el-form-item>
+          <el-form-item label="选项设置">
+            <div class="options-container">
+              <draggable v-model="formStore.activeItem.options" handle=".drag-handle-option" :animation="200"
+                ghost-class="ghost-option" chosen-class="chosen-option" drag-class="dragging-option">
+                <div v-for="(option, optIndex) in formStore.activeItem.options" :key="option.value" class="option-item">
+                  <el-icon class="drag-handle-option">
+                    <Operation />
+                  </el-icon>
+                  <el-input v-model="option.label" placeholder="选项名称" class="option-input-full"></el-input>
+                  <div class="option-actions">
+                    <el-button size="small" circle type="danger" @click="formStore.removeOption(optIndex)" title="删除">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </div>
+                </div>
+              </draggable>
+              <el-button type="primary" text class="add-option-btn" @click="formStore.addOption">
+                <el-icon>
+                  <Plus />
+                </el-icon> 添加选项
+              </el-button>
+            </div>
+          </el-form-item>
+          <el-form-item label="显示方式">
+            <el-radio-group v-model="formStore.activeItem.asDropdown">
+              <el-radio :label="false">单选框组</el-radio>
+              <el-radio :label="true">下拉选择器</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="是否必填">
+            <el-switch v-model="formStore.activeItem.required"></el-switch>
+          </el-form-item>
+          <el-form-item label="默认值">
+            <el-select v-if="formStore.activeItem.asDropdown" v-model="formStore.activeItem.defaultValue"
+              placeholder="请选择默认值" style="width: 100%">
+              <el-option v-for="option in formStore.activeItem.options" :key="option.value" :label="option.label"
+                :value="option.value"></el-option>
+            </el-select>
+            <el-radio-group v-else v-model="formStore.activeItem.defaultValue">
+              <el-radio v-for="option in formStore.activeItem.options" :key="option.value" :label="option.value">{{
+                option.label }}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </template>
+
         <!-- 日期时间区间组件属性设置 -->
         <template v-else-if="formStore.activeItem.type === 'daterange'">
           <el-form-item label="标题">
@@ -207,7 +262,7 @@
 import { ref } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from './ComponentRenderer.vue'
-import { Delete, CopyDocument, Iphone, Monitor } from '@element-plus/icons-vue'
+import { Delete, CopyDocument, Iphone, Monitor, ArrowUp, ArrowDown, Plus, Operation } from '@element-plus/icons-vue'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 
 // 使用 Pinia store
@@ -524,7 +579,7 @@ const dragEnd = () => { }
 
 @keyframes pulse {
   0% {
-    box-shadow: 00 0 0 rgba(64, 158, 255, 0.4);
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
   }
 
   70% {
@@ -534,5 +589,69 @@ const dragEnd = () => { }
   100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
   }
+}
+
+/* 选项管理样式 */
+.options-container {
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 4px;
+  background-color: #fff;
+  border: 1px solid #dcdfe6;
+
+  .drag-handle-option {
+    cursor: move;
+    color: #909399;
+    padding: 4px;
+    margin-right: 4px;
+    font-size: 18px;
+    /* 增加图标尺寸 */
+
+    &:hover {
+      color: #409EFF;
+    }
+  }
+
+  .option-input {
+    flex: 2;
+  }
+
+  .option-input-full {
+    flex: 1;
+    width: 100%;
+  }
+
+  .option-value {
+    flex: 1;
+  }
+
+  .option-actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+.add-option-btn {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+/* 选项拖拽时的样式 */
+.ghost-option {
+  opacity: 0.5;
+  background: #f0f9ff !important;
+  border: 1px dashed #409EFF !important;
 }
 </style>
