@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 
 export const useBasicSettingsStore = defineStore('basicSettings', () => {
   // 表单图标和颜色
@@ -7,11 +7,11 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
   const selectedIcon = ref('Promotion') // 默认选择的图标
 
   // 表单基础信息
-  const formInfo = reactive({
-    name: '', // 表单名称
-    groupId: '', // 所在分组
-    description: '', // 表单说明
-  })
+  const id = ref('') // 表单ID
+  const formName = ref('') // 表单名称
+  const formCode = ref('') // 表单编码
+  const groupId = ref('') // 所在分组ID
+  const description = ref('') // 表单说明
 
   // 发起人范围设置
   const initiatorScope = ref('all')
@@ -27,7 +27,11 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     selectedIcon,
 
     // 表单基础信息
-    formInfo,
+    id,
+    formName,
+    formCode,
+    groupId,
+    description,
 
     // 发起人设置
     initiatorScope,

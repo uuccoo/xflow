@@ -79,7 +79,7 @@ const loadForm = async () => {
 
         if (result && result.data) {
             formData.value = result.data;
-            formTitle.value = result.data.basicSettings?.formInfo?.name || '表单填写';
+            formTitle.value = result.data.basicSettings?.formName || '表单填写';
 
             // 初始化表单字段和默认值
             if (result.data.formDesign && result.data.formDesign.formItems) {

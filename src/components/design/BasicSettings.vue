@@ -63,7 +63,7 @@ const handleGroupCreated = (newGroup) => {
     label: newGroup.name
   })
   // 设置当前选中的分组为新建的分组
-  basicStore.formInfo.groupId = newGroup.id
+  basicStore.groupId = newGroup.id
 }
 
 // 组件挂载时获取分组列表
@@ -111,23 +111,19 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="表单名称" required>
-          <el-input v-model="basicStore.formInfo.name" placeholder="请输入"></el-input>
+          <el-input v-model="basicStore.formName" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="所在分组" required>
           <div class="group-selection-container">
-            <el-select v-model="basicStore.formInfo.groupId" placeholder="请选择分组" size="large" class="group-select">
+            <el-select v-model="basicStore.groupId" placeholder="请选择分组" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
-            <GroupCreator 
-              v-model:visible="newGroupDialogVisible" 
-              @group-created="handleGroupCreated"
-              inline
-              buttonText="新建分组"
-            />
+            <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" inline
+              buttonText="新建分组" />
           </div>
         </el-form-item>
         <el-form-item label="表单说明">
-          <el-input v-model="basicStore.formInfo.description" maxlength="500" style="width: 100%" placeholder="请输入表单说明"
+          <el-input v-model="basicStore.description" maxlength="500" style="width: 100%" placeholder="请输入表单说明"
             show-word-limit type="textarea" />
         </el-form-item>
 

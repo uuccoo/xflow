@@ -62,10 +62,12 @@ const loadExistingData = (data) => {
         basicSettingsStore.selectedIcon = data.basicSettings.selectedIcon
       }
 
-      // 表单信息
-      if (data.basicSettings.formInfo) {
-        Object.assign(basicSettingsStore.formInfo, data.basicSettings.formInfo)
-      }
+      // 表单信息 - 直接使用扁平化的字段
+      basicSettingsStore.id = data.basicSettings.id || ''
+      basicSettingsStore.formName = data.basicSettings.formName || ''
+      basicSettingsStore.formCode = data.basicSettings.formCode || ''
+      basicSettingsStore.groupId = data.basicSettings.groupId || ''
+      basicSettingsStore.description = data.basicSettings.description || ''
 
       // 发起人设置
       if (data.basicSettings.initiatorScope) {
@@ -121,17 +123,17 @@ const publish = async () => {
 
   try {
     // 数据验证
-    if (!basicSettingsStore.formInfo.name) {
+    if (!basicSettingsStore.formName) {
       ElMessage.error('请设置表单名称')
       router.push('/design/basicSettings')
       return
     }
 
     // 判断是否为修改已有表单
-    const isEditingExistingForm = !!basicSettingsStore.formInfo.id
+    const isEditingExistingForm = !!basicSettingsStore.id
 
     // 只对已有表单进行编码校验
-    if (isEditingExistingForm && !basicSettingsStore.formInfo.code) {
+    if (isEditingExistingForm && !basicSettingsStore.formCode) {
       ElMessage.error('请设置表单编码')
       router.push('/design/basicSettings')
       return
@@ -149,13 +151,17 @@ const publish = async () => {
       return
     }
 
-    // 收集所有数据
+    // 收集所有数据 - 直接使用扁平化的字段
     const finalData = {
       // 基础设置数据
       basicSettings: {
         iconColor: basicSettingsStore.iconColor,
         selectedIcon: basicSettingsStore.selectedIcon,
-        formInfo: { ...basicSettingsStore.formInfo },
+        id: basicSettingsStore.id,
+        formName: basicSettingsStore.formName,
+        formCode: basicSettingsStore.formCode,
+        groupId: basicSettingsStore.groupId,
+        description: basicSettingsStore.description,
         initiatorScope: basicSettingsStore.initiatorScope,
         selectedInitiators: [...basicSettingsStore.selectedInitiators],
         adminScope: basicSettingsStore.adminScope,
@@ -181,7 +187,7 @@ const publish = async () => {
     }
 
     // 使用API发布表单
-    const formId = basicSettingsStore.formInfo.id
+    const formId = basicSettingsStore.id
     let result
 
     if (formId) {
@@ -194,7 +200,7 @@ const publish = async () => {
 
     // 更新表单ID
     if (result.data && result.data.id) {
-      basicSettingsStore.formInfo.id = result.data.id
+      basicSettingsStore.id = result.data.id
     }
 
     ElMessage({
@@ -219,11 +225,14 @@ const resetFormData = () => {
   // 重置基本设置
   basicSettingsStore.iconColor = '#FF8800' // 默认值
   basicSettingsStore.selectedIcon = 'Promotion'
-  basicSettingsStore.formInfo = {
-    name: '',
-    groupId: '',
-    description: '',
-  }
+
+  // 重置表单基础信息
+  basicSettingsStore.id = ''
+  basicSettingsStore.formName = ''
+  basicSettingsStore.formCode = ''
+  basicSettingsStore.groupId = ''
+  basicSettingsStore.description = ''
+
   basicSettingsStore.initiatorScope = 'all'
   basicSettingsStore.selectedInitiators = []
   basicSettingsStore.adminScope = 'all'
