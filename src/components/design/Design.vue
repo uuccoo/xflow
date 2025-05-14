@@ -214,6 +214,53 @@ const publish = async () => {
   }
 }
 
+// 重置所有表单数据
+const resetFormData = () => {
+  // 重置基本设置
+  basicSettingsStore.iconColor = '#FF8800' // 默认值
+  basicSettingsStore.selectedIcon = 'Promotion'
+  basicSettingsStore.formInfo = {
+    name: '',
+    groupId: '',
+    description: '',
+  }
+  basicSettingsStore.initiatorScope = 'all'
+  basicSettingsStore.selectedInitiators = []
+  basicSettingsStore.adminScope = 'all'
+  basicSettingsStore.selectedAdmins = []
+
+  // 重置表单设计
+  formDesignStore.formItems = []
+  formDesignStore.activeItem = null
+
+  // 重置流程设计
+  flowDesignStore.flowData.id = 'flow-' + Date.now()
+  flowDesignStore.flowData.name = '未命名流程'
+  flowDesignStore.flowData.version = '1.0'
+  flowDesignStore.flowData.initiator = {
+    id: 1,
+    type: 'initiator',
+    name: '发起人',
+    props: {
+      initiator: [],
+    },
+  }
+  flowDesignStore.flowData.nodes = []
+  flowDesignStore.selectedNode = null
+  flowDesignStore.drawerVisible = false
+
+  // 重置更多设置
+  if (moreSettingsStore.settings) {
+    moreSettingsStore.settings = {
+      // 默认值，根据实际情况调整
+      enabled: true,
+      options: {}
+    }
+  }
+
+  console.log('表单数据已重置')
+}
+
 // 监听路由变化以处理URL参数
 watch(
   () => route.query,
@@ -248,6 +295,9 @@ watch(
       } finally {
         loading.value = false;
       }
+    } else {
+      // 既没有formId也没有formCode，说明是创建新表单，需要重置所有数据
+      resetFormData();
     }
   },
   { immediate: true }

@@ -86,13 +86,12 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 导入流程数据
   const importFlowData = (data) => {
     if (!data || !data.id) {
-      ElMessage.error('导入的流程数据无效')
-      return false
+      throw new Error('导入的流程数据无效')
     }
 
     // 验证数据结构
     if (!validateFlowData(data)) {
-      return false
+      throw new Error('流程数据验证失败')
     }
 
     // 重置当前数据
@@ -107,8 +106,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
     // 导入节点
     flowData.nodes = data.nodes || []
-
-    ElMessage.success('流程数据导入成功')
     return true
   }
 

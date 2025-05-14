@@ -361,7 +361,7 @@ const batchMoveToGroup = async () => {
 
 // 跳转到创建表单页面
 const goToCreateForm = () => {
-  router.push('/design/basicSettings');
+  router.push('/design');
 };
 
 // 处理新分组创建成功的回调
