@@ -8,14 +8,13 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 当前选中的组件
   const activeItem = ref(null)
 
-  // 当前选中的分栏布局
-  const activeColumnsLayout = ref('1:1')
-
   // 组件配置数据 - 保持不变，不需要持久化
   const components = reactive([
     {
       category: '布局组件',
-      items: [{ type: 'columns', icon: 'Grid', label: '分栏容器', columns: [] }],
+      items: [
+        { type: 'columns', icon: 'Grid', label: '分栏容器', columns: [], layoutValue: '1:1' },
+      ],
     },
     {
       category: '基础组件',
@@ -176,31 +175,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   const selectItem = (item) => {
     activeItem.value = item
 
-    // 如果选中的是分栏组件，根据当前列数设置activeColumnsLayout
-    if (item.type === 'columns') {
-      if (item.columns.length === 2) {
-        if (item.columns[0].width === 50 && item.columns[1].width === 50) {
-          activeColumnsLayout.value = '1:1'
-        } else if (item.columns[0].width === 33 && item.columns[1].width === 67) {
-          activeColumnsLayout.value = '1:2'
-        } else if (item.columns[0].width === 67 && item.columns[1].width === 33) {
-          activeColumnsLayout.value = '2:1'
-        }
-      } else if (item.columns.length === 3) {
-        if (
-          item.columns[0].width === 33 &&
-          item.columns[1].width === 34 &&
-          item.columns[2].width === 33
-        ) {
-          activeColumnsLayout.value = '1:1:1'
-        } else if (
-          item.columns[0].width === 25 &&
-          item.columns[1].width === 50 &&
-          item.columns[2].width === 25
-        ) {
-          activeColumnsLayout.value = '1:2:1'
-        }
-      }
+    // 如果选中的是分栏组件，并且没有布局值，设置默认值
+    if (item.type === 'columns' && !item.layoutValue) {
+      item.layoutValue = '1:1'
     }
   }
 
@@ -406,7 +383,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   return {
     formItems,
     activeItem,
-    activeColumnsLayout,
     components,
     cloneComponent,
     addComponent,

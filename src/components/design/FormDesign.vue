@@ -79,7 +79,7 @@
         <!-- 分栏组件属性设置 -->
         <template v-if="formStore.activeItem.type === 'columns'">
           <el-form-item label="栏目布局">
-            <el-select v-model="formStore.activeColumnsLayout" @change="formStore.updateColumnsLayout"
+            <el-select v-model="formStore.activeItem.layoutValue" @change="formStore.updateColumnsLayout"
               style="width: 100%">
               <el-option label="两等分" value="1:1"></el-option>
               <el-option label="三等分" value="1:1:1"></el-option>
