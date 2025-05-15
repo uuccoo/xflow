@@ -364,6 +364,14 @@ onMounted(() => {
         <el-icon><arrow-left /></el-icon>
         <span>返回</span>
       </div>
+      <div class="form-info">
+        <div class="icon-box" :style="{ backgroundColor: basicSettingsStore.iconColor }">
+          <el-icon size="20" color="#ffffff">
+            <component :is="basicSettingsStore.selectedIcon" />
+          </el-icon>
+        </div>
+        <span class="form-name">{{ basicSettingsStore.formName }}</span>
+      </div>
     </div>
   </header>
   <main>
@@ -439,6 +447,28 @@ header {
 
     span {
       font-size: 14px;
+    }
+  }
+
+  .form-info {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+
+    .icon-box {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    .form-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #606266;
     }
   }
 }
