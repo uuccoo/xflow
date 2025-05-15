@@ -22,6 +22,17 @@ const iconList = computed(() => {
 
 // 图标选择器相关
 const popoverVisible = ref(false) // 控制弹出框可见性
+const colorPickerVisible = ref(false) // 控制颜色选择器可见性
+
+// 切换弹出框可见性
+const togglePopover = () => {
+  popoverVisible.value = !popoverVisible.value
+}
+
+// 切换颜色选择器可见性
+const toggleColorPicker = () => {
+  colorPickerVisible.value = !colorPickerVisible.value
+}
 
 const selectIcon = (iconName) => {
   basicStore.selectedIcon = iconName
@@ -84,12 +95,12 @@ onMounted(() => {
               </el-icon>
             </div>
             <div class="option-item">
-              <span>选择背景色</span>
-              <el-color-picker v-model="basicStore.iconColor" size="small"
+              <span class="clickable-text" @click="toggleColorPicker">选择背景色</span>
+              <el-color-picker v-model="basicStore.iconColor" size="small" v-model:visible="colorPickerVisible"
                 :predefine="['#FF8800', '#409EFF', '#67C23A', '#E6A23C', '#F56C6C']" />
             </div>
             <div class="option-item">
-              <span>选择图标</span>
+              <span class="clickable-text" @click="togglePopover">选择图标</span>
               <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
                 <template #reference>
                   <el-icon size="20">
