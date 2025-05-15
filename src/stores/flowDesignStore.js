@@ -85,13 +85,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 导入流程数据
   const importFlowData = (data) => {
-    if (!data || !data.id) {
-      throw new Error('导入的流程数据无效')
-    }
-
-    // 验证数据结构
-    if (!validateFlowData(data)) {
-      throw new Error('流程数据验证失败')
+    if (!data) {
+      throw new Error('流程数据无效')
     }
 
     // 重置当前数据
@@ -107,94 +102,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 导入节点
     flowData.nodes = data.nodes || []
     return true
-  }
-
-  // 验证流程数据完整性
-  const validateFlowData = (data) => {
-    const errors = []
-
-    // 1. 基本信息验证
-    if (!data.name) {
-      errors.push('流程名称不能为空')
-    }
-
-    // 2. 验证发起人
-    if (!data.initiator || !data.initiator.props || !data.initiator.props.initiator) {
-      errors.push('流程发起人未配置')
-    }
-
-    // 3. 验证节点配置
-    if (data.nodes && data.nodes.length > 0) {
-      data.nodes.forEach((node, index) => {
-        // 审批人节点
-        if (
-          node.type === 'approver' &&
-          (!node.props.approvers || node.props.approvers.length === 0)
-        ) {
-          errors.push(`第${index + 1}个节点(${node.name})未配置审批人`)
-        }
-
-        // 办理节点
-        if (
-          node.type === 'process' &&
-          (!node.props.processors || node.props.processors.length === 0)
-        ) {
-          errors.push(`第${index + 1}个节点(${node.name})未配置办理人`)
-        }
-
-        // 抄送人节点
-        if (node.type === 'copyTo' && (!node.props.users || node.props.users.length === 0)) {
-          errors.push(`第${index + 1}个节点(${node.name})未配置抄送人`)
-        }
-
-        // 条件节点
-        if (node.type === 'condition') {
-          const conditions = node.props.conditions || []
-          if (conditions.length < 2) {
-            errors.push(`第${index + 1}个节点(条件分支)至少需要两个条件`)
-          }
-
-          // 检查非默认条件的表达式
-          conditions.forEach((condition, condIndex) => {
-            if (condition.name !== '默认条件' && !condition.expression) {
-              errors.push(`第${index + 1}个节点的条件${condIndex + 1}未配置条件表达式`)
-            }
-          })
-        }
-      })
-    } else {
-      errors.push('流程至少需要一个节点')
-    }
-
-    // 显示验证结果
-    if (errors.length > 0) {
-      ElMessage.error(`流程数据验证失败: ${errors[0]}`)
-      console.error('流程验证错误', errors)
-      return false
-    }
-
-    return true
-  }
-
-  // 预览流程
-  const previewFlow = () => {
-    if (validateFlowData(flowData)) {
-      ElMessage.success('流程验证通过，可以预览')
-      console.log('预览流程数据', exportFlowData())
-      return true
-    }
-    return false
-  }
-
-  // 发布流程
-  const publishFlow = () => {
-    if (validateFlowData(flowData)) {
-      ElMessage.success('流程验证通过，可以发布')
-      const publishData = exportFlowData()
-      console.log('发布流程数据', publishData)
-      return true
-    }
-    return false
   }
 
   // 获取节点样式
@@ -290,9 +197,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     clearSelectedNode,
     exportFlowData,
     importFlowData,
-    validateFlowData,
-    previewFlow,
-    publishFlow,
     getNodeStyle,
     getNodeHeaderStyle,
     deleteNode,

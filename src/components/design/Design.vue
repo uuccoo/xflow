@@ -168,25 +168,9 @@ const publish = async () => {
       return
     }
 
-    // 判断是否为修改已有表单
-    const isEditingExistingForm = !!basicSettingsStore.id
-
-    // 只对已有表单进行编码校验
-    if (isEditingExistingForm && !basicSettingsStore.formCode) {
-      ElMessage.error('请设置表单编码')
-      router.push('/design/basicSettings')
-      return
-    }
-
     if (formDesignStore.formItems.length === 0) {
       ElMessage.error('表单内容不能为空')
       router.push('/design/formDesign')
-      return
-    }
-
-    if (flowDesignStore.flowData.nodes.length < 1) {
-      ElMessage.error('流程至少需要两个节点')
-      router.push('/design/flowDesign')
       return
     }
 
