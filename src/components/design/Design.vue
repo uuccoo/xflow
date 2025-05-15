@@ -114,7 +114,46 @@ const loadExistingData = (data) => {
 
 // 预览和发布功能
 const preview = () => {
-  // 实现预览功能
+  // 收集所有表单数据
+  const previewData = {
+    // 基础设置数据
+    basicSettings: {
+      iconColor: basicSettingsStore.iconColor,
+      selectedIcon: basicSettingsStore.selectedIcon,
+      id: basicSettingsStore.id || 'preview-' + Date.now(),
+      formName: basicSettingsStore.formName || '预览表单',
+      formCode: basicSettingsStore.formCode,
+      groupId: basicSettingsStore.groupId,
+      description: basicSettingsStore.description,
+      initiatorScope: basicSettingsStore.initiatorScope,
+      selectedInitiators: [...basicSettingsStore.selectedInitiators],
+      adminScope: basicSettingsStore.adminScope,
+      selectedAdmins: [...basicSettingsStore.selectedAdmins]
+    },
+
+    // 表单设计数据
+    formDesign: {
+      formItems: [...formDesignStore.formItems]
+    },
+
+    // 流程设计数据
+    flowDesign: flowDesignStore.exportFlowData(),
+
+    // 更多设置数据
+    moreSettings: { ...moreSettingsStore.settings }
+  }
+
+  // 将预览数据存储到sessionStorage，避免URL过长
+  sessionStorage.setItem('formPreviewData', JSON.stringify(previewData))
+
+  // 跳转到预览页面
+  router.push({
+    path: '/approval-form',
+    query: {
+      preview: 'true',
+      timestamp: Date.now() // 添加时间戳确保每次预览都是新的
+    }
+  })
 }
 
 const publish = async () => {

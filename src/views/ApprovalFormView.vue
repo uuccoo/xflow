@@ -7,6 +7,7 @@
                     <span>返回</span>
                 </div>
                 <h1 class="form-title">{{ formTitle }}</h1>
+                <div v-if="isPreview" class="preview-badge">预览模式</div>
             </div>
             <el-divider></el-divider>
 
@@ -38,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
@@ -56,8 +57,45 @@ const submitting = ref(false);
 const formValues = reactive({});
 const formRef = ref(null);
 
+// 判断是否为预览模式
+const isPreview = computed(() => route.query.preview === 'true');
+
 // 获取表单详情
 const loadForm = async () => {
+    // 检查是否为预览模式
+    if (isPreview.value) {
+        try {
+            // 从sessionStorage获取预览数据
+            const previewDataStr = sessionStorage.getItem('formPreviewData');
+            if (previewDataStr) {
+                const previewData = JSON.parse(previewDataStr);
+                formData.value = previewData;
+                formTitle.value = previewData.basicSettings?.formName || '表单预览';
+
+                // 初始化表单字段和默认值
+                if (previewData.formDesign && previewData.formDesign.formItems) {
+                    previewData.formDesign.formItems.forEach(item => {
+                        if (item.field) {
+                            formValues[item.field] = item.defaultValue || '';
+                        }
+                    });
+                }
+                loading.value = false;
+                return;
+            } else {
+                ElMessage.error('预览数据不存在，可能已过期');
+                goBack();
+                return;
+            }
+        } catch (error) {
+            console.error('加载预览数据失败:', error);
+            ElMessage.error('加载预览数据失败: ' + (error.message || '未知错误'));
+            loading.value = false;
+            return;
+        }
+    }
+
+    // 非预览模式，正常加载表单
     const formId = route.query.id;
     const formCode = route.query.code;
 
@@ -139,6 +177,15 @@ const validateForm = () => {
 
 // 提交表单
 const submitForm = async () => {
+    // 如果是预览模式，提示用户
+    if (isPreview.value) {
+        ElMessage({
+            message: '预览模式下不能提交表单',
+            type: 'warning'
+        });
+        return;
+    }
+
     // 表单验证
     if (!validateForm()) {
         return;
@@ -226,6 +273,16 @@ onMounted(() => {
     color: #303133;
 }
 
+.preview-badge {
+    position: absolute;
+    right: 0;
+    background-color: #E6A23C;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
 .form-content {
     margin-top: 30px;
 }
@@ -243,8 +300,7 @@ onMounted(() => {
 
 .loading-container,
 .error-container {
-    background-color: #fff;
-    border-radius: 8px;
+    background-color: #fff; border-radius: 8px;
     padding: 40px 20px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     text-align: center;
