@@ -49,6 +49,16 @@ import FormRenderer from '@/components/form/FormRenderer.vue';
 const route = useRoute();
 const router = useRouter();
 
+// 定义props和emits
+const props = defineProps({
+    preview: {
+        type: Boolean,
+        default: false
+    }
+});
+
+const emit = defineEmits(['close-preview']);
+
 // 表单相关状态
 const formData = ref(null);
 const formTitle = ref('表单填写');
@@ -58,7 +68,7 @@ const formValues = reactive({});
 const formRef = ref(null);
 
 // 判断是否为预览模式
-const isPreview = computed(() => route.query.preview === 'true');
+const isPreview = computed(() => props.preview);
 
 // 获取表单详情
 const loadForm = async () => {
@@ -145,7 +155,13 @@ const reloadForm = () => {
 
 // 返回上一页
 const goBack = () => {
-    router.back();
+    if (props.preview) {
+        // 如果是通过props传递的预览模式，发送关闭预览事件
+        emit('close-preview');
+    } else {
+        // 否则使用路由后退
+        router.back();
+    }
 };
 
 // 更新表单值
@@ -300,7 +316,8 @@ onMounted(() => {
 
 .loading-container,
 .error-container {
-    background-color: #fff; border-radius: 8px;
+    background-color: #fff;
+    border-radius: 8px;
     padding: 40px 20px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     text-align: center;

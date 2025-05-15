@@ -6,7 +6,7 @@ import { useBasicSettingsStore } from '../../stores/basicSettingsStore'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { useMoreSettingsStore } from '../../stores/moreSettingsStore'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Close } from '@element-plus/icons-vue'
 // 导入API
 import { formApi } from '@/api'
 
@@ -15,6 +15,8 @@ import BasicSettings from './BasicSettings.vue'
 import FormDesign from './FormDesign.vue'
 import FlowDesign from './FlowDesign.vue'
 import MoreSettings from './MoreSettings.vue'
+// 导入预览组件
+import ApprovalFormView from '@/views/ApprovalFormView.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,6 +27,9 @@ const moreSettingsStore = useMoreSettingsStore()
 
 // 当前激活的组件
 const activeComponent = ref('basicSettings')
+
+// 是否显示预览
+const showPreview = ref(false)
 
 // 返回上一页的功能
 const backUrl = computed(() => route.query.backUrl) // 默认返回首页
@@ -143,17 +148,16 @@ const preview = () => {
     moreSettings: { ...moreSettingsStore.settings }
   }
 
-  // 将预览数据存储到sessionStorage，避免URL过长
+  // 将预览数据存储到sessionStorage，避免数据传递问题
   sessionStorage.setItem('formPreviewData', JSON.stringify(previewData))
 
-  // 跳转到预览页面
-  router.push({
-    path: '/approval-form',
-    query: {
-      preview: 'true',
-      timestamp: Date.now() // 添加时间戳确保每次预览都是新的
-    }
-  })
+  // 显示预览组件，不进行路由跳转
+  showPreview.value = true
+}
+
+// 关闭预览
+const closePreview = () => {
+  showPreview.value = false
 }
 
 const publish = async () => {
@@ -368,6 +372,11 @@ onMounted(() => {
     <FlowDesign v-show="activeComponent === 'flowDesign'" />
     <MoreSettings v-show="activeComponent === 'moreSettings'" />
   </main>
+
+  <!-- 全屏预览组件 -->
+  <div v-if="showPreview" class="preview-overlay">
+    <ApprovalFormView :preview="true" @close-preview="closePreview" />
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -431,6 +440,43 @@ header {
     span {
       font-size: 14px;
     }
+  }
+}
+
+/* 预览覆盖层样式 */
+.preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background-color: #f5f6f6;
+  overflow-y: auto;
+}
+
+.preview-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  background-color: #fff;
+  padding: 8px 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+
+  &:hover {
+    background-color: #f2f2f2;
+    color: #409EFF;
+  }
+
+  .el-icon {
+    font-size: 16px;
   }
 }
 </style>
