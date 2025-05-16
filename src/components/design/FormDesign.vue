@@ -118,7 +118,7 @@
             <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
           </el-form-item>
           <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
           </el-form-item>
           <el-form-item label="提示文字">
             <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
@@ -148,7 +148,7 @@
             <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
           </el-form-item>
           <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
           </el-form-item>
           <el-form-item label="选项设置">
             <div class="options-container">
@@ -203,7 +203,7 @@
             <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
           </el-form-item>
           <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
           </el-form-item>
           <el-form-item label="提示文字">
             <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
@@ -230,7 +230,7 @@
             <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
           </el-form-item>
           <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名"></el-input>
+            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
           </el-form-item>
           <el-form-item label="提示文字">
             <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
@@ -440,8 +440,8 @@ const dragEnd = () => { }
 
       // 根据视图模式调整样式
       &.pc-view {
-        width: 90%;
-        height: 90%;
+        width: 100%;
+        height: 100%;
         max-width: 900px;
         border-radius: 6px;
         border-width: 1px;
