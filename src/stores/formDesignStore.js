@@ -8,6 +8,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 当前选中的组件
   const activeItem = ref(null)
 
+  // 视图模式 - 'mobile' 或 'pc'
+  const viewMode = ref('mobile')
+
   // 组件配置数据 - 保持不变，不需要持久化
   const components = reactive([
     {
@@ -150,6 +153,11 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       items: [],
     },
   ])
+
+  // 设置视图模式
+  const setViewMode = (mode) => {
+    viewMode.value = mode
+  }
 
   // 克隆组件
   const cloneComponent = (component) => {
@@ -328,6 +336,8 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     formItems,
     activeItem,
     components,
+    viewMode,
+    setViewMode,
     cloneComponent,
     addComponent,
     selectItem,

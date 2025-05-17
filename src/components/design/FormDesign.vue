@@ -256,7 +256,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from './ComponentRenderer.vue'
 import { Delete, CopyDocument, Iphone, Monitor, ArrowUp, ArrowDown, Plus, Operation } from '@element-plus/icons-vue'
@@ -266,11 +266,11 @@ import { useFormDesignStore } from '../../stores/formDesignStore'
 const formStore = useFormDesignStore()
 
 // 视图模式状态（mobile/pc）
-const viewMode = ref('mobile')
+const viewMode = computed(() => formStore.viewMode);
 
 // 切换视图模式
 const switchView = (mode) => {
-  viewMode.value = mode
+  formStore.setViewMode(mode)
 }
 
 // 拖拽开始
