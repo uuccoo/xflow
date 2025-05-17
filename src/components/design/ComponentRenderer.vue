@@ -3,28 +3,36 @@
   <div class="form-item-wrapper-outer">
     <!-- 分栏容器组件 -->
     <div v-if="component.type === 'columns'" class="form-item column-container">
-      <div class="form-item-control columns-grid">
-        <div class="column-item" v-for="(column, index) in component.columns" :key="index"
-          :style="{ flexBasis: `${column.width}%`, maxWidth: `${column.width}%` }">
-          <draggable :list="column.children" group="components" item-key="id" class="column-drop-area"
-            handle=".drag-handle" :animation="300" ghost-class="ghost-item" chosen-class="chosen-item"
-            drag-class="dragging-item">
-            <div v-if="column.children.length === 0" class="empty-column-tip">
-              拖拽组件到此处
-            </div>
+      <div class="form-item-label" v-if="component.title">
+        {{ component.title }}
+      </div>
+
+      <!-- 单一框栏容器 -->
+      <div class="form-item-control single-column-container">
+        <div v-if="!component.children || component.children.length === 0" class="empty-column-tip">
+          拖动组件到此处
+        </div>
+        <!-- 单一拖拽区域 -->
+        <draggable :list="component.children" group="components" item-key="id" class="column-drop-area"
+          :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }" handle=".drag-handle"
+          :animation="300" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="dragging-item">
+
+          <!-- 多列布局渲染区域 - 仅用于显示，不参与拖拽 -->
+          <template v-for="(element, idx) in component.children" :key="element.id">
             <div class="drag-handle form-item-wrapper nested-item"
-              :class="{ active: activeItem && activeItem.id === element.id }" v-for="(element, idx) in column.children"
-              :key="element.id" @click.stop="formStore.handleSelectComponent(element)">
+              :class="{ active: activeItem && activeItem.id === element.id }"
+              @click.stop="formStore.handleSelectComponent(element)">
               <div class="form-item-content">
-                <component-renderer :component="element" :showActions="showActions" :isNested="true"
-                  :parentColumn="column" :index="idx" :isActive="activeItem && activeItem.id === element.id"
+                <component-renderer :component="element" :showActions="showActions" :isNested="true" :index="idx"
+                  :parentComponent="component" :isActive="activeItem && activeItem.id === element.id"
                   :activeItem="activeItem" />
               </div>
             </div>
-          </draggable>
-        </div>
+          </template>
+        </draggable>
       </div>
     </div>
+
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
       <div class="form-item-label">
@@ -38,10 +46,10 @@
 
     <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
     <div v-if="showActions && isActive" class="form-item-actions">
-      <el-icon @click.stop="formStore.handleCopyComponent(component, index, parentColumn)">
+      <el-icon @click.stop="formStore.handleCopyComponent(component, index, parentComponent)">
         <CopyDocument />
       </el-icon>
-      <el-icon @click.stop="formStore.handleDeleteComponent(component, index, parentColumn)" class="delete-button">
+      <el-icon @click.stop="formStore.handleDeleteComponent(component, index, parentComponent)" class="delete-button">
         <Delete class="delete-icon" />
       </el-icon>
     </div>
@@ -77,7 +85,7 @@ const props = defineProps({
     type: Number,
     default: undefined
   },
-  parentColumn: {
+  parentComponent: {
     type: Object,
     default: null
   },
@@ -91,6 +99,15 @@ const props = defineProps({
   }
 });
 
+// 根据布局值计算列数和列宽比例
+const getGridTemplateColumns = (layoutValue) => {
+  if (!layoutValue) return "1fr 1fr"; // 默认两等分
+
+  const parts = layoutValue.split(':').map(Number);
+  return parts.map(part => `${part}fr`).join(' ');
+};
+
+// 渲染表单控件
 const renderField = () => {
   switch (props.component.type) {
     case 'input':
@@ -227,33 +244,36 @@ const renderField = () => {
   width: 100%;
 }
 
-.columns-grid {
-  display: flex;
-  gap: 10px;
-  min-height: 100px;
-}
-
-.column-item {
-  flex: 1;
+/* 分栏容器单栏样式 */
+.single-column-container {
+  position: relative;
   border: 1px dashed #a0cfff;
   border-radius: 4px;
-  padding: 5px;
-  background-color: rgba(236, 245, 255, 0.4);
-  min-height: 80px;
+  padding: 10px;
+  background-color: rgba(236, 245, 255, 0.2);
+  min-height: 100px;
 }
 
 .column-drop-area {
   min-height: 70px;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.preview-column {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .empty-column-tip {
+  position: absolute;
+  top: calc(50% - 10.4px);
+  left: calc(50% - 45.5px);
   color: #909399;
-  font-size: 12px;
-  text-align: center;
-  padding: 10px;
+  font-size: 13px;
+  pointer-events: none;
 }
 
 /* 修改嵌套项样式，添加边框和背景色 */
@@ -308,6 +328,7 @@ const renderField = () => {
 }
 
 .chosen-item {
+
   background: linear-gradient(135deg, #f0faff 0%, #d8f0ff 100%) !important;
   border: 2px solid #409EFF !important;
   box-shadow: 0 0 10px rgba(64, 158, 255, 0.3) !important;

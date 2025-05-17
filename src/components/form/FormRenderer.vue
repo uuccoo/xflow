@@ -2,15 +2,12 @@
   <div class="form-renderer">
     <!-- 分栏容器组件 -->
     <div v-if="component.type === 'columns'" class="form-item column-container">
-      <div class="form-item-control columns-grid">
-        <div class="column-item" v-for="(column, index) in component.columns" :key="index"
-          :style="{ flexBasis: `${column.width}%`, maxWidth: `${column.width}%` }">
-          <template v-for="(element, idx) in column.children" :key="element.id">
-            <div class="form-item-wrapper nested-item">
-              <form-renderer :component="element" :form-values="formValues"
-                @update:value="(field, value) => $emit('update:value', field, value)" />
-            </div>
-          </template>
+      <div class="form-item-control columns-grid"
+        :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
+        <!-- 子组件直接放入grid布局中 -->
+        <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
+          <form-renderer :component="element" :form-values="formValues"
+            @update:value="(field, value) => $emit('update:value', field, value)" />
         </div>
       </div>
     </div>
@@ -48,6 +45,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:value']);
+
+// 根据布局值计算列数和列宽比例
+const getGridTemplateColumns = (layoutValue) => {
+  if (!layoutValue) return "1fr 1fr"; // 默认两等分
+
+  const parts = layoutValue.split(':').map(Number);
+  return parts.map(part => `${part}fr`).join(' ');
+};
 
 // 获取当前组件的值
 const getValue = computed(() => {
@@ -241,12 +246,9 @@ const renderField = () => {
 }
 
 .columns-grid {
-  display: flex;
+  display: grid;
   gap: 16px;
-}
-
-.column-item {
-  flex: 1;
+  width: 100%;
 }
 
 .form-item-wrapper {

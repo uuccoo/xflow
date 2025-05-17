@@ -83,9 +83,6 @@
               style="width: 100%">
               <el-option label="两等分" value="1:1"></el-option>
               <el-option label="三等分" value="1:1:1"></el-option>
-              <el-option label="左窄右宽" value="1:2"></el-option>
-              <el-option label="左宽右窄" value="2:1"></el-option>
-              <el-option label="左窄中宽右窄" value="1:2:1"></el-option>
             </el-select>
           </el-form-item>
         </template>

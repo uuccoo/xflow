@@ -13,7 +13,14 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     {
       category: '布局组件',
       items: [
-        { type: 'columns', icon: 'Grid', label: '分栏容器', columns: [], layoutValue: '1:1' },
+        {
+          type: 'columns',
+          icon: 'Grid',
+          label: '分栏容器',
+          title: '分栏容器',
+          children: [],
+          layoutValue: '1:1',
+        },
       ],
     },
     {
@@ -147,16 +154,15 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 克隆组件
   const cloneComponent = (component) => {
     if (component.type === 'columns') {
-      // 创建分栏容器时，默认创建两个等宽的列
+      // 创建分栏容器时，直接使用一维数组存储子组件
       return {
         ...component,
         id: Date.now(),
-        columns: [
-          { width: 50, children: [] },
-          { width: 50, children: [] },
-        ],
+        title: component.title || '分栏容器',
+        children: [], // 使用一维数组存储子组件
       }
     }
+
     return {
       ...component,
       id: Date.now(),
@@ -182,19 +188,27 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   }
 
   // 删除组件
-  const deleteItem = (component, index, parentColumn) => {
-    const arr = parentColumn?.children || formItems.value
-    arr.splice(index, 1)
+  const deleteItem = (component, index, parentComponent) => {
+    if (parentComponent && parentComponent.type === 'columns' && parentComponent.children) {
+      // 从分栏容器的children中删除
+      parentComponent.children.splice(index, 1)
+    } else {
+      // 从表单项中删除
+      formItems.value.splice(index, 1)
+    }
+
     // 如果删除的是当前选中的组件，则取消选中
-    if (activeItem.value && activeItem.value === arr[index]) {
+    if (activeItem.value && activeItem.value === component) {
       activeItem.value = null
     }
   }
 
   // 复制组件
-  const copyItem = (component, index, parentColumn) => {
-    const arr = parentColumn?.children || formItems.value
+  const copyItem = (component, index, parentComponent) => {
+    // 确定要操作的数组
+    const arr = parentComponent?.type === 'columns' ? parentComponent.children : formItems.value
     const sourceItem = arr[index]
+
     // 深拷贝组件
     const newItem = JSON.parse(JSON.stringify(sourceItem))
 
@@ -216,16 +230,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     if (component.type !== 'columns') {
       // 保持类型不变，但生成新的编码
       component.field = `${component.type}_${timestamp}`
-    }
-
-    // 如果是分栏容器，递归处理其中的子组件
-    if (component.type === 'columns' && component.columns) {
-      for (const column of component.columns) {
-        if (column.children && column.children.length > 0) {
-          for (const childComponent of column.children) {
-            updateComponentIds(childComponent)
-          }
-        }
+    } else if (component.children) {
+      // 如果是分栏容器，递归处理其中的子组件
+      for (const childComponent of component.children) {
+        updateComponentIds(childComponent)
       }
     }
   }
@@ -233,71 +241,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 更新分栏布局
   const updateColumnsLayout = (layout) => {
     if (!activeItem.value || activeItem.value.type !== 'columns') return
-
-    const columns = activeItem.value.columns
-    const widths = layout.split(':').map(Number)
-    const total = widths.reduce((sum, w) => sum + w, 0)
-
-    // 计算每个分栏的宽度百分比
-    const percentages = widths.map((w) => Math.round((w / total) * 100))
-
-    // 如果列数不一致，需要调整列数
-    if (columns.length !== widths.length) {
-      if (widths.length > columns.length) {
-        // 增加栏数的情况（例如从2栏到3栏）
-        const newColumns = []
-
-        // 保留原有栏目及其子组件
-        for (let i = 0; i < columns.length; i++) {
-          newColumns.push({
-            width: percentages[i],
-            children: [...columns[i].children], // 保留原有子组件
-          })
-        }
-
-        // 添加新的空栏目
-        for (let i = columns.length; i < widths.length; i++) {
-          newColumns.push({
-            width: percentages[i],
-            children: [], // 新栏目没有子组件
-          })
-        }
-
-        activeItem.value.columns = newColumns
-      } else {
-        // 减少栏数的情况（例如从3栏到2栏）
-        // 收集被移除栏中的所有子组件
-        const orphanedChildren = []
-        for (let i = widths.length; i < columns.length; i++) {
-          orphanedChildren.push(...columns[i].children)
-        }
-
-        // 创建新的栏结构
-        const newColumns = []
-        for (let i = 0; i < widths.length; i++) {
-          newColumns.push({
-            width: percentages[i],
-            children: [...columns[i].children], // 保留现有栏的子组件
-          })
-        }
-
-        // 将孤立的子组件均匀分配到剩余的栏中
-        if (orphanedChildren.length > 0) {
-          orphanedChildren.forEach((child, index) => {
-            // 按照余数决定放入哪一栏
-            const targetColumnIndex = index % widths.length
-            newColumns[targetColumnIndex].children.push(child)
-          })
-        }
-
-        activeItem.value.columns = newColumns
-      }
-    } else {
-      // 只更新宽度
-      columns.forEach((col, index) => {
-        col.width = percentages[index]
-      })
-    }
+    activeItem.value.layoutValue = layout
   }
 
   // 处理组件选择事件
@@ -306,16 +250,16 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   }
 
   // 处理组件复制事件
-  const handleCopyComponent = (component, index, parentColumn) => {
+  const handleCopyComponent = (component, index, parentComponent) => {
     if (index !== undefined) {
-      copyItem(component, index, parentColumn)
+      copyItem(component, index, parentComponent)
     }
   }
 
   // 处理组件删除事件
-  const handleDeleteComponent = (component, index, parentColumn) => {
+  const handleDeleteComponent = (component, index, parentComponent) => {
     if (index !== undefined) {
-      deleteItem(component, index, parentColumn)
+      deleteItem(component, index, parentComponent)
     }
   }
 
