@@ -118,7 +118,7 @@
                     <el-checkbox label="发起人">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
                     <el-checkbox v-for="field in requiredFormFields" :key="field" :label="field">{{ field
-                    }}</el-checkbox>
+                        }}</el-checkbox>
                 </el-checkbox-group>
             </div>
             <template #footer>

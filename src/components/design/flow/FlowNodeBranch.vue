@@ -40,8 +40,7 @@
                         :class="{ 'default-condition': branch.name === '默认条件' }">
                         <!-- 条件分支内容 -->
                         <template v-if="branchType === 'condition'">
-                            <span v-if="branch.name === '默认条件'">其他条件进入此流程</span>
-                            <span v-else>{{ branch.expression || '请设置条件' }}</span>
+                            <span class="condition-text" v-html="getConditionDescription(branch)"></span>
                         </template>
                         <!-- 其他类型分支内容可在此扩展 -->
                         <template v-else>
@@ -256,6 +255,141 @@ const editCondition = (condIndex, condition) => {
 
     console.log('编辑条件', condIndex, condition);
 }
+
+// 将条件设置转换为文本描述
+const getConditionDescription = (branch) => {
+    // 如果是默认条件，直接返回默认文本
+    if (branch.name === '默认条件') {
+        return '其他条件进入此流程';
+    }
+
+    // 如果节点设置了自定义表达式，则优先使用
+    if (branch.expression && branch.expression.trim()) {
+        return branch.expression;
+    }
+
+    // 如果有条件组数据，则生成描述
+    if (branch.props && branch.props.conditionGroups && branch.props.conditionGroups.length) {
+        // 返回包含所有条件组的描述
+        return formatConditionGroups(branch.props.conditionGroups);
+    }
+
+    return '请设置条件';
+};
+
+// 格式化条件组为文字描述
+const formatConditionGroups = (conditionGroups) => {
+    // 如果没有条件组，返回默认文本
+    if (!conditionGroups || conditionGroups.length === 0) {
+        return '请设置条件';
+    }
+
+    // 将每个条件组格式化，然后用<br>和"或"连接
+    const groupTexts = conditionGroups.map(group => formatConditionGroup(group));
+
+    // 过滤掉空的条件组描述
+    const validGroupTexts = groupTexts.filter(text => text);
+
+    if (validGroupTexts.length === 0) {
+        return '请设置条件';
+    }
+
+    if (validGroupTexts.length === 1) {
+        return validGroupTexts[0];
+    }
+
+    return validGroupTexts.join('<br>或 ');
+};
+
+// 格式化单个条件组为文字描述
+const formatConditionGroup = (group) => {
+    // 如果条件组内没有条件，返回空字符串
+    if (!group.conditions || group.conditions.length === 0) {
+        return '';
+    }
+
+    // 将每个条件格式化，然后用"且"连接
+    const conditionTexts = group.conditions.map(condition => formatSingleCondition(condition));
+
+    // 过滤掉空的条件描述
+    const validConditionTexts = conditionTexts.filter(text => text);
+
+    if (validConditionTexts.length === 0) {
+        return '';
+    }
+
+    if (validConditionTexts.length === 1) {
+        return validConditionTexts[0];
+    }
+
+    return validConditionTexts.join(' 且 ');
+};
+
+// 格式化单个条件为文字描述
+const formatSingleCondition = (condition) => {
+    if (!condition.type) {
+        return '';
+    }
+
+    let description = '';
+
+    // 根据条件类型生成描述
+    if (condition.type === '发起人') {
+        if (condition.users && condition.users.length) {
+            const userNames = condition.users.map(u => u.name).join('、');
+            description = `发起人为：${userNames}`;
+        } else {
+            description = '发起人未指定';
+        }
+    }
+    // 数字类型条件
+    else if (condition.conditionType && typeof condition.value === 'number') {
+        const typeMap = {
+            'lt': '小于',
+            'lte': '小于等于',
+            'eq': '等于',
+            'gte': '大于等于',
+            'gt': '大于'
+        };
+        const typeText = typeMap[condition.conditionType] || '';
+        description = `${condition.type} ${typeText} ${condition.value}`;
+    }
+    // 单选框条件
+    else if (condition.selectedOptions && Array.isArray(condition.selectedOptions) && condition.type) {
+        if (condition.selectedOptions.length === 0) {
+            description = `${condition.type} 未选择`;
+        } else {
+            const options = condition.options || [];
+            const selectedLabels = condition.selectedOptions.map(value => {
+                const option = options.find(opt => opt.value === value);
+                return option ? option.label : value;
+            }).join('、');
+
+            description = `${condition.type} 为 ${selectedLabels}`;
+        }
+    }
+    // 多选框条件
+    else if (condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
+        if (condition.selectedOptions.length === 0) {
+            description = `${condition.type} 未选择`;
+        } else {
+            const options = condition.options || [];
+            const selectedLabels = condition.selectedOptions.map(value => {
+                const option = options.find(opt => opt.value === value);
+                return option ? option.label : value;
+            }).join('、');
+
+            const typeText = condition.conditionType === 'exact' ? '完全等于' : '包含';
+            description = `${condition.type} ${typeText} ${selectedLabels}`;
+        }
+    }
+    // 默认情况
+    else {
+        description = `${condition.type} 未设置`;
+    }
+
+    return description;
+};
 
 </script>
 
@@ -494,6 +628,19 @@ const editCondition = (condIndex, condition) => {
 
         .chevron-icon {
             color: #c0c4cc;
+            flex-shrink: 0;
+            /* 防止图标被压缩 */
+        }
+
+        /* 添加条件文本容器的样式 */
+        .condition-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 5;
+            /* 限制显示5行 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
         }
     }
 }
