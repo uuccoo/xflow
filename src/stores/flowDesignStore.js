@@ -150,7 +150,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     const sourceBranch = branches[condIndex]
 
     // 如果是默认条件，不允许复制
-    if (sourceBranch.name === '默认条件') {
+    if (sourceBranch.isDefault) {
       ElMessage.warning('默认条件不能复制')
       return
     }
@@ -161,6 +161,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 修改名称，避免重名
     const baseName = copiedBranch.name.replace(/\s*\(\d+\)$/, '') // 移除可能已有的 (数字) 后缀
     copiedBranch.name = `${baseName} (复制)`
+
+    // 确保复制的分支不是默认条件
+    copiedBranch.isDefault = false
 
     // 生成新的优先级（插入在原条件右侧，即索引+1的位置）
     const insertPosition = condIndex + 1

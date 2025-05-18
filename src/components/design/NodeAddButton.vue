@@ -96,12 +96,14 @@ const createNodeByType = (type, nodeId) => {
                     expression: '',
                     priority: 1,
                     nodes: [],
+                    isDefault: false, // 添加默认条件标识，普通条件为false
                 },
                 {
                     name: '默认条件',
                     expression: '其他条件进入此流程',
                     priority: 2,
                     nodes: [],
+                    isDefault: true, // 添加默认条件标识
                 },
             ],
         },
@@ -176,7 +178,7 @@ const handleNodeAdd = (type) => {
         // 向分支内添加节点，传递位置参数
         addNodeToBranch(newNode, props.branch, props.position);
     } else {
-        // 向主流程添加节点
+// 向主流程添加节点
         addNodeToMainFlow(newNode, props.position);
     }
 

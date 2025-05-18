@@ -24,7 +24,7 @@
                         <div class="priority-tag" v-if="branchType === 'condition'">优先级{{ branch.priority }}</div>
 
                         <!-- 复制按钮 - 只在非默认条件下显示 -->
-                        <el-icon class="node-copy" v-if="branch.name !== '默认条件'" @click.stop="copyBranch(branchIndex)">
+                        <el-icon class="node-copy" v-if="!branch.isDefault" @click.stop="copyBranch(branchIndex)">
                             <CopyDocument />
                         </el-icon>
 
@@ -36,8 +36,8 @@
 
                     <!-- 分支内容 - 根据分支类型显示不同内容 -->
                     <div class="node-content branch-content"
-                        @click="branch.name !== '默认条件' ? editBranch(branchIndex, branch) : undefined"
-                        :class="{ 'default-condition': branch.name === '默认条件' }">
+                        @click="!branch.isDefault ? editBranch(branchIndex, branch) : undefined"
+                        :class="{ 'default-condition': branch.isDefault }">
                         <!-- 条件分支内容 -->
                         <template v-if="branchType === 'condition'">
                             <span class="condition-text" v-html="getConditionDescription(branch)"></span>
@@ -46,7 +46,7 @@
                         <template v-else>
                             <span>{{ branch.description || '请配置分支' }}</span>
                         </template>
-                        <el-icon class="chevron-icon" v-if="branch.name !== '默认条件'">
+                        <el-icon class="chevron-icon" v-if="!branch.isDefault">
                             <Edit />
                         </el-icon>
                     </div>
@@ -184,23 +184,22 @@ const addConditionBranch = () => {
         name: `条件${conditionNumber}`,
         expression: '',
         priority: conditionNumber,
-        nodes: []
+        nodes: [],
+        isDefault: false  // 普通条件，非默认
     };
 
-    // 将默认条件的优先级设为最低
-    const defaultConditionIndex = props.node.branches.findIndex(c => c.name === '默认条件');
-    if (defaultConditionIndex !== -1) {
-        props.node.branches[defaultConditionIndex].priority = conditionsCount + 1;
-    }
+    // 找到默认条件的索引
+    const defaultConditionIndex = props.node.branches.findIndex(c => c.isDefault);
 
-    // 在数组中插入新条件（紧挨着第一个条件的右侧）
-    // 确保至少插入在默认条件之前
-    const insertIndex = Math.min(1, conditionsCount - 1);
+    // 计算插入位置：如果找到了默认条件，就插入到它前面；否则插入到末尾
+    const insertIndex = defaultConditionIndex !== -1 ? defaultConditionIndex : conditionsCount;
+
+    // 在数组中插入新条件
     props.node.branches.splice(insertIndex, 0, newCondition);
 
     // 重新计算所有条件的优先级
     props.node.branches.forEach((condition, idx) => {
-        if (condition.name !== '默认条件') {
+        if (!condition.isDefault) {
             condition.priority = idx + 1;
         } else {
             condition.priority = props.node.branches.length; // 默认条件优先级最低
@@ -225,7 +224,7 @@ const deleteConditionBranch = (condIndex) => {
 
     // 如果有孤立节点，可以选择将它们移到默认分支
     if (orphanedNodes.length > 0) {
-        const defaultConditionIndex = props.node.branches.findIndex(c => c.name === '默认条件');
+        const defaultConditionIndex = props.node.branches.findIndex(c => c.isDefault);
         if (defaultConditionIndex !== -1) {
             props.node.branches[defaultConditionIndex].nodes.push(...orphanedNodes);
             ElMessage.info('已将分支中的节点转移到默认条件');
@@ -237,7 +236,7 @@ const deleteConditionBranch = (condIndex) => {
 
     // 更新剩余条件分支的优先级
     props.node.branches.forEach((condition, idx) => {
-        if (condition.name !== '默认条件') {
+        if (!condition.isDefault) {
             condition.priority = idx + 1;
         } else {
             condition.priority = props.node.branches.length;
@@ -259,7 +258,7 @@ const editCondition = (condIndex, condition) => {
 // 将条件设置转换为文本描述
 const getConditionDescription = (branch) => {
     // 如果是默认条件，直接返回默认文本
-    if (branch.name === '默认条件') {
+    if (branch.isDefault) {
         return '其他条件进入此流程';
     }
 

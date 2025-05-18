@@ -77,11 +77,9 @@ flowStore.nodeOptions.forEach(option => {
   option.icon = iconMap[option.icon] || null
 })
 
-// 计算缩放样式 - 使用 store 中的缩放比例
+// 计算缩放样式 - 使用CSS的zoom属性而非transform
 const zoomStyle = computed(() => ({
-  transform: `scale(${flowZoomScale.value})`,
-  transformOrigin: 'center top',
-  margin: '0 auto'  // 保证水平居中
+  zoom: flowZoomScale.value
 }))
 
 // 添加缩放相关的变量和函数
@@ -121,8 +119,8 @@ const resetZoom = () => {
 }
 
 .flow-chart {
-  width: 100%;
-  max-width: 800px;
+  width: fit-content; // 改为内容自适应宽度
+  min-width: 800px; // 设置最小宽度
   margin: 0 auto;
   display: flex;
   flex-direction: column;
