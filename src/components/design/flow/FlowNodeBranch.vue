@@ -250,7 +250,7 @@ const deleteConditionBranch = (condIndex) => {
 
 // 编辑条件表达式
 const editCondition = (condIndex, condition) => {
-    condition = { ...condition, type: 'condition' }; // 确保条件对象包含类型信息
+    condition.type = 'condition'; // 确保条件对象包含类型信息
     // 直接将条件作为node传递给selectNode方法
     flowStore.selectNode(condition, condIndex, null);
 
