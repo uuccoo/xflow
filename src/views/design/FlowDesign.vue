@@ -51,9 +51,9 @@
 
 <script setup>
 import { Connection, Document, Edit, Money, Setting, Sort, TurnOff, User, Plus, Minus, Refresh } from '@element-plus/icons-vue'
-import NodeAddButton from './NodeAddButton.vue'
-import FlowNodeRenderer from './flow/FlowNodeRenderer.vue'
-import NodeSettingsDrawer from '../settings/NodeSettingsDrawer.vue'
+import NodeAddButton from '../../components/flow/NodeAddButton.vue'
+import FlowNodeRenderer from '../../components/flow/node/FlowNodeRenderer.vue'
+import NodeSettingsDrawer from '../../components/settings/NodeSettingsDrawer.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { computed, ref } from 'vue'
 

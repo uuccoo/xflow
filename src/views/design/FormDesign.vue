@@ -258,7 +258,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
-import ComponentRenderer from './ComponentRenderer.vue'
+import ComponentRenderer from '../../components/form/ComponentRenderer.vue'
 import { Delete, CopyDocument, Iphone, Monitor, ArrowUp, ArrowDown, Plus, Operation } from '@element-plus/icons-vue'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 

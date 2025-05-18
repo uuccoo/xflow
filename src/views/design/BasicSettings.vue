@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import PersonSelector from '../common/PersonSelector.vue'
-import DesignatedPersonSelector from '../common/DesignatedPersonSelector.vue'
-import GroupCreator from '../common/GroupCreator.vue'
+import DesignatedPersonSelector from '../../components/common/DesignatedPersonSelector.vue'
+import GroupCreator from '../../components/common/GroupCreator.vue'
 import { useBasicSettingsStore } from '../../stores/basicSettingsStore'
 import { formGroupApi } from '../../api'
 import { ElMessage } from 'element-plus'

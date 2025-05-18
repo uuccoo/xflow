@@ -16,7 +16,7 @@ import FormDesign from './FormDesign.vue'
 import FlowDesign from './FlowDesign.vue'
 import MoreSettings from './MoreSettings.vue'
 // 导入预览组件
-import ApprovalFormView from '@/views/ApprovalFormView.vue'
+import ApprovalFormView from '@/views/approval/ApprovalFormView.vue'
 
 const route = useRoute()
 const router = useRouter()

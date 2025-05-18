@@ -14,29 +14,29 @@ const routes = [
       {
         path: 'initiate',
         name: 'initiate-approval',
-        component: () => import('@/views/home/InitiateApproval.vue'),
+        component: () => import('@/views/approval/InitiateApproval.vue'),
       },
       {
         path: 'approvals',
         name: 'approval-center',
-        component: () => import('@/views/home/ApprovalCenter.vue'),
+        component: () => import('@/views/approval/ApprovalCenter.vue'),
       },
       // 管理相关路由
       {
         path: 'manage-forms',
         name: 'manage-forms',
-        component: () => import('@/views/home/ManageForms.vue'),
+        component: () => import('@/views/management/ManageForms.vue'),
       },
     ],
   },
   {
     path: '/design',
-    component: () => import('@/views/DesignView.vue'),
+    component: () => import('@/views/design/Design.vue'),
   },
   {
     path: '/approval-form',
     name: 'approval-form',
-    component: () => import('@/views/ApprovalFormView.vue'),
+    component: () => import('@/views/approval/ApprovalFormView.vue'),
   },
 ]
 
