@@ -88,21 +88,22 @@ const createNodeByType = (type, nodeId) => {
         condition: {
             name: '条件分支',
             props: {
-                conditions: [
-                    {
-                        name: '条件1',
-                        expression: '',
-                        priority: 1,
-                        nodes: [],
-                    },
-                    {
-                        name: '默认条件',
-                        expression: '其他条件进入此流程',
-                        priority: 2,
-                        nodes: [],
-                    },
-                ],
+                // 移除 conditions 字段
             },
+            branches: [
+                {
+                    name: '条件1',
+                    expression: '',
+                    priority: 1,
+                    nodes: [],
+                },
+                {
+                    name: '默认条件',
+                    expression: '其他条件进入此流程',
+                    priority: 2,
+                    nodes: [],
+                },
+            ],
         },
         automation: {
             name: '自动化',
@@ -137,6 +138,8 @@ const createNodeByType = (type, nodeId) => {
         type,
         name: config.name || label,
         props: { ...(config.props || {}) },
+        // 如果配置中包含 branches 字段，则添加到返回的节点对象中
+        ...(config.branches ? { branches: config.branches } : {})
     };
 };
 

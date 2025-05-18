@@ -146,8 +146,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 复制条件分支
   const copyConditionBranch = (node, condIndex) => {
     // 获取要复制的条件
-    const conditions = node.props.conditions
-    const sourceBranch = conditions[condIndex]
+    const branches = node.branches
+    const sourceBranch = branches[condIndex]
 
     // 如果是默认条件，不允许复制
     if (sourceBranch.name === '默认条件') {
@@ -166,14 +166,14 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     const insertPosition = condIndex + 1
 
     // 更新优先级
-    conditions.splice(insertPosition, 0, copiedBranch)
+    branches.splice(insertPosition, 0, copiedBranch)
 
     // 重新计算所有条件的优先级
-    conditions.forEach((condition, idx) => {
+    branches.forEach((condition, idx) => {
       if (condition.name !== '默认条件') {
         condition.priority = idx + 1
       } else {
-        condition.priority = conditions.length // 默认条件优先级最低
+        condition.priority = branches.length // 默认条件优先级最低
       }
     })
 

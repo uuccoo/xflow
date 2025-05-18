@@ -123,7 +123,7 @@ const branchType = computed(() => props.node.type)
 // 根据分支类型获取分支集合
 const branches = computed(() => {
     if (branchType.value === 'condition') {
-        return props.node.props.conditions || [];
+        return props.node.branches || [];
     }
     // 未来可以在这里添加其他类型的分支数据获取逻辑
     return [];
@@ -177,7 +177,7 @@ const copyBranch = (branchIndex) => {
 // 添加条件分支
 const addConditionBranch = () => {
     // 获取现有条件数量
-    const conditionsCount = props.node.props.conditions.length;
+    const conditionsCount = props.node.branches.length;
     const conditionNumber = conditionsCount; // 新条件的编号
 
     // 创建新条件
@@ -189,22 +189,22 @@ const addConditionBranch = () => {
     };
 
     // 将默认条件的优先级设为最低
-    const defaultConditionIndex = props.node.props.conditions.findIndex(c => c.name === '默认条件');
+    const defaultConditionIndex = props.node.branches.findIndex(c => c.name === '默认条件');
     if (defaultConditionIndex !== -1) {
-        props.node.props.conditions[defaultConditionIndex].priority = conditionsCount + 1;
+        props.node.branches[defaultConditionIndex].priority = conditionsCount + 1;
     }
 
     // 在数组中插入新条件（紧挨着第一个条件的右侧）
     // 确保至少插入在默认条件之前
     const insertIndex = Math.min(1, conditionsCount - 1);
-    props.node.props.conditions.splice(insertIndex, 0, newCondition);
+    props.node.branches.splice(insertIndex, 0, newCondition);
 
     // 重新计算所有条件的优先级
-    props.node.props.conditions.forEach((condition, idx) => {
+    props.node.branches.forEach((condition, idx) => {
         if (condition.name !== '默认条件') {
             condition.priority = idx + 1;
         } else {
-            condition.priority = props.node.props.conditions.length; // 默认条件优先级最低
+            condition.priority = props.node.branches.length; // 默认条件优先级最低
         }
     });
 
@@ -214,7 +214,7 @@ const addConditionBranch = () => {
 
 // 删除条件分支
 const deleteConditionBranch = (condIndex) => {
-    if (props.node.props.conditions.length <= 2) {
+    if (props.node.branches.length <= 2) {
         // 当只有两个条件分支时，删除整个当前条件分支组件
         // 直接使用 store 中的方法删除，传递branch属性
         flowStore.deleteNode(props.node, props.index, props.branch);
@@ -222,26 +222,26 @@ const deleteConditionBranch = (condIndex) => {
     }
 
     // 收集被删除分支中的所有节点
-    const orphanedNodes = props.node.props.conditions[condIndex].nodes;
+    const orphanedNodes = props.node.branches[condIndex].nodes;
 
     // 如果有孤立节点，可以选择将它们移到默认分支
     if (orphanedNodes.length > 0) {
-        const defaultConditionIndex = props.node.props.conditions.findIndex(c => c.name === '默认条件');
+        const defaultConditionIndex = props.node.branches.findIndex(c => c.name === '默认条件');
         if (defaultConditionIndex !== -1) {
-            props.node.props.conditions[defaultConditionIndex].nodes.push(...orphanedNodes);
+            props.node.branches[defaultConditionIndex].nodes.push(...orphanedNodes);
             ElMessage.info('已将分支中的节点转移到默认条件');
         }
     }
 
     // 删除条件分支
-    props.node.props.conditions.splice(condIndex, 1);
+    props.node.branches.splice(condIndex, 1);
 
     // 更新剩余条件分支的优先级
-    props.node.props.conditions.forEach((condition, idx) => {
+    props.node.branches.forEach((condition, idx) => {
         if (condition.name !== '默认条件') {
             condition.priority = idx + 1;
         } else {
-            condition.priority = props.node.props.conditions.length;
+            condition.priority = props.node.branches.length;
         }
     });
 

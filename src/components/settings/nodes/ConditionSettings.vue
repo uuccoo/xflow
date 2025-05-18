@@ -118,7 +118,7 @@
                     <el-checkbox label="发起人">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
                     <el-checkbox v-for="field in requiredFormFields" :key="field" :label="field">{{ field
-                        }}</el-checkbox>
+                    }}</el-checkbox>
                 </el-checkbox-group>
             </div>
             <template #footer>
@@ -385,13 +385,23 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    // 确保节点有 props 属性
+    // 确保节点有 props 属性和 branches 字段
     if (!props.node.props) {
         props.node.props = {};
     }
 
-    // 保存条件组设置到节点的props对象中
+    // 根据条件组数据生成branches字段
+    // 注意：这里将条件组数据转换为branches字段格式
+    // 这里是简化实现，实际可能需要根据业务逻辑进行更复杂的转换
+
+    // 首先确保节点的branches数组存在
+    if (!props.node.branches) {
+        props.node.branches = [];
+    }
+
+    // 保存条件组设置到节点的props对象中（用于内部处理）
     props.node.props.conditionGroups = JSON.parse(JSON.stringify(conditionGroups.value));
+
     console.log('保存的条件组数据:', props.node.props.conditionGroups);
     return true;
 }
