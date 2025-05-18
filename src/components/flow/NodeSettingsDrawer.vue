@@ -51,13 +51,13 @@ import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 
 // 导入各种节点设置组件
-import InitiatorSettings from './nodes/InitiatorSettings.vue'
-import ApproverSettings from './nodes/ApproverSettings.vue'
-import CopyToSettings from './nodes/CopyToSettings.vue'
-import ProcessSettings from './nodes/ProcessSettings.vue'
-import ConditionSettings from './nodes/ConditionSettings.vue'
-import AutomationSettings from './nodes/AutomationSettings.vue'
-import DefaultSettings from './nodes/DefaultSettings.vue'
+import InitiatorSettings from './settings/InitiatorSettings.vue'
+import ApproverSettings from './settings/ApproverSettings.vue'
+import CopyToSettings from './settings/CopyToSettings.vue'
+import ProcessSettings from './settings/ProcessSettings.vue'
+import ConditionSettings from './settings/ConditionSettings.vue'
+import AutomationSettings from './settings/AutomationSettings.vue'
+import DefaultSettings from './settings/DefaultSettings.vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()

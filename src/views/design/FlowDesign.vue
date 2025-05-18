@@ -53,7 +53,7 @@
 import { Connection, Document, Edit, Money, Setting, Sort, TurnOff, User, Plus, Minus, Refresh } from '@element-plus/icons-vue'
 import NodeAddButton from '../../components/flow/NodeAddButton.vue'
 import FlowNodeRenderer from '../../components/flow/node/FlowNodeRenderer.vue'
-import NodeSettingsDrawer from '../../components/settings/NodeSettingsDrawer.vue'
+import NodeSettingsDrawer from '../../components/flow/NodeSettingsDrawer.vue'
 import { useFlowDesignStore } from '../../stores/flowDesignStore'
 import { computed, ref } from 'vue'
 
