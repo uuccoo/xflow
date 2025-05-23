@@ -11,13 +11,9 @@ import { ElMessage } from 'element-plus'
 const basicStore = useBasicSettingsStore()
 
 // 从ElementPlusIconsVue中获取所有图标
-const iconList = computed(() => {
-  const icons = []
-  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    icons.push({ name: key, component })
-  }
-  return icons
-})
+const iconList = computed(() =>
+  Object.entries(ElementPlusIconsVue).map(([name, component]) => ({ name, component }))
+)
 
 // 图标选择器相关
 const popoverVisible = ref(false) // 控制弹出框可见性
@@ -37,14 +33,6 @@ const selectIcon = (iconName) => {
   basicStore.selectedIcon = iconName
   popoverVisible.value = false // 选择后关闭弹窗
 }
-
-// 谁可以发起 设置
-const initiatorScope = ref('all')
-const selectedInitiators = ref([])
-
-// 模板管理员设置
-const adminScope = ref('all')
-const selectedAdmins = ref([])
 
 // 分组相关
 const groupOptions = ref([]) // 分组选项
