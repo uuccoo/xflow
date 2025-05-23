@@ -70,187 +70,8 @@
     </el-main>
 
     <!-- 右侧属性配置面板 -->
-    <el-aside width="280px" class="property-panel">
-      <div class="property-header">
-        <h3>属性设置</h3>
-      </div>
-
-      <el-form v-if="formStore.activeItem" label-position="top" size="small" class="property-form">
-        <!-- 分栏组件属性设置 -->
-        <template v-if="formStore.activeItem.type === 'columns'">
-          <el-form-item label="栏目布局">
-            <el-select v-model="formStore.activeItem.layoutValue" @change="formStore.updateColumnsLayout"
-              style="width: 100%">
-              <el-option label="两等分" value="1:1"></el-option>
-              <el-option label="三等分" value="1:1:1"></el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-
-        <!-- 说明文字组件属性设置 -->
-        <template v-else-if="formStore.activeItem.type === 'text'">
-          <el-form-item label="标题">
-            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
-          </el-form-item>
-          <el-form-item label="内容">
-            <el-input type="textarea" v-model="formStore.activeItem.content" placeholder="请输入说明文字内容"
-              :rows="4"></el-input>
-          </el-form-item>
-          <el-form-item label="字体大小">
-            <el-select v-model="formStore.activeItem.fontSize" style="width: 100%">
-              <el-option label="小" value="12px"></el-option>
-              <el-option label="中" value="14px"></el-option>
-              <el-option label="大" value="16px"></el-option>
-              <el-option label="超大" value="18px"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="文字颜色">
-            <el-color-picker v-model="formStore.activeItem.color"></el-color-picker>
-          </el-form-item>
-        </template>
-
-        <!-- 数字输入框组件属性设置 -->
-        <template v-else-if="formStore.activeItem.type === 'number'">
-          <el-form-item label="标题">
-            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
-          </el-form-item>
-          <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="提示文字">
-            <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
-          </el-form-item>
-          <el-form-item label="最小值">
-            <el-input-number v-model="formStore.activeItem.min" :step="1" style="width: 100%"></el-input-number>
-          </el-form-item>
-          <el-form-item label="最大值">
-            <el-input-number v-model="formStore.activeItem.max" :step="1" style="width: 100%"></el-input-number>
-          </el-form-item>
-          <el-form-item label="步长">
-            <el-input-number v-model="formStore.activeItem.step" :step="0.1" :precision="1"
-              style="width: 100%"></el-input-number>
-          </el-form-item>
-          <el-form-item label="是否必填">
-            <el-switch v-model="formStore.activeItem.required"></el-switch>
-          </el-form-item>
-          <el-form-item label="默认值">
-            <el-input-number v-model="formStore.activeItem.defaultValue" :step="1"
-              style="width: 100%"></el-input-number>
-          </el-form-item>
-        </template>
-
-        <!-- 单选框组件属性设置 -->
-        <template v-else-if="formStore.activeItem.type === 'radio'">
-          <el-form-item label="标题">
-            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
-          </el-form-item>
-          <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="选项设置">
-            <div class="options-container">
-              <draggable v-model="formStore.activeItem.options" handle=".drag-handle-option" :animation="200"
-                ghost-class="ghost-option" chosen-class="chosen-option" drag-class="dragging-option">
-                <div v-for="(option, optIndex) in formStore.activeItem.options" :key="option.value" class="option-item">
-                  <el-icon class="drag-handle-option">
-                    <Operation />
-                  </el-icon>
-                  <el-input v-model="option.label" placeholder="选项名称" class="option-input-full"></el-input>
-                  <div class="option-actions">
-                    <el-button size="small" circle type="danger" @click="formStore.removeOption(optIndex)" title="删除">
-                      <el-icon>
-                        <Delete />
-                      </el-icon>
-                    </el-button>
-                  </div>
-                </div>
-              </draggable>
-              <el-button type="primary" text class="add-option-btn" @click="formStore.addOption">
-                <el-icon>
-                  <Plus />
-                </el-icon> 添加选项
-              </el-button>
-            </div>
-          </el-form-item>
-          <el-form-item label="显示方式">
-            <el-radio-group v-model="formStore.activeItem.asDropdown">
-              <el-radio :label="false">单选框组</el-radio>
-              <el-radio :label="true">下拉选择器</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="是否必填">
-            <el-switch v-model="formStore.activeItem.required"></el-switch>
-          </el-form-item>
-          <el-form-item label="默认值">
-            <el-select v-if="formStore.activeItem.asDropdown" v-model="formStore.activeItem.defaultValue"
-              placeholder="请选择默认值" style="width: 100%">
-              <el-option v-for="option in formStore.activeItem.options" :key="option.value" :label="option.label"
-                :value="option.value"></el-option>
-            </el-select>
-            <el-radio-group v-else v-model="formStore.activeItem.defaultValue">
-              <el-radio v-for="option in formStore.activeItem.options" :key="option.value" :label="option.value">{{
-                option.label }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </template>
-
-        <!-- 日期时间区间组件属性设置 -->
-        <template v-else-if="formStore.activeItem.type === 'daterange'">
-          <el-form-item label="标题">
-            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
-          </el-form-item>
-          <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="提示文字">
-            <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
-          </el-form-item>
-          <el-form-item label="日期格式">
-            <el-select v-model="formStore.activeItem.format" style="width: 100%">
-              <el-option label="年-月-日 时:分:秒" value="YYYY-MM-DD HH:mm:ss"></el-option>
-              <el-option label="年-月-日" value="YYYY-MM-DD"></el-option>
-              <el-option label="年/月/日" value="YYYY/MM/DD"></el-option>
-              <el-option label="年年年年-月月-日日" value="YYYY-MM-DD"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="分隔符">
-            <el-input v-model="formStore.activeItem.rangeSeparator" placeholder="请输入日期区间分隔符"></el-input>
-          </el-form-item>
-          <el-form-item label="是否必填">
-            <el-switch v-model="formStore.activeItem.required"></el-switch>
-          </el-form-item>
-        </template>
-
-        <!-- 普通组件属性设置 -->
-        <template v-else>
-          <el-form-item label="标题">
-            <el-input v-model="formStore.activeItem.title" placeholder="请输入标题"></el-input>
-          </el-form-item>
-          <el-form-item label="编码">
-            <el-input v-model="formStore.activeItem.field" placeholder="请输入字段名" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="提示文字">
-            <el-input v-model="formStore.activeItem.placeholder" placeholder="请输入提示文字"></el-input>
-          </el-form-item>
-          <el-form-item label="是否必填">
-            <el-switch v-model="formStore.activeItem.required"></el-switch>
-          </el-form-item>
-          <el-form-item label="校验规则">
-            <el-select v-model="formStore.activeItem.validator" placeholder="请选择校验规则" style="width: 100%">
-              <el-option label="无" value="none"></el-option>
-              <el-option label="邮箱" value="email"></el-option>
-              <el-option label="手机号" value="phone"></el-option>
-              <el-option label="身份证" value="id"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="默认值">
-            <el-input v-model="formStore.activeItem.defaultValue" placeholder="请输入默认值"></el-input>
-          </el-form-item>
-        </template>
-      </el-form>
-      <div v-else class="empty-tip">
-        请选择一个组件进行配置
-      </div>
+    <el-aside width="280px" class="property-panel-container">
+      <property-panel :component="formStore.activeItem" />
     </el-aside>
   </el-container>
 </template>
@@ -259,6 +80,7 @@
 import { ref, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from '../../components/form/ComponentRenderer.vue'
+import PropertyPanel from '../../components/form/property/PropertyPanel.vue'
 import { Delete, CopyDocument, Iphone, Monitor, ArrowUp, ArrowDown, Plus, Operation } from '@element-plus/icons-vue'
 import { useFormDesignStore } from '../../stores/formDesignStore'
 
@@ -454,26 +276,10 @@ const dragEnd = () => { }
   margin: auto;
 }
 
-.property-panel {
+// 移除 .property-panel 相关样式，只保留容器样式
+.property-panel-container {
   background-color: #ffffff;
   border-left: 1px solid #ebeef5;
-
-  .property-header {
-    display: flex;
-    align-items: center;
-    height: 50px;
-    border-bottom: 1px solid #ebeef5;
-
-    h3 {
-      margin-left: 15px;
-      color: #606266;
-    }
-  }
-
-  .property-form {
-    margin-top: 15px;
-    padding: 0 15px;
-  }
 }
 
 .form-container {
@@ -586,69 +392,5 @@ const dragEnd = () => { }
   100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
   }
-}
-
-/* 选项管理样式 */
-.options-container {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 10px;
-  background-color: #fafafa;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.option-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 4px;
-  background-color: #fff;
-  border: 1px solid #dcdfe6;
-
-  .drag-handle-option {
-    cursor: move;
-    color: #909399;
-    padding: 4px;
-    margin-right: 4px;
-    font-size: 18px;
-    /* 增加图标尺寸 */
-
-    &:hover {
-      color: #409EFF;
-    }
-  }
-
-  .option-input {
-    flex: 2;
-  }
-
-  .option-input-full {
-    flex: 1;
-    width: 100%;
-  }
-
-  .option-value {
-    flex: 1;
-  }
-
-  .option-actions {
-    display: flex;
-    gap: 4px;
-  }
-}
-
-.add-option-btn {
-  margin-top: 8px;
-  align-self: flex-start;
-}
-
-/* 选项拖拽时的样式 */
-.ghost-option {
-  opacity: 0.5;
-  background: #f0f9ff !important;
-  border: 1px dashed #409EFF !important;
 }
 </style>
