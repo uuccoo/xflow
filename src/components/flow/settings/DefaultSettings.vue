@@ -17,7 +17,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 
 // 接收节点数据
 const props = defineProps({

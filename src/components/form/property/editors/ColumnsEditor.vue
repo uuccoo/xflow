@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { useFormDesignStore } from '../../../../stores/formDesignStore';
+import { useFormDesignStore } from '@/stores/formDesignStore';
 
 const props = defineProps({
   component: {

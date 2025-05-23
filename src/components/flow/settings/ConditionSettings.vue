@@ -118,7 +118,7 @@
                     <el-checkbox label="发起人">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
                     <el-checkbox v-for="field in requiredFormFields" :key="field" :label="field">{{ field
-                        }}</el-checkbox>
+                    }}</el-checkbox>
                 </el-checkbox-group>
             </div>
             <template #footer>
@@ -133,8 +133,8 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
-import { useFormDesignStore } from '../../../stores/formDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
+import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'

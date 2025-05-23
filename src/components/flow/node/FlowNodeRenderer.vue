@@ -21,7 +21,7 @@ import FlowNode from './FlowNodeBasic.vue';
 import FlowNodeBranch from './FlowNodeBranch.vue';
 import FlowNodeEnd from './FlowNodeEnd.vue';
 import InitiatorNode from './FlowNodeInitiator.vue';
-import { useFlowDesignStore } from '../../../stores/flowDesignStore';
+import { useFlowDesignStore } from '@/stores/flowDesignStore';
 
 // 获取 flowDesignStore
 const flowStore = useFlowDesignStore();

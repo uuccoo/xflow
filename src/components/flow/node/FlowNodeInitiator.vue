@@ -24,7 +24,7 @@
 <script setup>
 import { User, ArrowRight } from '@element-plus/icons-vue'
 import { computed } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()

@@ -12,7 +12,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 

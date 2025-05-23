@@ -60,7 +60,7 @@
 import { h, defineAsyncComponent } from 'vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
-import { useFormDesignStore } from '../../stores/formDesignStore';
+import { useFormDesignStore } from '@/stores/formDesignStore';
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();

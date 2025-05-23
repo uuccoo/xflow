@@ -80,7 +80,7 @@
 <script setup>
 import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
 import { computed } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
 
 // 使用 Pinia store

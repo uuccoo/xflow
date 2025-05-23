@@ -16,21 +16,15 @@
         </div>
 
         <!-- 集成的PersonSelector组件 -->
-        <person-selector 
-            v-model="selectorVisible" 
-            :title="title" 
-            :selected-ids="selectedIds"
-            @confirm="handleConfirm"
-            @cancel="handleCancel" 
-            ref="personSelectorRef"
-        />
+        <person-selector v-model="selectorVisible" :title="title" :selected-ids="selectedIds" @confirm="handleConfirm"
+            @cancel="handleCancel" ref="personSelectorRef" />
     </div>
 </template>
 
 <script setup>
 import { ref, computed, defineProps, defineEmits, watch } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { useFlowDesignStore } from '../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import PersonSelector from './PersonSelector.vue'
 

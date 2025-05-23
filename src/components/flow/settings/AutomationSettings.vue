@@ -58,7 +58,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useFlowDesignStore } from '../../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 
 // 接收节点数据

@@ -8,8 +8,8 @@
     </el-form-item>
     <el-form-item label="选项设置">
       <div class="options-container">
-        <draggable v-model="component.options" handle=".drag-handle-option" :animation="200"
-          ghost-class="ghost-option" chosen-class="chosen-option" drag-class="dragging-option">
+        <draggable v-model="component.options" handle=".drag-handle-option" :animation="200" ghost-class="ghost-option"
+          chosen-class="chosen-option" drag-class="dragging-option">
           <div v-for="(option, optIndex) in component.options" :key="option.value" class="option-item">
             <el-icon class="drag-handle-option">
               <Operation />
@@ -41,8 +41,7 @@
       <el-switch v-model="component.required"></el-switch>
     </el-form-item>
     <el-form-item label="默认值">
-      <el-select v-if="component.asDropdown" v-model="component.defaultValue"
-        placeholder="请选择默认值" style="width: 100%">
+      <el-select v-if="component.asDropdown" v-model="component.defaultValue" placeholder="请选择默认值" style="width: 100%">
         <el-option v-for="option in component.options" :key="option.value" :label="option.label"
           :value="option.value"></el-option>
       </el-select>
@@ -57,7 +56,7 @@
 
 <script setup>
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
-import { useFormDesignStore } from '../../../../stores/formDesignStore'
+import { useFormDesignStore } from '@/stores/formDesignStore'
 import { Delete, Plus, Operation } from '@element-plus/icons-vue'
 
 const props = defineProps({

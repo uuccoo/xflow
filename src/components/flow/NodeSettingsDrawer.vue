@@ -47,7 +47,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
-import { useFlowDesignStore } from '../../stores/flowDesignStore'
+import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 
 // 导入各种节点设置组件

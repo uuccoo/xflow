@@ -82,7 +82,7 @@ const getEditorComponent = (type) => {
     color: #909399;
     font-size: 14px;
     text-align: center;
-  margin: auto;
-  padding-top: 100px;
+    margin: auto;
+    padding-top: 100px;
 }
 </style>

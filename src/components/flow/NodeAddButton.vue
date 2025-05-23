@@ -32,7 +32,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
-import { useFlowDesignStore } from '../../stores/flowDesignStore';
+import { useFlowDesignStore } from '@/stores/flowDesignStore';
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
@@ -178,7 +178,7 @@ const handleNodeAdd = (type) => {
         // 向分支内添加节点，传递位置参数
         addNodeToBranch(newNode, props.branch, props.position);
     } else {
-// 向主流程添加节点
+        // 向主流程添加节点
         addNodeToMainFlow(newNode, props.position);
     }
 
