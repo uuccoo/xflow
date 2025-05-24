@@ -53,7 +53,7 @@
                 </div>
 
                 <!-- 条件框下方紧跟的添加按钮 -->
-                <node-add-button class="first-add-btn" :position="0" :branch="branch" :parentNode="props.node" />
+                <node-add-button class="first-add-btn" :position="0" :branch="branch" />
 
                 <!-- 分支内的节点列表 -->
                 <div class="branch-nodes-container" v-if="branch.nodes && branch.nodes.length > 0">
@@ -61,11 +61,11 @@
                         <template v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id">
                             <!-- 渲染节点 -->
                             <flow-node-renderer :node="branchNode" :index="nodeIdx" :showDeleteBtn="true"
-                                :parentNode="props.node" :branch="branch">
+                                :branch="branch">
                             </flow-node-renderer>
 
                             <!-- 每个节点后的添加按钮 -->
-                            <node-add-button :position="nodeIdx + 1" :branch="branch" :parentNode="props.node" />
+                            <node-add-button :position="nodeIdx + 1" :branch="branch" />
                         </template>
                     </div>
                 </div>
@@ -86,9 +86,6 @@ import NodeAddButton from '../NodeAddButton.vue'
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
 
-// 从 store 获取 nodeOptions
-const nodeOptions = computed(() => flowStore.nodeOptions)
-
 // 递归引用当前组件
 const props = defineProps({
     node: {
@@ -99,21 +96,13 @@ const props = defineProps({
         type: [Number, String],
         required: true
     },
-    showDeleteBtn: {
-        type: Boolean,
-        default: true
-    },
-    parentNode: {
-        type: Object,
-        default: null
-    },
     branch: {
         type: Object,
         default: null
     }
 })
 
-// 由于已经直接使用store处理大部分操作，只保留必要的事件定义
+// 由于已经直接使用store处理大部分操作
 const emit = defineEmits([])
 
 // 分支类型 - 目前支持条件分支(condition)，未来可扩展更多类型

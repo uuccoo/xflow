@@ -36,9 +36,6 @@ import { useFlowDesignStore } from '@/stores/flowDesignStore'
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
 
-// 从 store 获取 nodeOptions
-const nodeOptions = computed(() => flowStore.nodeOptions)
-
 const props = defineProps({
     node: {
         type: Object,
@@ -48,10 +45,6 @@ const props = defineProps({
         type: Number,
         required: true
     },
-    parentNode: {
-        type: Object,
-        default: null
-    },
     branch: {
         type: Object,
         default: null
@@ -60,19 +53,19 @@ const props = defineProps({
 
 // 节点图标
 const nodeIcon = computed(() => {
-    const option = nodeOptions.value.find(option => option.type === props.node.type)
+    const option = flowStore.getNodeOption(props.node.type)
     return option ? option.icon : null
 })
 
 // 节点样式
 const nodeStyle = computed(() => {
-    const option = nodeOptions.value.find(option => option.type === props.node.type)
+    const option = flowStore.getNodeOption(props.node.type)
     return option ? { borderLeft: `3px solid ${option.color}` } : {}
 })
 
 // 节点头部样式
 const nodeHeaderStyle = computed(() => {
-    const option = nodeOptions.value.find(option => option.type === props.node.type)
+    const option = flowStore.getNodeOption(props.node.type)
     return option ? { backgroundColor: option.headerBg } : {}
 })
 

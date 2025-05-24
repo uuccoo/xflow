@@ -42,6 +42,11 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     { type: 'payment', label: '付款人', icon: 'Money', color: '#52c41a', headerBg: '#f6ffed' },
   ]
 
+  // 根据节点类型获取节点选项配置
+  const getNodeOption = (nodeType) => {
+    return nodeOptions.find((option) => option.type === nodeType) || null
+  }
+
   // 当前选中的节点
   const selectedNode = ref(null)
   // 控制抽屉层显示
@@ -102,18 +107,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 导入节点
     flowData.nodes = data.nodes || []
     return true
-  }
-
-  // 获取节点样式
-  const getNodeStyle = (node) => {
-    const option = nodeOptions.find((option) => option.type === node.type)
-    return option ? { borderLeft: `3px solid ${option.color}` } : {}
-  }
-
-  // 获取节点头部样式
-  const getNodeHeaderStyle = (node) => {
-    const option = nodeOptions.find((option) => option.type === node.type)
-    return option ? { backgroundColor: option.headerBg } : {}
   }
 
   // 删除节点 - 支持删除主流程和分支内的节点
@@ -200,11 +193,10 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     clearSelectedNode,
     exportFlowData,
     importFlowData,
-    getNodeStyle,
-    getNodeHeaderStyle,
     deleteNode,
     editCondition,
     formatUserNames,
     copyConditionBranch,
+    getNodeOption,
   }
 })

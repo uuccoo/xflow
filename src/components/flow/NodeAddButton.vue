@@ -37,7 +37,7 @@ import { useFlowDesignStore } from '@/stores/flowDesignStore';
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
 
-// 从store获取节点选项和流程数据
+// 直接使用 store 中的 nodeOptions
 const nodeOptions = computed(() => flowStore.nodeOptions);
 const flowData = computed(() => flowStore.flowData);
 
@@ -48,11 +48,6 @@ const props = defineProps({
     position: {
         type: Number,
         required: true
-    },
-    // 添加新的props，用于标识当前节点的父节点信息
-    parentNode: {
-        type: Object,
-        default: null
     },
     // 当前操作的分支对象（可选）
     branch: {
@@ -131,7 +126,7 @@ const createNodeByType = (type, nodeId) => {
 
     // 获取节点配置
     const config = nodeConfigs[type] || {};
-    const option = nodeOptions.value.find((option) => option.type === type);
+    const option = flowStore.getNodeOption(type);
     const label = option?.label || '未知节点';
 
     // 创建并返回节点
@@ -154,12 +149,6 @@ const addNodeToMainFlow = (node, position) => {
 
 // 向分支中添加节点 - 修改后的方法，支持在指定位置添加节点
 const addNodeToBranch = (node, branch, position) => {
-    // 如果要添加的是条件分支节点，为其生成唯一标识符
-    if (node.type === 'condition' && !node.isNested) {
-        node.id = `nested-${Date.now()}`;
-        node.isNested = true; // 标记为嵌套节点，方便特殊处理
-    }
-
     // 将节点添加到分支的节点数组中指定位置
     if (!branch.nodes) {
         branch.nodes = [];
@@ -269,12 +258,6 @@ const handleNodeAdd = (type) => {
             font-size: 12px;
             color: #606266;
         }
-    }
-}
-
-:deep(.node-popover) {
-    .el-popover__title {
-        display: none;
     }
 }
 </style>

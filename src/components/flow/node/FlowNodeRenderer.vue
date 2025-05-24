@@ -4,11 +4,10 @@
         <initiator-node v-if="node.type === 'initiator'" />
 
         <!-- 普通节点（审批人、抄送人、办理、付款人等） -->
-        <flow-node v-else-if="isRegularNode" :node="node" :index="index" :parentNode="parentNode" :branch="branch" />
+        <flow-node v-else-if="isRegularNode" :node="node" :index="index" :branch="branch" />
 
         <!-- 分支节点（条件分支及其他类型的分支） -->
-        <flow-node-branch v-else-if="isBranchNode" :node="node" :index="index" :showDeleteBtn="showDeleteBtn"
-            :parentNode="parentNode" :branch="branch" />
+        <flow-node-branch v-else-if="isBranchNode" :node="node" :index="index" :branch="branch" />
 
         <!-- 结束节点 -->
         <flow-node-end v-else-if="node.type === 'end'" />
@@ -36,17 +35,9 @@ const props = defineProps({
         type: [Number, String],
         required: true
     },
-    parentNode: {
-        type: Object,
-        default: null
-    },
     branch: {
         type: Object,
         default: null
-    },
-    showDeleteBtn: {
-        type: Boolean,
-        default: true
     }
 });
 

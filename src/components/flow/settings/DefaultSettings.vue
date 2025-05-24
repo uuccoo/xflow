@@ -40,7 +40,7 @@ const hasAdvancedSettings = ref(false)
 const nodeTypeLabel = computed(() => {
     if (!props.node) return '节点';
 
-    const option = flowStore.nodeOptions.find(opt => opt.type === props.node.type);
+    const option = flowStore.getNodeOption(props.node.type);
     return option ? option.label : '节点';
 });
 

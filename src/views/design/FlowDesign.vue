@@ -33,7 +33,7 @@
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in flowStore.flowData.nodes" :key="node.id">
           <!-- 使用通用节点组件渲染所有节点类型 -->
-          <flow-node-renderer :node="node" :index="index" :parentNode="null" />
+          <flow-node-renderer :node="node" :index="index" />
 
           <!-- 每个节点后面都有一个添加按钮 -->
           <node-add-button :position="index + 1" />
