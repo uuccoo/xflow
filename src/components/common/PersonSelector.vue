@@ -208,8 +208,8 @@ const fetchOrganizationData = async () => {
     
     try {
         const response = await userApi.getOrganizationTree()
-        
-        if (response && response.success && Array.isArray(response.data)) {
+
+        if (Array.isArray(response.data)) {
             const transformedData = transformApiData(response.data)
             if (transformedData) {
                 return transformedData
