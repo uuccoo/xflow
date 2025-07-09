@@ -170,6 +170,7 @@ const addConditionBranch = () => {
 
     // 创建新条件
     const newCondition = {
+        id: `branch_${Date.now()}`, // 添加唯一id，使用时间戳
         name: `条件${conditionNumber}`,
         expression: '',
         priority: conditionNumber,

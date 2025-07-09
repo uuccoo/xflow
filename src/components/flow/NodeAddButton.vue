@@ -87,6 +87,7 @@ const createNodeByType = (type, nodeId) => {
             },
             branches: [
                 {
+                    id: `branch_${Date.now()}`, // 添加唯一id，使用时间戳
                     name: '条件1',
                     expression: '',
                     priority: 1,
@@ -94,6 +95,7 @@ const createNodeByType = (type, nodeId) => {
                     isDefault: false, // 添加默认条件标识，普通条件为false
                 },
                 {
+                    id: `branch_${Date.now() + 1}`, // 添加唯一id，使用时间戳+1避免重复
                     name: '默认条件',
                     expression: '其他条件进入此流程',
                     priority: 2,
@@ -160,7 +162,7 @@ const addNodeToBranch = (node, branch, position) => {
 
 const handleNodeAdd = (type) => {
     // 创建新节点
-    const newNode = createNodeByType(type, Date.now());
+    const newNode = createNodeByType(type, `node_${Date.now()}`);
 
     // 根据不同情况处理节点添加
     if (props.branch) {

@@ -175,7 +175,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       ...component,
       id: Date.now(),
       title: component.label,
-      field: component.type + Date.now(),
+      field: component.type + '_' + Date.now(),
       placeholder: component.placeholder || '',
     }
   }
@@ -232,7 +232,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     // 生成更可靠的唯一ID
     const timestamp = Date.now()
     const randomChars = Math.random().toString(36).substring(2, 8)
-    component.id = `${timestamp}-${randomChars}`
+    component.id = `${timestamp}_${randomChars}`
 
     // 更新不同类型组件的编码
     if (component.type !== 'columns') {

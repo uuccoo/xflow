@@ -157,6 +157,9 @@ const requiredFormFields = ref([]);
 // 存储表单项标题和类型的映射，用于判断条件类型
 const formFieldTypesMap = ref({});
 
+// 存储表单项标题和字段ID的映射，用于关联条件和表单字段
+const formFieldIdsMap = ref({})
+
 // 条件组列表
 const conditionGroups = ref([]);
 
@@ -233,9 +236,13 @@ const getRequiredFormFields = () => {
 
     // 构建表单项标题和类型的映射
     formFieldTypesMap.value = {};
-    requiredItems.forEach(item => {
-        formFieldTypesMap.value[item.title] = item.type;
-    });
+    // 构建表单项标题和字段ID的映射
+    formFieldIdsMap.value = {}
+
+    requiredItems.forEach((item) => {
+        formFieldTypesMap.value[item.title] = item.type
+        formFieldIdsMap.value[item.title] = item.field // 保存字段ID
+    })
 }
 
 // 初始化表单数据
@@ -248,18 +255,8 @@ const initFormData = () => {
     if (props.node.props && props.node.props.conditionGroups && props.node.props.conditionGroups.length) {
         conditionGroups.value = JSON.parse(JSON.stringify(props.node.props.conditionGroups));
     } else {
-        conditionGroups.value = [
-            {
-                id: Date.now(),
-                conditions: [
-                    {
-                        id: Date.now() + Math.random(),
-                        type: '发起人',
-                        users: [] // 初始化空的用户列表
-                    }
-                ]
-            }
-        ];
+        conditionGroups.value = [];
+        addConditionGroup();
     }
 }
 
@@ -319,12 +316,18 @@ const confirmAddCondition = () => {
         // 检查该类型是否已存在于当前组
         const exists = currentGroupConditions.some(c => c.type === type);
         if (!exists) {
+            // 公共字段提取
+            const commonFields = {
+                id: Date.now() + Math.random(),
+                type,
+                fieldId: type !== '发起人' ? formFieldIdsMap.value[type] : null
+            };
+
             // 判断字段类型决定如何初始化条件
             if (isNumberField(type)) {
                 // 数字输入框类型
                 currentGroupConditions.push({
-                    id: Date.now() + Math.random(),
-                    type: type,
+                    ...commonFields,
                     conditionType: 'lt', // 默认"小于"条件
                     value: null, // 单个数值
                 });
@@ -332,8 +335,7 @@ const confirmAddCondition = () => {
                 // 单选框类型
                 const fieldOptions = getFieldOptions(type);
                 currentGroupConditions.push({
-                    id: Date.now() + Math.random(),
-                    type: type,
+                    ...commonFields,
                     selectedOptions: [], // 选中的选项列表
                     options: fieldOptions, // 可选选项列表
                 });
@@ -341,8 +343,7 @@ const confirmAddCondition = () => {
                 // 多选框类型
                 const fieldOptions = getFieldOptions(type);
                 currentGroupConditions.push({
-                    id: Date.now() + Math.random(),
-                    type: type,
+                    ...commonFields,
                     conditionType: 'exact', // 默认"完全等于"条件
                     selectedOptions: [], // 选中的选项列表
                     options: fieldOptions, // 可选选项列表
@@ -357,10 +358,9 @@ const confirmAddCondition = () => {
             } else {
                 // 其他类型，通用处理
                 currentGroupConditions.push({
-                    id: Date.now() + Math.random(),
-                    type: type,
-                    value: null
-                });
+                    ...commonFields,
+                    value: null,
+                })
             }
         }
     }

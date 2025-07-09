@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 存储完整流程数据
   const flowData = reactive({
-    id: 'flow-' + Date.now(),
+    id: 'flow_' + Date.now(),
     name: '未命名流程',
     version: '1.0',
     initiator: {
@@ -150,6 +150,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
     // 创建深拷贝
     const copiedBranch = JSON.parse(JSON.stringify(sourceBranch))
+
+    // 生成新的唯一id
+    copiedBranch.id = `branch_${Date.now()}`
 
     // 修改名称，避免重名
     const baseName = copiedBranch.name.replace(/\s*\(\d+\)$/, '') // 移除可能已有的 (数字) 后缀
