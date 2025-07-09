@@ -103,6 +103,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
             { label: '选项2', value: '2' },
           ],
           defaultValue: [],
+          asDropdown: false, // 是否以下拉多选框形式展示
         },
         {
           type: 'date',

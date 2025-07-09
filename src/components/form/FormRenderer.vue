@@ -115,15 +115,31 @@ const renderField = () => {
       }
 
     case 'checkbox':
-      return h(ElCheckboxGroup,
-        {
-          modelValue: getValue.value,
-          'onUpdate:modelValue': handleValueChange
-        },
-        () => props.component.options?.map(option =>
-          h(ElCheckbox, { label: option.value }, { default: () => option.label })
-        ) || []
-      );
+      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
+      if (props.component.asDropdown) {
+        return h(ElSelect,
+          {
+            modelValue: getValue.value,
+            multiple: true,
+            placeholder: props.component.placeholder || '请选择' + props.component.title,
+            style: { width: '100%' },
+            'onUpdate:modelValue': handleValueChange
+          },
+          () => props.component.options?.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          ) || []
+        );
+      } else {
+        return h(ElCheckboxGroup,
+          {
+            modelValue: getValue.value,
+            'onUpdate:modelValue': handleValueChange
+          },
+          () => props.component.options?.map(option =>
+            h(ElCheckbox, { label: option.value }, { default: () => option.label })
+          ) || []
+        );
+      }
 
     case 'select':
       return h(ElSelect,

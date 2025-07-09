@@ -159,11 +159,26 @@ const renderField = () => {
         );
       }
     case 'checkbox':
-      return h(ElCheckboxGroup, { modelValue: props.component.defaultValue, disabled: true },
-        props.component.options.map(option =>
-          h(ElCheckbox, { label: option.value, disabled: true }, { default: () => option.label })
-        )
-      );
+      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
+      if (props.component.asDropdown) {
+        return h(ElSelect, {
+          modelValue: props.component.defaultValue,
+          multiple: true,
+          placeholder: props.component.placeholder || '请选择' + props.component.title,
+          style: { width: '100%' },
+          disabled: true
+        }, {
+          default: () => props.component.options.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          )
+        });
+      } else {
+        return h(ElCheckboxGroup, { modelValue: props.component.defaultValue, disabled: true },
+          props.component.options.map(option =>
+            h(ElCheckbox, { label: option.value, disabled: true }, { default: () => option.label })
+          )
+        );
+      }
     case 'date':
       return h(ElDatePicker, {
         type: 'date',

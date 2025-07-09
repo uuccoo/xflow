@@ -20,6 +20,7 @@ import ColumnsEditor from './editors/ColumnsEditor.vue'
 import TextEditor from './editors/TextEditor.vue'
 import NumberEditor from './editors/NumberEditor.vue'
 import RadioEditor from './editors/RadioEditor.vue'
+import CheckboxEditor from './editors/CheckboxEditor.vue'
 import DateRangeEditor from './editors/DateRangeEditor.vue'
 import CommonEditor from './editors/CommonEditor.vue'
 
@@ -42,6 +43,8 @@ const getEditorComponent = (type) => {
             return NumberEditor
         case 'radio':
             return RadioEditor
+        case 'checkbox':
+            return CheckboxEditor
         case 'daterange':
             return DateRangeEditor
         default:
