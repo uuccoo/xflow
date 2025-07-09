@@ -339,6 +339,24 @@ watch(
   { immediate: true }
 )
 
+// 查看表单JSON数据结构
+const viewFormJson = () => {
+  const formData = {
+    formItems: [...formDesignStore.formItems]
+  }
+  console.log('=== 表单JSON数据结构 ===')
+  console.log(JSON.stringify(formData, null, 2))
+  ElMessage.success('表单JSON数据已输出到控制台')
+}
+
+// 查看流程JSON数据结构
+const viewFlowJson = () => {
+  const flowData = flowDesignStore.exportFlowData()
+  console.log('=== 流程JSON数据结构 ===')
+  console.log(JSON.stringify(flowData, null, 2))
+  ElMessage.success('流程JSON数据已输出到控制台')
+}
+
 // 页面加载时，检查URL是否包含表单ID或表单编码，如果有则自动加载
 onMounted(() => {
   console.log('组件已加载，URL参数:', route.query);
@@ -354,6 +372,8 @@ onMounted(() => {
       <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
     </el-menu>
     <div class="publish">
+      <el-button size="small" @click="viewFormJson">查看表单JSON</el-button>
+      <el-button size="small" @click="viewFlowJson">查看流程JSON</el-button>
       <el-button size="small" @click="preview">预览</el-button>
       <el-button size="small" type="primary" :loading="publishing" @click="publish">
         {{ publishing ? '发布中...' : '发布' }}
