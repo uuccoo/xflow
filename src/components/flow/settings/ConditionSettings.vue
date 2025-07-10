@@ -27,13 +27,13 @@
                         <!-- 条件项列表 -->
                         <div v-for="(condition, index) in group.conditions"
                             :key="'condition-' + groupIndex + '-' + index" class="condition-item">
-                            <span class="condition-type">{{ condition.type }}</span>
+                            <span class="condition-type">{{ condition.title}}</span>
 
                             <!-- 发起人条件时显示人员选择器 -->
-                            <designated-person-selector v-if="condition.type === '发起人'" v-model="condition.users" />
+                            <designated-person-selector v-if="condition.type === 'initiator'" v-model="condition.users" />
 
                             <!-- 数字输入框条件 -->
-                            <template v-else-if="isNumberField(condition.type)">
+                            <template v-else-if="condition.type === 'number'">
                                 <!-- 条件类型选择 -->
                                 <el-select v-model="condition.conditionType" class="condition-select">
                                     <el-option v-for="option in numberConditionOptions" :key="option.value"
@@ -46,7 +46,7 @@
                             </template>
 
                             <!-- 单选框条件 -->
-                            <template v-else-if="isRadioField(condition.type)">
+                            <template v-else-if="condition.type === 'radio'">
                                 <div class="checkbox-options-container">
                                     <el-checkbox-group v-model="condition.selectedOptions">
                                         <el-checkbox v-for="option in condition.options" :key="option.value"
@@ -58,7 +58,7 @@
                             </template>
 
                             <!-- 多选框条件 -->
-                            <template v-else-if="isCheckboxField(condition.type)">
+                            <template v-else-if="condition.type === 'checkbox'">
                                 <!-- 条件类型选择 -->
                                 <el-select v-model="condition.conditionType" class="condition-select">
                                     <el-option v-for="option in checkboxConditionOptions" :key="option.value"
@@ -112,12 +112,12 @@
         <!-- 条件选择对话框 -->
         <el-dialog v-model="conditionDialogVisible" title="选择条件" width="400px" center :close-on-click-modal="false"
             :show-close="true">
-            <span>请选择用来区分审批流程的条件字段，已选{{ selectedConditionTypes.length }}个</span>
+            <span>请选择用来区分审批流程的条件字段，已选{{ selectedFieldIds.length }}个</span>
             <div class="condition-selection">
-                <el-checkbox-group v-model="selectedConditionTypes">
-                    <el-checkbox label="发起人">发起人</el-checkbox>
+                <el-checkbox-group v-model="selectedFieldIds">
+                    <el-checkbox label="initiator">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
-                    <el-checkbox v-for="field in requiredFormFields" :key="field" :label="field">{{ field
+                    <el-checkbox v-for="item in requiredItems" :key="item.field" :label="item.field">{{ item.title
                     }}</el-checkbox>
                 </el-checkbox-group>
             </div>
@@ -151,21 +151,16 @@ const props = defineProps({
 const flowStore = useFlowDesignStore()
 const formDesignStore = useFormDesignStore()
 
-// 存储表单中所有必填项的标题
-const requiredFormFields = ref([]);
-
-// 存储表单项标题和类型的映射，用于判断条件类型
-const formFieldTypesMap = ref({});
-
-// 存储表单项标题和字段ID的映射，用于关联条件和表单字段
-const formFieldIdsMap = ref({})
+// 存储表单中所有必填项
+const requiredItems = ref([]);
 
 // 条件组列表
 const conditionGroups = ref([]);
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
-const selectedConditionTypes = ref([]);
+// 选中的字段ID列表
+const selectedFieldIds = ref([]);
 const currentGroupIndex = ref(0);
 
 // 数字输入框条件类型选项
@@ -182,31 +177,6 @@ const checkboxConditionOptions = [
     { label: '完全等于', value: 'exact' },
     { label: '包含任意', value: 'contains' }
 ];
-
-// 判断表单字段是否是数字输入框类型
-const isNumberField = (fieldTitle) => {
-    return formFieldTypesMap.value[fieldTitle] === 'number';
-};
-
-// 判断表单字段是否是单选框类型
-const isRadioField = (fieldTitle) => {
-    return formFieldTypesMap.value[fieldTitle] === 'radio';
-};
-
-// 判断表单字段是否是多选框类型
-const isCheckboxField = (fieldTitle) => {
-    return formFieldTypesMap.value[fieldTitle] === 'checkbox';
-};
-
-// 获取表单字段的选项列表
-const getFieldOptions = (fieldTitle) => {
-    // 找到对应标题的表单项
-    const formItem = formDesignStore.formItems.find(item => item.title === fieldTitle);
-    if (formItem && formItem.options) {
-        return formItem.options;
-    }
-    return [];
-}
 
 // 获取表单中的必填项
 const getRequiredFormFields = () => {
@@ -228,21 +198,8 @@ const getRequiredFormFields = () => {
         return result;
     };
 
-    // 收集所有表单项中符合条件的字段
-    const requiredItems = collectRequiredFields(formDesignStore.formItems);
-
-    // 提取必填项标题存储到数组
-    requiredFormFields.value = requiredItems.map(item => item.title);
-
-    // 构建表单项标题和类型的映射
-    formFieldTypesMap.value = {};
-    // 构建表单项标题和字段ID的映射
-    formFieldIdsMap.value = {}
-
-    requiredItems.forEach((item) => {
-        formFieldTypesMap.value[item.title] = item.type
-        formFieldIdsMap.value[item.title] = item.field // 保存字段ID
-    })
+    // 收集所有表单项中符合条件的字段，直接存储到requiredItems中
+    requiredItems.value = collectRequiredFields(formDesignStore.formItems);
 }
 
 // 初始化表单数据
@@ -260,16 +217,23 @@ const initFormData = () => {
     }
 }
 
+// 创建发起人条件对象
+function createInitiatorCondition() {
+    return {
+        id: Date.now() + Math.random(),
+        type: 'initiator',
+        title: '发起人',
+        fieldId: 'initiator',
+        users: []
+    }
+}
+
 // 添加条件组
 const addConditionGroup = () => {
     conditionGroups.value.push({
         id: Date.now(),
         conditions: [
-            {
-                id: Date.now() + Math.random(),
-                type: '发起人',
-                users: [] // 初始化空的用户列表
-            }
+            createInitiatorCondition()
         ]
     });
 }
@@ -283,7 +247,7 @@ const removeConditionGroup = (groupIndex) => {
 const openAddConditionDialog = (groupIndex) => {
     currentGroupIndex.value = groupIndex;
     // 根据当前条件组中已有的条件类型来初始化选择项
-    selectedConditionTypes.value = conditionGroups.value[groupIndex].conditions.map(c => c.type);
+    selectedFieldIds.value = conditionGroups.value[groupIndex].conditions.map(c => c.fieldId);
     conditionDialogVisible.value = true;
 }
 
@@ -297,70 +261,74 @@ const confirmAddCondition = () => {
     // 获取当前条件组中的条件
     const currentGroupConditions = conditionGroups.value[currentGroupIndex.value].conditions;
 
-    // 保存现有条件类型，以便与选中的类型比较
-    const existingTypes = currentGroupConditions.map(c => c.type);
+    // 保存现有条件的字段ID或类型，以便与选中的类型比较
+    const existingFields = currentGroupConditions.map(c => c.fieldId);
 
-    // 找出需要删除的条件（已存在但不在当前选择中的条件类型）
-    const typesToRemove = existingTypes.filter(type => !selectedConditionTypes.value.includes(type));
+    // 找出需要删除的条件（已存在但不在当前选择中的条件）
+    const fieldsToRemove = existingFields.filter(field => !selectedFieldIds.value.includes(field));
 
     // 删除取消勾选的条件
-    for (const type of typesToRemove) {
-        const indexToRemove = currentGroupConditions.findIndex(c => c.type === type);
+    for (const field of fieldsToRemove) {
+        const indexToRemove = currentGroupConditions.findIndex(c => (c.fieldId) === field);
         if (indexToRemove !== -1) {
             currentGroupConditions.splice(indexToRemove, 1);
         }
     }
 
     // 添加新选中的条件类型
-    for (const type of selectedConditionTypes.value) {
-        // 检查该类型是否已存在于当前组
-        const exists = currentGroupConditions.some(c => c.type === type);
+    for (const selectedField of selectedFieldIds.value) {
+        // 检查该字段是否已存在于当前组
+        const exists = currentGroupConditions.some(c => (c.fieldId) === selectedField);
         if (!exists) {
-            // 公共字段提取
-            const commonFields = {
-                id: Date.now() + Math.random(),
-                type,
-                fieldId: type !== '发起人' ? formFieldIdsMap.value[type] : null
-            };
-
-            // 判断字段类型决定如何初始化条件
-            if (isNumberField(type)) {
-                // 数字输入框类型
-                currentGroupConditions.push({
-                    ...commonFields,
-                    conditionType: 'lt', // 默认"小于"条件
-                    value: null, // 单个数值
-                });
-            } else if (isRadioField(type)) {
-                // 单选框类型
-                const fieldOptions = getFieldOptions(type);
-                currentGroupConditions.push({
-                    ...commonFields,
-                    selectedOptions: [], // 选中的选项列表
-                    options: fieldOptions, // 可选选项列表
-                });
-            } else if (isCheckboxField(type)) {
-                // 多选框类型
-                const fieldOptions = getFieldOptions(type);
-                currentGroupConditions.push({
-                    ...commonFields,
-                    conditionType: 'exact', // 默认"完全等于"条件
-                    selectedOptions: [], // 选中的选项列表
-                    options: fieldOptions, // 可选选项列表
-                });
-            } else if (type === '发起人') {
+            if (selectedField === 'initiator') {
                 // 发起人类型
-                currentGroupConditions.push({
-                    id: Date.now() + Math.random(),
-                    type: type,
-                    users: [] // 用户列表
-                });
+                currentGroupConditions.push(createInitiatorCondition());
             } else {
-                // 其他类型，通用处理
-                currentGroupConditions.push({
-                    ...commonFields,
-                    value: null,
-                })
+                // 查找对应的表单项 - 通过字段ID查找
+                const formItem = requiredItems.value.find(item => item.field === selectedField);
+                
+                if (formItem) {
+                    // 公共字段提取
+                    const commonFields = {
+                        id: Date.now() + Math.random(),
+                        type: formItem.type, // 使用表单项的实际类型
+                        title: formItem.title, // 存储表单项的标题
+                        fieldId: formItem.field // 使用字段ID
+                    };
+
+                    // 根据字段类型决定如何初始化条件
+                    if (formItem.type === 'number') {
+                        // 数字输入框类型
+                        currentGroupConditions.push({
+                            ...commonFields,
+                            conditionType: 'lt', // 默认"小于"条件
+                            value: null, // 单个数值
+                        });
+                    } else if (formItem.type === 'radio') {
+                        // 单选框类型
+                        const fieldOptions = formItem.options || [];
+                        currentGroupConditions.push({
+                            ...commonFields,
+                            selectedOptions: [], // 选中的选项列表
+                            options: fieldOptions, // 可选选项列表
+                        });
+                    } else if (formItem.type === 'checkbox') {
+                        // 多选框类型
+                        const fieldOptions = formItem.options || [];
+                        currentGroupConditions.push({
+                            ...commonFields,
+                            conditionType: 'exact', // 默认"完全等于"条件
+                            selectedOptions: [], // 选中的选项列表
+                            options: fieldOptions, // 可选选项列表
+                        });
+                    } else {
+                        // 其他类型，通用处理
+                        currentGroupConditions.push({
+                            ...commonFields,
+                            value: null,
+                        });
+                    }
+                }
             }
         }
     }

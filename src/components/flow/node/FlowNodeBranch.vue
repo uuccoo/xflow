@@ -323,7 +323,7 @@ const formatSingleCondition = (condition) => {
     let description = '';
 
     // 根据条件类型生成描述
-    if (condition.type === '发起人') {
+    if (condition.type === 'initiator') {
         if (condition.users && condition.users.length) {
             const userNames = condition.users.map(u => u.name).join('、');
             description = `发起人为：${userNames}`;
@@ -332,7 +332,7 @@ const formatSingleCondition = (condition) => {
         }
     }
     // 数字类型条件
-    else if (condition.conditionType && typeof condition.value === 'number') {
+    else if (condition.type === 'number' && condition.conditionType && typeof condition.value === 'number') {
         const typeMap = {
             'lt': '小于',
             'lte': '小于等于',
@@ -341,12 +341,12 @@ const formatSingleCondition = (condition) => {
             'gt': '大于'
         };
         const typeText = typeMap[condition.conditionType] || '';
-        description = `${condition.type} ${typeText} ${condition.value}`;
+        description = `${condition.title} ${typeText} ${condition.value}`;
     }
     // 单选框条件
-    else if (condition.selectedOptions && Array.isArray(condition.selectedOptions) && condition.type) {
+    else if (condition.type === 'radio' && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
-            description = `${condition.type} 未选择`;
+            description = `${condition.title} 未选择`;
         } else {
             const options = condition.options || [];
             const selectedLabels = condition.selectedOptions.map(value => {
@@ -354,13 +354,13 @@ const formatSingleCondition = (condition) => {
                 return option ? option.label : value;
             }).join('、');
 
-            description = `${condition.type} 为 ${selectedLabels}`;
+            description = `${condition.title} 为 ${selectedLabels}`;
         }
     }
     // 多选框条件
-    else if (condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
+    else if (condition.type === 'checkbox' && condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
-            description = `${condition.type} 未选择`;
+            description = `${condition.title} 未选择`;
         } else {
             const options = condition.options || [];
             const selectedLabels = condition.selectedOptions.map(value => {
@@ -369,12 +369,12 @@ const formatSingleCondition = (condition) => {
             }).join('、');
 
             const typeText = condition.conditionType === 'exact' ? '完全等于' : '包含';
-            description = `${condition.type} ${typeText} ${selectedLabels}`;
+            description = `${condition.title} ${typeText} ${selectedLabels}`;
         }
     }
     // 默认情况
     else {
-        description = `${condition.type} 未设置`;
+        description = `${condition.title} 未设置`;
     }
 
     return description;
