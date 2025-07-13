@@ -27,6 +27,7 @@
                 <div class="form-actions">
                     <el-button @click="goBack">取消</el-button>
                     <el-button type="primary" @click="submitForm" :loading="submitting">提交</el-button>
+                    <el-button type="info" @click="debugFormData" v-if="isDevMode">调试</el-button>
                 </div>
             </div>
 
@@ -45,9 +46,13 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import { formApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
+import { isDevelopment } from '@/utils/env';
 
 const route = useRoute();
 const router = useRouter();
+
+// 判断是否为开发环境（使用通用工具函数）
+const isDevMode = computed(() => isDevelopment());
 
 // 定义props和emits
 const props = defineProps({
@@ -189,6 +194,27 @@ const validateForm = () => {
     }
 
     return true;
+};
+
+// 调试表单数据
+const debugFormData = () => {
+    console.group('表单调试信息');
+    console.log('表单基础信息:', formData.value);
+    console.log('用户填写的表单值:', formValues);
+    
+    // 创建要提交到后端的数据结构
+    const submissionData = {
+        formId: formData.value.id,
+        formCode: formData.value.basicSettings?.formCode,
+        formName: formData.value.basicSettings?.formName,
+        formValues: { ...formValues },
+        submitTime: new Date().toISOString()
+    };
+    
+    console.log('要提交到后端的数据:', submissionData);
+    console.groupEnd();
+    
+    ElMessage.success('表单数据已在控制台打印，请按 F12 查看');
 };
 
 // 提交表单
