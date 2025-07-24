@@ -9,6 +9,8 @@ import { useMoreSettingsStore } from '@/stores/moreSettingsStore'
 import { ArrowLeft, Close } from '@element-plus/icons-vue'
 // 导入API
 import { formApi } from '@/api'
+// 导入环境工具函数
+import { isDevelopment } from '@/utils/env'
 
 // 导入各个组件
 import BasicSettings from './BasicSettings.vue'
@@ -27,6 +29,9 @@ const moreSettingsStore = useMoreSettingsStore()
 
 // 当前激活的组件
 const activeComponent = ref('basicSettings')
+
+// 判断是否为开发环境
+const isDevMode = computed(() => isDevelopment())
 
 // 是否显示预览
 const showPreview = ref(false)
@@ -372,8 +377,8 @@ onMounted(() => {
       <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
     </el-menu>
     <div class="publish">
-      <el-button size="small" @click="viewFormJson">查看表单JSON</el-button>
-      <el-button size="small" @click="viewFlowJson">查看流程JSON</el-button>
+      <el-button size="small" @click="viewFormJson" v-if="isDevMode">查看表单JSON</el-button>
+      <el-button size="small" @click="viewFlowJson" v-if="isDevMode">查看流程JSON</el-button>
       <el-button size="small" @click="preview">预览</el-button>
       <el-button size="small" type="primary" :loading="publishing" @click="publish">
         {{ publishing ? '发布中...' : '发布' }}
