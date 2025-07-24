@@ -124,7 +124,6 @@ defineExpose({
 <style scoped lang="scss">
 .personnel-selector {
     display: flex;
-    flex-direction: column;
     align-items: flex-start;
 }
 
@@ -138,7 +137,7 @@ defineExpose({
 }
 
 .selected-users {
-    margin-top: 10px;
+    align-self: center;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;

@@ -132,7 +132,7 @@ onMounted(() => {
             <el-option label="指定人员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicStore.initiatorScope !== 'all'" label="指定人员" required>
+        <el-form-item v-if="basicStore.initiatorScope !== 'all'" required>
           <designated-person-selector v-model="basicStore.selectedInitiators" title="选择发起人范围" button-text="添加"
             selector-type="initiator" :required="true" />
         </el-form-item>
@@ -144,7 +144,7 @@ onMounted(() => {
             <el-option label="指定管理员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicStore.adminScope === 'specified'" label="指定管理员" required>
+        <el-form-item v-if="basicStore.adminScope === 'specified'" required>
           <designated-person-selector v-model="basicStore.selectedAdmins" title="选择管理员" button-text="添加"
             selector-type="admin" :required="true" />
         </el-form-item>

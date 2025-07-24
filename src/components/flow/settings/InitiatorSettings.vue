@@ -7,7 +7,7 @@
                     <el-option label="指定人员" value="specified"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item v-if="initiatorScope !== 'all'" label="指定人员" label-position="left" required>
+            <el-form-item v-if="initiatorScope !== 'all'" label-position="left" required>
                 <designated-person-selector v-model="selectedInitiators" title="选择发起人范围" button-text="添加"
                     selector-type="initiator" :required="true" />
             </el-form-item>

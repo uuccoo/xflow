@@ -25,7 +25,7 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="processorType === 'designated'" label="指定人员" label-position="left" required>
+            <el-form-item v-if="processorType === 'designated'" label-position="left" required>
                 <designated-person-selector v-model="processors" title="选择办理人" button-text="添加" selector-type="process"
                     :required="true" />
             </el-form-item>

@@ -25,7 +25,7 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="approverType === 'designated'" label="指定人员" label-position="left" required>
+            <el-form-item v-if="approverType === 'designated'" label-position="left" required>
                 <designated-person-selector v-model="approvers" title="选择审批人" button-text="添加" selector-type="approver"
                     :required="true" />
             </el-form-item>
