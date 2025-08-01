@@ -37,6 +37,7 @@
                         <div class="navigation-controls">
                             <div class="department-select-all">
                                 <el-checkbox v-model="currentDepartment.checked"
+                                    :disabled="props.onlySelectUsers"
                                     :indeterminate="currentDepartment.indeterminate" @change="(val) => {
                                         updateChildrenStatus(currentDepartment, val);
                                         updateParentStatus(currentDepartment);
@@ -64,8 +65,13 @@
 
                         <div v-for="item in displayNodes" :key="item.id" class="department-item">
                             <el-checkbox v-model="item.checked"
-                                :indeterminate="item.type === 'department' && item.indeterminate" @change="(val) => {
-                                    if (item.children && item.children.length > 0) {
+                                :disabled="item.type === 'department' && props.onlySelectUsers"
+                                :indeterminate="item.type === 'department' && item.indeterminate" 
+                                @change="(val) => {
+                                    if (props.singleMode && val) {
+                                        // 单选模式下，清除之前选中的所有项
+                                        handleSingleSelection(item);
+                                    } else if (item.children && item.children.length > 0) {
                                         updateChildrenStatus(item, val);
                                     }
                                     updateParentStatus(currentDepartment);
@@ -145,6 +151,16 @@ const props = defineProps({
     selectedIds: {
         type: Array,
         default: () => []
+    },
+    // 单选模式 - 只能选择一项（不区分人员或部门）
+    singleMode: {
+        type: Boolean,
+        default: false
+    },
+    // 只能选择人员，部门不可勾选
+    onlySelectUsers: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -290,7 +306,7 @@ const updateSelectedList = () => {
     })
     
     // 过滤出用户直接勾选的节点（不包括因父节点勾选而自动勾选的子节点）
-    selectedUsers.value = allNodes
+    const filteredNodes = allNodes
         .filter(item => {
             // 排除根公司节点
             if (item.id === 'company-1' || !item.checked) {
@@ -319,22 +335,29 @@ const updateSelectedList = () => {
             name: item.name,
             type: item.type
         }))
+    
+    // 使用 Map 确保没有重复项（根据 id 去重）
+    const uniqueNodesMap = new Map()
+    filteredNodes.forEach(node => {
+        uniqueNodesMap.set(node.id, node)
+    })
+    
+    // 转换回数组
+    selectedUsers.value = Array.from(uniqueNodesMap.values())
 }
 
 // 更新父节点的状态
 const updateParentStatus = (node) => {
     if (!node.children || node.children.length === 0) return
 
-    const allChecked = node.children.every(child => {
-        return child.type === 'user' ? child.checked : (child.checked && !child.indeterminate)
-    })
-
+    // 检查是否有被选中的子节点（用户或部门）
     const someChecked = node.children.some(child => {
         return child.checked || child.indeterminate
     })
-
-    node.checked = allChecked
-    node.indeterminate = !allChecked && someChecked
+    
+    // 不再自动勾选部门，即使所有子节点都被勾选
+    // 只设置 indeterminate 状态
+    node.indeterminate = someChecked && !node.checked
 
     // 递归向上更新所有父节点的状态
     if (currentPath.value.length > 1) {
@@ -345,8 +368,9 @@ const updateParentStatus = (node) => {
                 indeterminate: child.indeterminate
             }))
 
-            parent.checked = childrenStatus.every(s => s.checked)
-            parent.indeterminate = !parent.checked && childrenStatus.some(s => s.checked || s.indeterminate)
+            // 同样，不自动勾选父部门
+            const someChildrenChecked = childrenStatus.some(s => s.checked || s.indeterminate)
+            parent.indeterminate = someChildrenChecked && !parent.checked
         }
     }
 }
@@ -356,7 +380,12 @@ const updateChildrenStatus = (node, checked) => {
     if (!node.children) return
 
     node.children.forEach(child => {
-        child.checked = checked
+        // 在只选择用户模式下，部门节点不可选
+        if (props.onlySelectUsers && child.type === 'department') {
+            child.checked = false;
+        } else {
+            child.checked = checked;
+        }
         child.indeterminate = false
 
         if (child.children && child.children.length > 0) {
@@ -396,6 +425,36 @@ const removeSelected = (itemToRemove) => {
 
     // 更新已选人员列表
     updateSelectedList()
+}
+
+// 单选模式下处理选择逻辑
+const handleSingleSelection = (selectedItem) => {
+    // 先清除所有选中状态
+    const clearAllSelections = (node) => {
+        node.checked = false
+        node.indeterminate = false
+
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(clearAllSelections)
+        }
+    }
+
+    clearAllSelections(companyDepartments.value)
+    
+    // 只选中当前项
+    selectedItem.checked = true
+    
+    // 更新父节点状态
+    const nodePath = getNodePath(selectedItem.id)
+    if (nodePath && nodePath.length > 1) {
+        // 更新路径上所有父节点的状态
+        for (let i = nodePath.length - 2; i >= 0; i--) {
+            const parent = nodePath[i]
+            // 只设置 indeterminate 状态，不自动勾选父部门
+            parent.indeterminate = true
+            parent.checked = false
+        }
+    }
 }
 
 // 清空所有已选
@@ -505,14 +564,10 @@ const initSelector = () => {
             node.children.forEach(setNodeCheckedState)
 
             // 更新父节点状态
-            const allChecked = node.children.every(child => child.checked)
             const someChecked = node.children.some(child => child.checked || child.indeterminate)
 
-            if (allChecked) {
-                node.checked = true
-                node.indeterminate = false
-            } else if (someChecked) {
-                node.checked = false
+            // 不自动勾选部门，即使所有子节点都被勾选
+            if (someChecked && !node.checked) {
                 node.indeterminate = true
             }
         }
@@ -573,12 +628,6 @@ watch(() => visible.value, async (newVal) => {
     }
 })
 
-// 监听selectedIds变化，当外部选择的ID改变时更新选中状态
-watch(() => props.selectedIds, (newVal) => {
-    if (visible.value && newVal) {
-        initSelector()
-    }
-}, { deep: true })
 
 // 暴露方法给父组件
 defineExpose({

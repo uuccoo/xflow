@@ -27,6 +27,9 @@
           {{ item.name }}
         </li>
       </ul>
+
+      <!-- 用户信息区域 -->
+      <UserInfoPanel />
     </div>
 
     <!-- 右侧内容区域 -->
@@ -39,6 +42,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -80,10 +84,11 @@ const navigateTo = (route) => {
   width: 200px;
   background-color: #f5f5f5;
   border-right: 1px solid #e0e0e0;
-  padding: 20px 0;
+  padding: 20px 0 0 0; /* 移除底部填充，为用户区域留出空间 */
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: visible; /* 允许内容溢出以显示右侧菜单 */
   /* 确保侧边栏占据整个高度 */
 }
 
@@ -164,8 +169,7 @@ const navigateTo = (route) => {
 
 /* 管理菜单特殊样式 */
 .admin-menu {
-  margin-bottom: 20px;
-  /* 底部留出一些空间 */
+  margin-bottom: 10px; /* 为用户信息区域添加一些间距 */
 }
 
 .admin-menu li {
@@ -189,5 +193,19 @@ const navigateTo = (route) => {
   /* 如果菜单项太多，允许滚动 */
   max-height: 60vh;
   /* 限制最大高度 */
+}
+
+/* 用户信息区域样式 */
+.user-info-container {
+  padding: 10px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto; /* 确保用户信息区域在侧边栏的底部 */
+  flex-shrink: 0; /* 防止用户区域被压缩 */
+}
+
+/* 自定义Element UI的下拉菜单样式 */
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
 }
 </style>
