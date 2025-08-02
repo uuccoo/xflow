@@ -168,7 +168,6 @@ import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
 import GroupCreator from '@/components/common/GroupCreator.vue';
 
 const router = useRouter();
@@ -274,44 +273,59 @@ const editForm = (form) => {
 const publishForm = async (form) => {
   try {
     await formApi.publishForm(form.id);
-    alert('表单发布成功！');
+    ElMessage.success('表单启用成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
   } catch (error) {
-    console.error('发布表单失败:', error);
-    alert('发布表单失败，请稍后重试');
+    console.error('表单启用失败:', error);
+    ElMessage.error('表单启用失败，请稍后重试');
   }
 };
 
 // 停用表单
 const disableForm = async (form) => {
-  try {
-    await formApi.disableForm(form.id);
-    alert('表单已停用！');
-    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
-  } catch (error) {
-    console.error('停用表单失败:', error);
-    alert('停用表单失败，请稍后重试');
-  }
+  // 使用 Element UI 的确认框
+  ElMessageBox.confirm('停用的表单会被移动到「已停用」分组中。', '确认停用表单吗？', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await formApi.disableForm(form.id);
+      ElMessage.success('表单已停用！');
+      fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+    } catch (error) {
+      console.error('停用表单失败:', error);
+      ElMessage.error('停用表单失败，请稍后重试');
+    }
+  }).catch(() => {
+    // 用户取消操作，不做任何处理
+  });
 };
 
 // 确认删除表单
 const confirmDeleteForm = (form) => {
-  if (confirm(`确定要删除表单"${form.name}"吗？此操作不可恢复。`)) {
+  ElMessageBox.confirm(`此操作将永久删除表单"${form.name}"，是否继续？`, '确认删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
     deleteForm(form.id);
-  }
+  }).catch(() => {
+    // 用户取消操作，不做任何处理
+  });
 };
 
 // 删除表单
 const deleteForm = async (id) => {
   try {
     await formApi.deleteForm(id);
-    alert('表单删除成功！');
+    ElMessage.success('表单删除成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
     // 如果删除的是已选中的表单，需要从selectedForms中移除
     selectedForms.value = selectedForms.value.filter(formId => formId !== id);
   } catch (error) {
     console.error('删除表单失败:', error);
-    alert('删除表单失败，请稍后重试');
+    ElMessage.error('删除表单失败，请稍后重试');
   }
 };
 
@@ -319,9 +333,15 @@ const deleteForm = async (id) => {
 const confirmBatchDelete = () => {
   if (selectedForms.value.length === 0) return;
 
-  if (confirm(`确定要删除选中的${selectedForms.value.length}个表单吗？此操作不可恢复。`)) {
+  ElMessageBox.confirm(`此操作将永久删除选中的${selectedForms.value.length}个表单，是否继续？`, '确认批量删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
     batchDeleteForms();
-  }
+  }).catch(() => {
+    // 用户取消操作，不做任何处理
+  });
 };
 
 // 批量删除
@@ -329,19 +349,19 @@ const batchDeleteForms = async () => {
   try {
     const deletePromises = selectedForms.value.map(id => formApi.deleteForm(id));
     await Promise.all(deletePromises);
-    alert('批量删除成功！');
+    ElMessage.success('批量删除成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
     selectedForms.value = []; // 清空选择
   } catch (error) {
     console.error('批量删除失败:', error);
-    alert('批量删除失败，请稍后重试');
+    ElMessage.error('批量删除失败，请稍后重试');
   }
 };
 
 // 批量移动分组
 const batchMoveToGroup = async () => {
   if (!targetGroupId.value) {
-    alert('请选择目标分组');
+    ElMessage.warning('请选择目标分组');
     return;
   }
 
@@ -350,12 +370,12 @@ const batchMoveToGroup = async () => {
       formIds: selectedForms.value,
       groupId: targetGroupId.value
     });
-    alert('批量移动分组成功！');
+    ElMessage.success('批量移动分组成功！');
     showBatchMove.value = false;
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
   } catch (error) {
     console.error('批量移动分组失败:', error);
-    alert('批量移动分组失败，请稍后重试');
+    ElMessage.error('批量移动分组失败，请稍后重试');
   }
 };
 
@@ -381,27 +401,33 @@ const showRenameGroup = (group) => {
 };
 
 const confirmDeleteGroup = (group) => {
-  if (confirm(`确定要删除分组"${group.name}"吗？此操作不可恢复。`)) {
+  ElMessageBox.confirm(`此操作将永久删除分组"${group.name}"，是否继续？`, '确认删除分组', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
     deleteGroup(group.id);
-  }
+  }).catch(() => {
+    // 用户取消操作，不做任何处理
+  });
 };
 
 // 删除分组
 const deleteGroup = async (id) => {
   try {
     await deleteFormGroup(id);
-    alert('分组删除成功！');
+    ElMessage.success('分组删除成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
   } catch (error) {
     console.error('删除分组失败:', error);
-    alert('删除分组失败，请稍后重试');
+    ElMessage.error('删除分组失败，请稍后重试');
   }
 };
 
 // 重命名分组
 const renameGroup = async () => {
   if (!editingGroupName.value.trim()) {
-    alert('分组名称不能为空');
+    ElMessage.warning('分组名称不能为空');
     return;
   }
 
@@ -411,12 +437,12 @@ const renameGroup = async () => {
     await updateFormGroup(editingGroupId.value, {
       name: editingGroupName.value.trim()
     });
-    alert('分组重命名成功！');
+    ElMessage.success('分组重命名成功！');
     showRenameDialog.value = false;
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
   } catch (error) {
     console.error('重命名分组失败:', error);
-    alert('重命名分组失败，请稍后重试');
+    ElMessage.error('重命名分组失败，请稍后重试');
   } finally {
     groupActionLoading.value = false;
   }
