@@ -109,11 +109,11 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="表单名称" required>
-          <el-input v-model="basicStore.formName" placeholder="请输入"></el-input>
+          <el-input v-model="basicStore.formName" placeholder="请输入" maxlength="50" show-word-limit></el-input>
         </el-form-item>
         <el-form-item label="所在分组" required>
           <div class="group-selection-container">
-            <el-select v-model="basicStore.groupId" placeholder="请选择分组" size="large" class="group-select">
+            <el-select v-model="basicStore.groupId" placeholder="请选择" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" inline
@@ -121,8 +121,8 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="表单说明">
-          <el-input v-model="basicStore.description" maxlength="500" style="width: 100%" placeholder="请输入表单说明"
-            show-word-limit type="textarea" />
+          <el-input v-model="basicStore.description" maxlength="100" style="width: 100%" placeholder="请输入"
+            show-word-limit type="textarea" :rows="3" />
         </el-form-item>
 
         <!-- 谁可以发起设置 -->
