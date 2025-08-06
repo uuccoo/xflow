@@ -37,14 +37,8 @@ const isDevMode = computed(() => isDevelopment())
 const showPreview = ref(false)
 
 // 返回上一页的功能
-const backUrl = computed(() => route.query.backUrl) // 默认返回首页
-
 const handleBack = () => {
-  if (backUrl.value) {
-    router.push(backUrl.value)
-  } else {
-    router.back()
-  }
+  router.push('/home/manage-forms')
 }
 
 // 是否正在发布

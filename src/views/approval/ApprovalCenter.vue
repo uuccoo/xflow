@@ -1,6 +1,6 @@
 <template>
   <div class="approval-center">
-    <h2>审批中心</h2>
+    <div class="page-title">审批中心</div>
     
     <!-- 切换标签 -->
     <div class="tabs">
@@ -149,9 +149,11 @@ const viewDetail = (item) => {
   padding: 20px;
 }
 
-h2 {
-  margin-bottom: 20px;
+.page-title {
+  font-size: 18px;
   font-weight: 500;
+  color: #262626;
+  margin-bottom: 20px;
 }
 
 .tabs {
@@ -196,6 +198,12 @@ h2 {
   display: flex;
   padding: 15px;
   border-top: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+
+.list-item:hover {
+  background-color: #f0f6ff;
+  cursor: pointer;
 }
 
 .col {

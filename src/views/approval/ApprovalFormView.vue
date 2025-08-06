@@ -250,7 +250,7 @@ const submitForm = async () => {
         ElMessage.success('表单已提交成功');
 
         // 提交成功后返回到审批中心
-        router.push('/approval-center');
+        router.push('/home/approvals');
     } catch (error) {
         if (error !== 'cancel') {
             console.error('提交表单失败:', error);
