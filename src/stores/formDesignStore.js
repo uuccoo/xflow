@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
+import { generateUniqueId } from '@/utils/idGenerator'
 
 export const useFormDesignStore = defineStore('formDesign', () => {
   // 设计区域的表单控件列表
@@ -17,6 +18,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       category: '布局组件',
       items: [
         {
+          id: '',
           type: 'columns',
           icon: 'Grid',
           label: '分栏容器',
@@ -30,10 +32,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       category: '基础组件',
       items: [
         {
+          id: '',
           type: 'input',
           icon: 'EditPen',
           label: '单行文本',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
@@ -41,10 +43,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           defaultValue: '',
         },
         {
+          id: '',
           type: 'textarea',
           icon: 'Tickets',
           label: '多行文本',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
@@ -52,10 +54,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           defaultValue: '',
         },
         {
+          id: '',
           type: 'number',
           icon: 'EditPen',
           label: '数字输入框',
-          field: '',
           title: '',
           placeholder: '请输入数字',
           required: false,
@@ -66,20 +68,20 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           step: 1,
         },
         {
+          id: '',
           type: 'text',
           icon: 'InfoFilled',
           label: '说明文字',
-          field: '',
           title: '说明标题',
           content: '这里是说明文字内容',
           fontSize: '14px',
           color: '#606266',
         },
         {
+          id: '',
           type: 'radio',
           icon: 'Check',
           label: '单选框',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
@@ -91,10 +93,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           asDropdown: false, // 新增属性：是否以下拉框形式展示
         },
         {
+          id: '',
           type: 'checkbox',
           icon: 'CircleCheck',
           label: '多选框',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
@@ -106,20 +108,20 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           asDropdown: false, // 是否以下拉多选框形式展示
         },
         {
+          id: '',
           type: 'date',
           icon: 'Calendar',
           label: '日期选择',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
           defaultValue: '',
         },
         {
+          id: '',
           type: 'daterange',
           icon: 'Calendar',
           label: '日期区间',
-          field: '',
           title: '',
           placeholder: '请选择日期时间区间',
           required: false,
@@ -128,20 +130,20 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           rangeSeparator: '至',
         },
         {
+          id: '',
           type: 'upload',
           icon: 'Upload',
           label: '文件上传',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
           defaultValue: [],
         },
         {
+          id: '',
           type: 'image',
           icon: 'Picture',
           label: '图片上传',
-          field: '',
           title: '',
           placeholder: '请输入',
           required: false,
@@ -166,7 +168,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       // 创建分栏容器时，直接使用一维数组存储子组件
       return {
         ...component,
-        id: Date.now(),
+        id: generateUniqueId(),
         title: component.title || '分栏容器',
         children: [], // 使用一维数组存储子组件
       }
@@ -174,9 +176,8 @@ export const useFormDesignStore = defineStore('formDesign', () => {
 
     return {
       ...component,
-      id: Date.now(),
+      id: generateUniqueId(),
       title: component.label,
-      field: component.type + '_' + Date.now(),
       placeholder: component.placeholder || '',
     }
   }
@@ -228,19 +229,13 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     arr.splice(index + 1, 0, newItem)
   }
 
-  // 递归更新组件和所有子组件的ID和编码
+  // 递归更新组件和所有子组件的ID
   const updateComponentIds = (component) => {
-    // 生成更可靠的唯一ID
-    const timestamp = Date.now()
-    const randomChars = Math.random().toString(36).substring(2, 8)
-    component.id = `${timestamp}_${randomChars}`
+    // 使用唯一ID生成器，确保复制时的ID唯一性
+    component.id = generateUniqueId()
 
-    // 更新不同类型组件的编码
-    if (component.type !== 'columns') {
-      // 保持类型不变，但生成新的编码
-      component.field = `${component.type}_${timestamp}`
-    } else if (component.children) {
-      // 如果是分栏容器，递归处理其中的子组件
+    // 如果是分栏容器，递归处理其中的子组件
+    if (component.type === 'columns' && component.children) {
       for (const childComponent of component.children) {
         updateComponentIds(childComponent)
       }
@@ -278,9 +273,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     // 确保组件是单选框或多选框
     if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
       // 生成唯一的选项值
-      const timestamp = Date.now()
-      const randomStr = Math.random().toString(36).substring(2, 8)
-      const uniqueValue = `option_${timestamp}_${randomStr}`
+      const uniqueValue = `option_${generateUniqueId()}`
 
       const newOption = {
         label: `选项${activeItem.value.options.length + 1}`,

@@ -90,8 +90,8 @@ const loadForm = async () => {
                 // 初始化表单字段和默认值
                 if (previewData.formDesign && previewData.formDesign.formItems) {
                     previewData.formDesign.formItems.forEach(item => {
-                        if (item.field) {
-                            formValues[item.field] = item.defaultValue || '';
+                        if (item.id) {
+                            formValues[item.id] = item.defaultValue || '';
                         }
                     });
                 }
@@ -137,8 +137,8 @@ const loadForm = async () => {
             // 初始化表单字段和默认值
             if (result.data.formDesign && result.data.formDesign.formItems) {
                 result.data.formDesign.formItems.forEach(item => {
-                    if (item.field) {
-                        formValues[item.field] = item.defaultValue || '';
+                    if (item.id) {
+                        formValues[item.id] = item.defaultValue || '';
                     }
                 });
             }
@@ -170,9 +170,9 @@ const goBack = () => {
 };
 
 // 更新表单值
-const updateValue = (field, value) => {
-    if (field) {
-        formValues[field] = value;
+const updateValue = (id, value) => {
+    if (id) {
+        formValues[id] = value;
     }
 };
 
@@ -184,9 +184,9 @@ const validateForm = () => {
 
     const requiredItems = formData.value.formDesign.formItems.filter(item => item.required);
     for (const item of requiredItems) {
-        if (!item.field) continue;
+        if (!item.id) continue;
 
-        const value = formValues[item.field];
+        const value = formValues[item.id];
         if (value === undefined || value === null || value === '') {
             ElMessage.error(`${item.title || '未命名字段'} 为必填项`);
             return false;

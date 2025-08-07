@@ -117,7 +117,7 @@
                 <el-checkbox-group v-model="selectedFieldIds">
                     <el-checkbox label="initiator">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
-                    <el-checkbox v-for="item in requiredItems" :key="item.field" :label="item.field">{{ item.title
+                    <el-checkbox v-for="item in requiredItems" :key="item.id" :label="item.id">{{ item.title
                     }}</el-checkbox>
                 </el-checkbox-group>
             </div>
@@ -138,6 +138,7 @@ import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { generateUniqueId } from '@/utils/idGenerator'
 
 // 接收节点数据
 const props = defineProps({
@@ -159,7 +160,7 @@ const conditionGroups = ref([]);
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
-// 选中的字段ID列表
+// 选中的组件ID列表
 const selectedFieldIds = ref([]);
 const currentGroupIndex = ref(0);
 
@@ -220,7 +221,7 @@ const initFormData = () => {
 // 创建发起人条件对象
 function createInitiatorCondition() {
     return {
-        id: Date.now() + Math.random(),
+        id: generateUniqueId(),
         type: 'initiator',
         title: '发起人',
         fieldId: 'initiator',
@@ -284,16 +285,16 @@ const confirmAddCondition = () => {
                 // 发起人类型
                 currentGroupConditions.push(createInitiatorCondition());
             } else {
-                // 查找对应的表单项 - 通过字段ID查找
-                const formItem = requiredItems.value.find(item => item.field === selectedField);
+                // 查找对应的表单项 - 通过组件ID查找
+                const formItem = requiredItems.value.find(item => item.id === selectedField);
                 
                 if (formItem) {
                     // 公共字段提取
                     const commonFields = {
-                        id: Date.now() + Math.random(),
+                        id: generateUniqueId(),
                         type: formItem.type, // 使用表单项的实际类型
                         title: formItem.title, // 存储表单项的标题
-                        fieldId: formItem.field // 使用字段ID
+                        fieldId: formItem.id // 使用组件ID
                     };
 
                     // 根据字段类型决定如何初始化条件

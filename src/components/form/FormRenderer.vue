@@ -7,7 +7,7 @@
         <!-- 子组件直接放入grid布局中 -->
         <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
           <form-renderer :component="element" :form-values="formValues"
-            @update:value="(field, value) => $emit('update:value', field, value)" />
+            @update:value="(id, value) => $emit('update:value', id, value)" />
         </div>
       </div>
     </div>
@@ -56,16 +56,16 @@ const getGridTemplateColumns = (layoutValue) => {
 
 // 获取当前组件的值
 const getValue = computed(() => {
-  if (props.component.field && props.formValues) {
-    return props.formValues[props.component.field];
+  if (props.component.id && props.formValues) {
+    return props.formValues[props.component.id];
   }
   return props.component.defaultValue || '';
 });
 
 // 处理值变化
 const handleValueChange = (value) => {
-  if (props.component.field) {
-    emit('update:value', props.component.field, value);
+  if (props.component.id) {
+    emit('update:value', props.component.id, value);
   }
 };
 
