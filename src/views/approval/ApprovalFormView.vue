@@ -188,7 +188,7 @@ const validateForm = () => {
 
         const value = formValues[item.id];
         if (value === undefined || value === null || value === '') {
-            ElMessage.error(`${item.title || '未命名字段'} 为必填项`);
+            ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
             return false;
         }
     }

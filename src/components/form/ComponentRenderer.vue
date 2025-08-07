@@ -3,8 +3,8 @@
   <div class="form-item-wrapper-outer">
     <!-- 分栏容器组件 -->
     <div v-if="component.type === 'columns'" class="form-item column-container">
-      <div class="form-item-label" v-if="component.title">
-        {{ component.title }}
+      <div class="form-item-label" v-if="component.label">
+        {{ component.label }}
       </div>
 
       <!-- 单一框栏容器 -->
@@ -36,7 +36,7 @@
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
       <div class="form-item-label">
-        {{ component.title }}
+        {{ component.label }}
         <span v-if="component.required" class="required">*</span>
       </div>
       <div class="form-item-control">
@@ -117,14 +117,14 @@ const renderField = () => {
   switch (props.component.type) {
     case 'input':
       return h(ElInput, {
-        placeholder: props.component.placeholder || '请输入' + props.component.title,
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
         modelValue: props.component.defaultValue,
         disabled: true
       });
     case 'textarea':
       return h(ElInput, {
         type: 'textarea',
-        placeholder: props.component.placeholder || '请输入' + props.component.title,
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
         modelValue: props.component.defaultValue,
         disabled: true
       });
@@ -143,7 +143,7 @@ const renderField = () => {
       if (props.component.asDropdown) {
         return h(ElSelect, {
           modelValue: props.component.defaultValue,
-          placeholder: props.component.placeholder || '请选择' + props.component.title,
+          placeholder: props.component.placeholder || '请选择' + props.component.label,
           style: { width: '100%' },
           disabled: true
         }, {
@@ -164,7 +164,7 @@ const renderField = () => {
         return h(ElSelect, {
           modelValue: props.component.defaultValue,
           multiple: true,
-          placeholder: props.component.placeholder || '请选择' + props.component.title,
+          placeholder: props.component.placeholder || '请选择' + props.component.label,
           style: { width: '100%' },
           disabled: true
         }, {

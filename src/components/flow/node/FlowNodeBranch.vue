@@ -341,12 +341,12 @@ const formatSingleCondition = (condition) => {
             'gt': '大于'
         };
         const typeText = typeMap[condition.conditionType] || '';
-        description = `${condition.title} ${typeText} ${condition.value}`;
+        description = `${condition.label} ${typeText} ${condition.value}`;
     }
     // 单选框条件
     else if (condition.type === 'radio' && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
-            description = `${condition.title} 未选择`;
+            description = `${condition.label} 未选择`;
         } else {
             const options = condition.options || [];
             const selectedLabels = condition.selectedOptions.map(value => {
@@ -354,13 +354,13 @@ const formatSingleCondition = (condition) => {
                 return option ? option.label : value;
             }).join('、');
 
-            description = `${condition.title} 为 ${selectedLabels}`;
+            description = `${condition.label} 为 ${selectedLabels}`;
         }
     }
     // 多选框条件
     else if (condition.type === 'checkbox' && condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
-            description = `${condition.title} 未选择`;
+            description = `${condition.label} 未选择`;
         } else {
             const options = condition.options || [];
             const selectedLabels = condition.selectedOptions.map(value => {
@@ -369,12 +369,12 @@ const formatSingleCondition = (condition) => {
             }).join('、');
 
             const typeText = condition.conditionType === 'exact' ? '完全等于' : '包含';
-            description = `${condition.title} ${typeText} ${selectedLabels}`;
+            description = `${condition.label} ${typeText} ${selectedLabels}`;
         }
     }
     // 默认情况
     else {
-        description = `${condition.title} 未设置`;
+        description = `${condition.label} 未设置`;
     }
 
     return description;

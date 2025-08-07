@@ -18,7 +18,7 @@
                 <el-icon>
                   <component :is="element.icon" />
                 </el-icon>
-                <span>{{ element.label }}</span>
+                <span>{{ element.name }}</span>
               </div>
             </draggable>
           </div>

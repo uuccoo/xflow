@@ -27,7 +27,7 @@
                         <!-- 条件项列表 -->
                         <div v-for="(condition, index) in group.conditions"
                             :key="'condition-' + groupIndex + '-' + index" class="condition-item">
-                            <span class="condition-type">{{ condition.title}}</span>
+                            <span class="condition-type">{{ condition.label}}</span>
 
                             <!-- 发起人条件时显示人员选择器 -->
                             <designated-person-selector v-if="condition.type === 'initiator'" v-model="condition.users" />
@@ -117,7 +117,7 @@
                 <el-checkbox-group v-model="selectedFieldIds">
                     <el-checkbox label="initiator">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
-                    <el-checkbox v-for="item in requiredItems" :key="item.id" :label="item.id">{{ item.title
+                    <el-checkbox v-for="item in requiredItems" :key="item.id" :label="item.id">{{ item.label
                     }}</el-checkbox>
                 </el-checkbox-group>
             </div>
@@ -191,7 +191,7 @@ const getRequiredFormFields = () => {
                 result = result.concat(collectRequiredFields(item.children));
             }
             // 如果是必填的单选框、多选框或数字输入框，加入结果
-            else if (item.required && item.title && ['radio', 'checkbox', 'number'].includes(item.type)) {
+            else if (item.required && item.label && ['radio', 'checkbox', 'number'].includes(item.type)) {
                 result.push(item);
             }
         }
@@ -223,7 +223,7 @@ function createInitiatorCondition() {
     return {
         id: generateUniqueId(),
         type: 'initiator',
-        title: '发起人',
+        label: '发起人',
         fieldId: 'initiator',
         users: []
     }
@@ -293,7 +293,7 @@ const confirmAddCondition = () => {
                     const commonFields = {
                         id: generateUniqueId(),
                         type: formItem.type, // 使用表单项的实际类型
-                        title: formItem.title, // 存储表单项的标题
+                        label: formItem.label, // 存储表单项的标签
                         fieldId: formItem.id // 使用组件ID
                     };
 
