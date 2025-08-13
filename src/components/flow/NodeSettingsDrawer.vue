@@ -16,6 +16,17 @@
                             </el-icon>
                         </div>
                     </div>
+                    <!-- 条件分支时显示优先级设置 -->
+                    <div v-if="isConditionBranch" class="priority-setting">
+                        <el-select v-model="localPriority" placeholder="请选择" size="small" class="priority-select">
+                            <el-option 
+                                v-for="option in priorityOptions" 
+                                :key="option.value" 
+                                :label="option.label" 
+                                :value="option.value">
+                            </el-option>
+                        </el-select>
+                    </div>
                 </div>
                 <el-icon class="drawer-close" @click="handleCancel">
                     <Close />
@@ -67,14 +78,70 @@ const isEditingName = ref(false)
 const nodeNameInput = ref(null)
 const localNodeName = ref('')
 
+// 优先级设置
+const localPriority = ref(0)
+
 // 添加对当前设置组件的ref引用
 const nodeComponentRef = ref(null)
+
+// 判断是否为条件节点中的分支
+const isConditionBranch = computed(() => {
+    return flowStore.selectedNode?.node?.type === 'condition'
+})
+
+// 获取非默认分支数量，动态生成优先级选项
+const priorityOptions = computed(() => {
+    if (!isConditionBranch.value) {
+        return []
+    }
+    // 直接从 selectedNode.parentNode 获取父级条件节点
+    const parentConditionNode = flowStore.selectedNode?.parentNode
+    if (parentConditionNode && parentConditionNode.branches) {
+        const nonDefaultBranches = parentConditionNode.branches.filter(branch => !branch.isDefault)
+        const options = []
+        for (let i = 1; i <= nonDefaultBranches.length; i++) {
+            options.push({
+                label: `优先级${i}`,
+                value: i
+            })
+        }
+        return options
+    }
+})
 
 // 初始化表单数据
 const initFormData = () => {
     if (flowStore.selectedNode?.node) {
         localNodeName.value = flowStore.selectedNode.node.name || ''
+        // 初始化优先级数据 - 只对条件分支设置优先级
+        if (isConditionBranch.value) {
+            localPriority.value = flowStore.selectedNode.node.priority || 1
+        }
     }
+}
+
+// 根据新的优先级调整分支位置
+const adjustBranchPosition = (currentBranch, newPriority) => {
+    const parentNode = flowStore.selectedNode?.parentNode
+    if (!parentNode || !parentNode.branches) return
+
+    const branches = parentNode.branches
+    // 根据priority来计算当前分支在branches中的索引
+    const currentIndex = currentBranch.priority - 1
+    // 新的索引位置
+    let insertIndex = newPriority - 1
+    // 如果当前位置和目标位置一样，无需调整
+    if (currentIndex === insertIndex) return
+
+    // 先移除当前分支
+    branches.splice(currentIndex, 1)
+    // 再插入到新位置
+    branches.splice(insertIndex, 0, currentBranch)
+
+    // 重新为所有非默认分支赋优先级
+    flowStore.updateBranchesPriority(branches)
+
+    console.log('分支位置已调整，新的优先级顺序:', branches.filter(b => !b.isDefault).map(b => b.priority))
 }
 
 // 监听节点变化
@@ -144,6 +211,16 @@ const handleSave = () => {
             if (flowStore.selectedNode?.node && localNodeName.value) {
                 flowStore.selectedNode.node.name = localNodeName.value
             }
+            // 保存优先级设置（仅条件分支）
+            if (isConditionBranch.value) {
+                const newPriority = localPriority.value
+                const currentBranch = flowStore.selectedNode.node
+                
+                // 调整分支位置
+                adjustBranchPosition(currentBranch, newPriority)
+                
+                console.log('已保存优先级:', localPriority.value)
+            }
             ElMessage.success('节点设置已保存')
             flowStore.closeDrawer()
         }
@@ -201,6 +278,14 @@ const handleSave = () => {
                     color: #909399;
                     transition: color 0.3s;
                 }
+            }
+        }
+
+        .priority-setting {
+            margin-left: 15px;
+
+            .priority-select {
+                width: 100px;
             }
         }
     }

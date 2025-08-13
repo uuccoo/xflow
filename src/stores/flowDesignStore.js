@@ -53,11 +53,13 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   const drawerVisible = ref(false)
 
   // 选择节点
-  const selectNode = (node, index, branch = null) => {
+  // 新增 parentNode 字段，支持传入父节点
+  const selectNode = (node, index, branch = null, parentNode = null) => {
     selectedNode.value = {
       node, // 保存对原始节点的引用
       index,
       branch,
+      parentNode, // 新增父节点字段
     }
 
     drawerVisible.value = true
@@ -167,17 +169,23 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 更新优先级
     branches.splice(insertPosition, 0, copiedBranch)
 
-    // 重新计算所有条件的优先级
-    branches.forEach((condition, idx) => {
-      if (condition.name !== '默认条件') {
-        condition.priority = idx + 1
-      } else {
-        condition.priority = branches.length // 默认条件优先级最低
-      }
-    })
+    // 更新所有分支的优先级
+    updateBranchesPriority(branches)
 
     ElMessage.success('复制条件分支成功')
     return copiedBranch
+  }
+
+  // 只更新分支的优先级属性
+  const updateBranchesPriority = (branches) => {
+    if (!branches) return
+    // 只为非默认分支分配优先级，按当前顺序
+    let priority = 1
+    for (const branch of branches) {
+      if (!branch.isDefault) {
+        branch.priority = priority++
+      }
+    }
   }
 
   // 格式化用户名称
@@ -200,6 +208,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     editCondition,
     formatUserNames,
     copyConditionBranch,
+    updateBranchesPriority,
     getNodeOption,
   }
 })

@@ -20,8 +20,8 @@
                 <div class="flow-node branch-node" :class="[branchType]">
                     <div class="branch-header">
                         {{ branch.name }}
-                        <!-- 优先级标签 - 仅在条件分支类型时显示 -->
-                        <div class="priority-tag" v-if="branchType === 'condition'">优先级{{ branch.priority }}</div>
+                        <!-- 优先级标签 - 仅在条件分支类型且非默认条件时显示 -->
+                        <div class="priority-tag" v-if="branchType === 'condition' && !branch.isDefault">优先级{{ branch.priority }}</div>
 
                         <!-- 复制按钮 - 只在非默认条件下显示 -->
                         <el-icon class="node-copy" v-if="!branch.isDefault" @click.stop="copyBranch(branchIndex)">
@@ -164,9 +164,9 @@ const copyBranch = (branchIndex) => {
 
 // 添加条件分支
 const addConditionBranch = () => {
-    // 获取现有条件数量
-    const conditionsCount = props.node.branches.length;
-    const conditionNumber = conditionsCount; // 新条件的编号
+    // 获取现有非默认条件数量
+    const nonDefaultBranches = props.node.branches.filter(b => !b.isDefault);
+    const conditionNumber = nonDefaultBranches.length + 1; // 新条件的编号
 
     // 创建新条件
     const newCondition = {
@@ -178,23 +178,14 @@ const addConditionBranch = () => {
         isDefault: false  // 普通条件，非默认
     };
 
-    // 找到默认条件的索引
-    const defaultConditionIndex = props.node.branches.findIndex(c => c.isDefault);
-
-    // 计算插入位置：如果找到了默认条件，就插入到它前面；否则插入到末尾
-    const insertIndex = defaultConditionIndex !== -1 ? defaultConditionIndex : conditionsCount;
+    // 确定插入位置 - 插入到所有非默认条件的末尾
+    const insertIndex = nonDefaultBranches.length;
 
     // 在数组中插入新条件
     props.node.branches.splice(insertIndex, 0, newCondition);
 
-    // 重新计算所有条件的优先级
-    props.node.branches.forEach((condition, idx) => {
-        if (!condition.isDefault) {
-            condition.priority = idx + 1;
-        } else {
-            condition.priority = props.node.branches.length; // 默认条件优先级最低
-        }
-    });
+    // 更新分支优先级
+    flowStore.updateBranchesPriority(props.node.branches);
 
     console.log('添加条件分支成功', newCondition);
     // 不再向上传递事件，只在本地处理即可
@@ -224,14 +215,8 @@ const deleteConditionBranch = (condIndex) => {
     // 删除条件分支
     props.node.branches.splice(condIndex, 1);
 
-    // 更新剩余条件分支的优先级
-    props.node.branches.forEach((condition, idx) => {
-        if (!condition.isDefault) {
-            condition.priority = idx + 1;
-        } else {
-            condition.priority = props.node.branches.length;
-        }
-    });
+    // 更新分支优先级
+    flowStore.updateBranchesPriority(props.node.branches);
 
     console.log('删除条件分支', condIndex);
 }
@@ -239,8 +224,8 @@ const deleteConditionBranch = (condIndex) => {
 // 编辑条件表达式
 const editCondition = (condIndex, condition) => {
     condition.type = 'condition'; // 确保条件对象包含类型信息
-    // 直接将条件作为node传递给selectNode方法
-    flowStore.selectNode(condition, condIndex, null);
+    // 传递父节点 props.node 作为 parentNode
+    flowStore.selectNode(condition, condIndex, null, props.node);
 
     console.log('编辑条件', condIndex, condition);
 }
@@ -625,7 +610,7 @@ const formatSingleCondition = (condition) => {
         .condition-text {
             display: -webkit-box;
             -webkit-line-clamp: 5;
-            /* 限制显示5行 */
+            line-clamp: 5; /* 标准属性 */
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;

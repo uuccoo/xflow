@@ -98,7 +98,6 @@ const createNodeByType = (type, nodeId) => {
                     id: `branch_${Date.now() + 1}`, // 添加唯一id，使用时间戳+1避免重复
                     name: '默认条件',
                     expression: '其他条件进入此流程',
-                    priority: 2,
                     nodes: [],
                     isDefault: true, // 添加默认条件标识
                 },
