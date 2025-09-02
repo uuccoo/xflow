@@ -52,17 +52,17 @@
 
             <!-- 发起人自选范围类型选择 -->
             <el-form-item v-if="approverType === 'initiator_select'" label="用户可选范围">
-                <el-select v-model="rangeType" placeholder="请选择范围" style="width: 100%">
+                <el-select v-model="initiatorSelectRangeType" placeholder="请选择范围" style="width: 100%">
                     <el-option label="所有人" value="all"></el-option>
                     <el-option label="指定人员" value="specified"></el-option>
                 </el-select>
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="approverType === 'initiator_select' && rangeType === 'specified'"
+            <el-form-item v-if="approverType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
                 label-position="left" required>
                 <designated-person-selector
-                    v-model="selectRange"
+                    v-model="initiatorSelectRange"
                     title="选择发起人自选范围"
                     button-text="添加"
                     selector-type="initiatorSelectRange"
@@ -225,7 +225,7 @@ const flowStore = useFlowDesignStore()
 const approverType = ref('designated') // 审批人类型
 const approvalMode = ref('anyone') // 多人审批方式
 const initiatorSelectMode = ref('single') // 发起人自选模式
-const rangeType = ref('all') // 自选范围类型
+const initiatorSelectRangeType = ref('all') // 自选范围类型
 const managerType = ref(1) // 主管级别
 const fallbackToHigherManager = ref(false) // 找不到主管时上级代审批
 const emptyApproverAction = ref('auto_pass') // 审批人为空处理方式
@@ -238,7 +238,7 @@ const specificLevel = ref(1) // 具体级别
 
 // 人员列表
 const approvers = ref([]) // 审批人列表
-const selectRange = ref([]) // 发起人自选人员范围
+const initiatorSelectRange = ref([]) // 发起人自选人员范围
 
 // 初始化表单数据
 const initFormData = () => {
@@ -255,7 +255,7 @@ const initFormData = () => {
 
     // 初始化发起人自选相关
     initiatorSelectMode.value = props.node.props.initiatorSelectMode || 'single'
-    rangeType.value = props.node.props.rangeType || 'all'
+    initiatorSelectRangeType.value = props.node.props.initiatorSelectRangeType || 'all'
 
     // 初始化部门主管相关
     managerType.value = props.node.props.managerType || 1
@@ -274,7 +274,7 @@ const initFormData = () => {
 
     // 初始化人员列表
     approvers.value = props.node.props.approvers || []
-    selectRange.value = props.node.props.selectRange || []
+    initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
 }
 
 // 监听节点变化
@@ -295,7 +295,7 @@ const saveSettings = () => {
         return false
     }
 
-    if (approverType.value === 'initiator_select' && rangeType.value === 'specified' && selectRange.value.length === 0) {
+    if (approverType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
         ElMessage.warning('请至少选择一名发起人自选范围人员')
         return false
     }
@@ -314,7 +314,7 @@ const saveSettings = () => {
     // 保存发起人自选相关
     if (approverType.value === 'initiator_select') {
         props.node.props.initiatorSelectMode = initiatorSelectMode.value
-        props.node.props.rangeType = rangeType.value
+    props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
     }
 
     // 保存部门主管相关
@@ -338,7 +338,7 @@ const saveSettings = () => {
 
     // 保存人员列表
     props.node.props.approvers = approvers.value
-    props.node.props.selectRange = selectRange.value
+    props.node.props.initiatorSelectRange = initiatorSelectRange.value
 
     return true
 }

@@ -52,17 +52,17 @@
 
             <!-- 发起人自选范围类型选择 -->
             <el-form-item v-if="processorType === 'initiator_select'" label="用户可选范围">
-                <el-select v-model="rangeType" placeholder="请选择范围" style="width: 100%">
+                <el-select v-model="initiatorSelectRangeType" placeholder="请选择范围" style="width: 100%">
                     <el-option label="所有人" value="all"></el-option>
                     <el-option label="指定人员" value="specified"></el-option>
                 </el-select>
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="processorType === 'initiator_select' && rangeType === 'specified'"
+            <el-form-item v-if="processorType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
                 label-position="left" required>
                 <designated-person-selector
-                    v-model="selectRange"
+                    v-model="initiatorSelectRange"
                     title="选择发起人自选范围"
                     button-text="添加"
                     selector-type="processRange"
@@ -163,9 +163,9 @@ const processMode = ref('sequential')
 // 发起人自选模式
 const initiatorSelectMode = ref('single')
 // 自选范围类型
-const rangeType = ref('all')
+const initiatorSelectRangeType = ref('all')
 // 自选人员范围
-const selectRange = ref([])
+const initiatorSelectRange = ref([])
 // 主管级别
 const managerType = ref(1)
 // 找不到主管时上级代办理
@@ -193,8 +193,8 @@ const initFormData = () => {
 
     // 初始化发起人自选相关
     initiatorSelectMode.value = props.node.props.initiatorSelectMode || 'single'
-    rangeType.value = props.node.props.rangeType || 'all'
-    selectRange.value = props.node.props.selectRange || []
+    initiatorSelectRangeType.value = props.node.props.initiatorSelectRangeType || 'all'
+    initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
 
     // 初始化部门主管相关
     managerType.value = props.node.props.managerType || 1
@@ -223,7 +223,7 @@ const saveSettings = () => {
         return false
     }
 
-    if (processorType.value === 'initiator_select' && rangeType.value === 'specified' && selectRange.value.length === 0) {
+    if (processorType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
         ElMessage.warning('请至少选择一名发起人自选范围人员')
         return false
     }
@@ -237,9 +237,9 @@ const saveSettings = () => {
 
     // 保存发起人自选相关
     if (processorType.value === 'initiator_select') {
-        props.node.props.initiatorSelectMode = initiatorSelectMode.value
-        props.node.props.rangeType = rangeType.value
-        props.node.props.selectRange = selectRange.value
+    props.node.props.initiatorSelectMode = initiatorSelectMode.value
+    props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
+    props.node.props.initiatorSelectRange = initiatorSelectRange.value
     }
 
     // 保存部门主管相关
