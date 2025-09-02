@@ -20,41 +20,38 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // 从本地存储获取用户ID
-    let userId = localStorage.getItem('userId')
-    console.log('当前用户ID:', userId)
+    // 从本地存储或 userStore 获取用户ID 和 组织ID（简化）
+    const userStore = useUserStore();
+    const userId = localStorage.getItem('userId') || userStore.id || '';
+    const orgId = localStorage.getItem('orgId') || userStore.orgId || '';
     
-    try {
-      // 获取 Pinia Store 中的用户信息
-      const userStore = useUserStore();
-      
-      if (userId) {
-        // 如果localStorage中有userId，检查与userStore中的id是否一致
-        if (userId !== userStore.id) {
-          console.log('本地存储与Pinia Store用户ID不一致，正在同步...');
-          // 从localStorage获取用户信息并更新userStore
-          const username = localStorage.getItem('username') || '';
-          const realName = localStorage.getItem('realName') || '';
-          
-          // 更新userStore
-          userStore.updateUser({
-            id: userId,
-            username: username,
-            realName: realName
-          });
-        }
-      } else if (userStore.id) {
-        // 如果localStorage没有userId但userStore有，则使用userStore的值
-        userId = userStore.id;
-        console.log('从Pinia获取到用户ID:', userId);
-      }
-    } catch (error) {
-      console.error('用户信息处理失败', error)
+    // 检查并同步 userStore 中的数据（localStorage 为主）
+    // 检查是否需要更新userStore
+    const needUpdate = (userId && userId !== userStore.id) || (orgId && orgId !== userStore.orgId);
+    if (needUpdate) {
+      console.log('本地存储与Pinia Store数据不一致，正在同步...');
+
+      // 从 localStorage 获取完整的用户信息，fallback 到 userStore
+      const username = localStorage.getItem('username') || userStore.username || '';
+      const realName = localStorage.getItem('realName') || userStore.realName || '';
+
+      // 更新 userStore
+      userStore.updateUser({
+        id: userId,
+        username: username,
+        realName: realName,
+        orgId: orgId
+      });
     }
     
     // 如果有用户ID，则设置到请求头中
     if (userId) {
       config.headers['X-User-Id'] = userId
+    }
+    
+    // 如果有用户组织ID，则设置到请求头中
+    if (orgId) {
+      config.headers['X-Org-Id'] = orgId
     }
     
     return config

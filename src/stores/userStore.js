@@ -5,7 +5,8 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     id: 'user01',
     username: '',
-    realName: '张三'
+    realName: '张三',
+    orgId: 'org01'
   }),
   
   getters: {
