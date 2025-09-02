@@ -1,27 +1,33 @@
 <template>
     <div class="approval-form-bg">
-        <div class="approval-form-container">
-            <div class="form-header">
-                <div class="back-button" @click="goBack">
-                    <el-icon><arrow-left /></el-icon>
-                    <span>返回</span>
+        <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
+        <el-tooltip content="返回" placement="top">
+            <div class="floating-back-button" @click="goBack">
+                <el-icon><arrow-left /></el-icon>
+            </div>
+        </el-tooltip>
+
+        <div v-if="loading" class="loading-container">
+            <el-skeleton :rows="10" animated />
+        </div>
+        
+        <div v-else-if="formData" class="approval-sections">
+            <!-- 表单区域 -->
+            <div class="form-section">
+                <div class="form-header">
+                    <h1 class="form-title">{{ formTitle }}</h1>
+                    <div v-if="isPreview" class="preview-badge">预览模式</div>
                 </div>
-                <h1 class="form-title">{{ formTitle }}</h1>
-                <div v-if="isPreview" class="preview-badge">预览模式</div>
-            </div>
-            <el-divider></el-divider>
+                <el-divider></el-divider>
 
-            <div v-if="loading" class="loading-container">
-                <el-skeleton :rows="10" animated />
-            </div>
-
-            <div v-else-if="formData" class="form-content">
-                <!-- 表单渲染 -->
-                <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
-                    <div v-for="item in formData.formDesign.formItems" :key="item.id" class="form-item-container">
-                        <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
-                    </div>
-                </el-form>
+                <!-- 表单填写部分 -->
+                <div class="form-content">
+                    <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
+                        <div v-for="item in formData.formDesign.formItems" :key="item.id" class="form-item-container">
+                            <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
+                        </div>
+                    </el-form>
+                </div>
 
                 <!-- 提交按钮 -->
                 <div class="form-actions">
@@ -30,11 +36,11 @@
                     <el-button type="info" @click="debugFormData" v-if="isDevMode">调试</el-button>
                 </div>
             </div>
+        </div>
 
-            <div v-else class="error-container">
-                <el-empty description="加载表单失败" />
-                <el-button type="primary" @click="reloadForm">重新加载</el-button>
-            </div>
+        <div v-else class="error-container">
+            <el-empty description="加载表单失败" />
+            <el-button type="primary" @click="reloadForm">重新加载</el-button>
         </div>
     </div>
 </template>
@@ -270,20 +276,52 @@ onMounted(() => {
 <style scoped lang="scss">
 .approval-form-bg {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     background-color: #f5f6f6;
     width: 100%;
     min-height: 100vh;
+    padding: 20px 0;
+    position: relative; /* 为悬浮按钮提供定位上下文 */
 }
 
-.approval-form-container {
+/* 悬浮返回按钮样式 */
+.floating-back-button {
+    position: fixed;
+    top: 25px;
+    /* 计算位置：(页面宽度 - 表单宽度) / 2 - 按钮宽度 - 间距 */
+    left: calc(50% - 400px - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%; /* 圆形按钮 */
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 999; /* 确保按钮在最上层 */
+    color: #606266;
+    transition: all 0.3s ease;
+}
+
+.floating-back-button:hover {
+    color: #409EFF;
+    background-color: #f5f7fa;
+}
+
+.approval-sections {
     width: 800px;
-    margin: 10px;
-    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 两个区域之间的间距 */
+}
+
+.form-section {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 0 20px;
 }
 
 .form-header {
@@ -291,19 +329,6 @@ onMounted(() => {
     align-items: center;
     position: relative;
     margin: 20px 0;
-}
-
-.back-button {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    position: absolute;
-    left: 0;
-    color: #606266;
-}
-
-.back-button:hover {
-    color: #409EFF;
 }
 
 .form-title {
@@ -327,6 +352,7 @@ onMounted(() => {
 
 .form-content {
     margin-top: 30px;
+    padding-bottom: 20px;
 }
 
 .form-item-container {
@@ -342,6 +368,8 @@ onMounted(() => {
 
 .loading-container,
 .error-container {
+    width: 800px;
+    margin-top: 20px;
     background-color: #fff;
     border-radius: 8px;
     padding: 40px 20px;
