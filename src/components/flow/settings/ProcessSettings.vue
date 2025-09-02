@@ -26,8 +26,14 @@
 
             <!-- 指定人员的设置 -->
             <el-form-item v-if="processorType === 'designated'" label-position="left" required>
-                <designated-person-selector v-model="processors" title="选择办理人" button-text="添加" selector-type="process"
-                    :required="true" />
+                <designated-person-selector
+                    v-model="processors"
+                    title="选择办理人"
+                    button-text="添加"
+                    selector-type="process"
+                    :required="true"
+                    :only-select-users="true"
+                />
             </el-form-item>
 
             <!-- 发起人自选的子选项 -->
@@ -53,10 +59,17 @@
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="processorType === 'initiator_select' && rangeType === 'specified'" label="指定人员"
+            <el-form-item v-if="processorType === 'initiator_select' && rangeType === 'specified'"
                 label-position="left" required>
-                <personnel-selector v-model="selectRange" title="选择发起人自选范围" button-text="添加"
-                    selector-type="processRange" :required="true" />
+                <designated-person-selector
+                    v-model="selectRange"
+                    title="选择发起人自选范围"
+                    button-text="添加"
+                    selector-type="processRange"
+                    :required="true"
+                    :single-mode="initiatorSelectMode === 'single'"
+                    :only-select-users="true"
+                />
             </el-form-item>
 
             <!-- 部门主管设置 -->

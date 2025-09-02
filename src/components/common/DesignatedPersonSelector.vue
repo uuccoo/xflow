@@ -16,8 +16,16 @@
         </div>
 
         <!-- 集成的PersonSelector组件 -->
-        <person-selector v-model="selectorVisible" :title="title" :selected-ids="selectedIds" @confirm="handleConfirm"
-            @cancel="handleCancel" ref="personSelectorRef" />
+        <person-selector
+            v-model="selectorVisible"
+            :title="title"
+            :selected-ids="selectedIds"
+            :single-mode="singleMode"
+            :only-select-users="onlySelectUsers"
+            @confirm="handleConfirm"
+            @cancel="handleCancel"
+            ref="personSelectorRef"
+        />
     </div>
 </template>
 
@@ -57,6 +65,16 @@ const props = defineProps({
     selectorType: {
         type: String,
         default: 'default'
+    },
+    // 透传给 PersonSelector 的单选模式
+    singleMode: {
+        type: Boolean,
+        default: false
+    },
+    // 透传给 PersonSelector 的仅可选用户
+    onlySelectUsers: {
+        type: Boolean,
+        default: false
     }
 })
 

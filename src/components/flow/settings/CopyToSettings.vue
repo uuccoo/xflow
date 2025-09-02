@@ -3,8 +3,14 @@
         <el-form label-position="top">
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item label="指定人员" label-position="left" required>
-                <designated-person-selector v-model="users" title="选择抄送人" button-text="添加" selector-type="copyTo"
-                    :required="true" />
+                <designated-person-selector
+                    v-model="users"
+                    title="选择抄送人"
+                    button-text="添加"
+                    selector-type="copyTo"
+                    :required="true"
+                    :only-select-users="true"
+                />
             </el-form-item>
         </el-form>
     </div>

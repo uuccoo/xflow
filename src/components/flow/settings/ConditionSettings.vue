@@ -30,7 +30,10 @@
                             <span class="condition-type">{{ condition.label}}</span>
 
                             <!-- 发起人条件时显示人员选择器 -->
-                            <designated-person-selector v-if="condition.type === 'initiator'" v-model="condition.users" />
+                            <designated-person-selector
+                                v-if="condition.type === 'initiator'"
+                                v-model="condition.users"
+                            />
 
                             <!-- 数字输入框条件 -->
                             <template v-else-if="condition.type === 'number'">
