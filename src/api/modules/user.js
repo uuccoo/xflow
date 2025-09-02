@@ -96,6 +96,19 @@ export function getOrganizationTree() {
   })
 }
 
+/**
+ * 获取当前用户组织架构树
+ * @param {Array} data - 筛选条件，仅返回指定的部门和用户
+ * @returns {Promise}
+ */
+export function getCurrentUserOrgTree(data) {
+  return request({
+    url: '/organizations/current-user-org-tree',
+    method: 'post',
+    data,
+  })
+}
+
 // 默认导出所有方法
 export default {
   login,
@@ -106,4 +119,5 @@ export default {
   getRoleList,
   getPermissions,
   getOrganizationTree,
+  getCurrentUserOrgTree,
 }

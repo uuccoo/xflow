@@ -161,6 +161,11 @@ const props = defineProps({
     onlySelectUsers: {
         type: Boolean,
         default: false
+    },
+    // 筛选条件，仅返回指定的部门和用户
+    filter: {
+        type: Array,
+        default: () => []
     }
 })
 
@@ -186,12 +191,11 @@ const companyDepartments = ref(null)
 
 // 转换API返回的数据格式为组件需要的格式
 const transformApiData = (apiData) => {
-    if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+    if (!apiData) {
         return null
     }
 
-    // 通常API返回的是一个数组，我们取第一个组织
-    const organization = apiData[0]
+    const organization = apiData
     
     // 递归转换数据结构
     const transformNode = (node) => {
@@ -200,15 +204,13 @@ const transformApiData = (apiData) => {
             name: node.name,
             checked: false,
             indeterminate: false,
-            type: node.nodeType || node.type,
+            type: node.type,
             children: []
         }
 
         // 如果有子节点，递归转换
         if (node.children && Array.isArray(node.children)) {
-            result.children = node.children
-                .filter(child => child.status === 1) // 只保留状态正常的节点
-                .map(transformNode)
+            result.children = node.children.map(transformNode)
         }
 
         return result
@@ -223,9 +225,12 @@ const fetchOrganizationData = async () => {
     loadingError.value = false
     
     try {
-        const response = await userApi.getOrganizationTree()
+        // 构建请求参数
+        const requestData = props.filter
 
-        if (Array.isArray(response.data)) {
+        const response = await userApi.getCurrentUserOrgTree(requestData)
+
+        if (response.data) {
             const transformedData = transformApiData(response.data)
             if (transformedData) {
                 return transformedData
@@ -244,7 +249,7 @@ const fetchOrganizationData = async () => {
             name: '组织架构',
             checked: false,
             indeterminate: false,
-            type: 'company',
+            type: 'organization',
             children: []
         }
     } finally {
