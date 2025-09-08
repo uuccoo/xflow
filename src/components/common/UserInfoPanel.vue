@@ -33,11 +33,13 @@
 import { ref } from 'vue';
 import { SwitchButton, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import PersonSelector from '@/components/common/PersonSelector.vue';
 
 // 使用用户状态
 const userStore = useUserStore();
+const router = useRouter();
 
 // 用户选择器显示状态
 const userSelectorVisible = ref(false);
@@ -74,6 +76,9 @@ const handleUserSelectConfirm = (data) => {
     localStorage.setItem('realName', selectedUser.realName || selectedUser.name || '');
     
     ElMessage.success('切换账号成功');
+    
+    // 使用路由刷新页面
+    router.go(0);
   }
 };
 </script>
