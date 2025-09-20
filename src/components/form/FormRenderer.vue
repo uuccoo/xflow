@@ -1,7 +1,7 @@
 <template>
   <div class="form-renderer">
     <!-- 分栏容器组件 -->
-    <div v-if="component.type === 'columns'" class="form-item column-container">
+    <div v-if="component.type === FormComponentType.COLUMNS" class="form-item column-container">
       <div class="form-item-control columns-grid"
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
@@ -29,6 +29,7 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
+import { FormComponentType } from '@/enums';
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -72,14 +73,14 @@ const handleValueChange = (value) => {
 // 渲染表单控件
 const renderField = () => {
   switch (props.component.type) {
-    case 'input':
+    case FormComponentType.INPUT:
       return h(ElInput, {
         modelValue: getValue.value,
         placeholder: props.component.placeholder || '请输入' + props.component.label,
         'onUpdate:modelValue': handleValueChange
       });
 
-    case 'textarea':
+    case FormComponentType.TEXTAREA:
       return h(ElInput, {
         modelValue: getValue.value,
         placeholder: props.component.placeholder || '请输入' + props.component.label,
@@ -88,7 +89,7 @@ const renderField = () => {
         rows: 3
       });
 
-    case 'radio':
+    case FormComponentType.RADIO:
       // 根据 asDropdown 属性决定渲染下拉框还是单选框组
       if (props.component.asDropdown) {
         return h(ElSelect,
@@ -114,7 +115,7 @@ const renderField = () => {
         );
       }
 
-    case 'checkbox':
+    case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
       if (props.component.asDropdown) {
         return h(ElSelect,
@@ -154,7 +155,7 @@ const renderField = () => {
         ) || []
       );
 
-    case 'date':
+    case FormComponentType.DATE:
       return h(ElDatePicker, {
         type: 'date',
         placeholder: props.component.placeholder || '请选择日期',
@@ -163,7 +164,7 @@ const renderField = () => {
         'onUpdate:modelValue': handleValueChange
       });
 
-    case 'upload':
+    case FormComponentType.UPLOAD:
       return h(ElUpload, {
         action: '#',
         autoUpload: false,
@@ -174,7 +175,7 @@ const renderField = () => {
         default: () => h(ElButton, {}, { default: () => '点击上传' })
       });
 
-    case 'image':
+    case FormComponentType.IMAGE:
       return h(ElUpload, {
         class: 'avatar-uploader',
         action: '#',
@@ -187,7 +188,7 @@ const renderField = () => {
         default: () => h(ElIcon, {}, { default: () => h(Plus) })
       });
 
-    case 'number':
+    case FormComponentType.NUMBER:
       return h(ElInputNumber, {
         modelValue: getValue.value,
         placeholder: props.component.placeholder || '请输入数字',
@@ -198,7 +199,7 @@ const renderField = () => {
         'onUpdate:modelValue': handleValueChange
       });
 
-    case 'daterange':
+    case FormComponentType.DATERANGE:
       return h(ElDatePicker, {
         type: 'datetimerange',
         placeholder: props.component.placeholder || '请选择日期时间区间',
@@ -211,7 +212,7 @@ const renderField = () => {
         'onUpdate:modelValue': handleValueChange
       });
 
-    case 'text':
+    case FormComponentType.TEXT:
       return h('div', {
         style: {
           fontSize: props.component.fontSize || '14px',

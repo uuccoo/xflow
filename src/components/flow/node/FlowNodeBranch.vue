@@ -82,7 +82,7 @@ import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
-import { FlowNodeType } from '@/enums'
+import { FlowNodeType, FormComponentType } from '@/enums'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -318,7 +318,7 @@ const formatSingleCondition = (condition) => {
         }
     }
     // 数字类型条件
-    else if (condition.type === 'number' && condition.conditionType && typeof condition.value === 'number') {
+    else if (condition.type === FormComponentType.NUMBER && condition.conditionType && typeof condition.value === 'number') {
         const typeMap = {
             'lt': '小于',
             'lte': '小于等于',
@@ -330,7 +330,7 @@ const formatSingleCondition = (condition) => {
         description = `${condition.label} ${typeText} ${condition.value}`;
     }
     // 单选框条件
-    else if (condition.type === 'radio' && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
+    else if (condition.type === FormComponentType.RADIO && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
             description = `${condition.label} 未选择`;
         } else {
@@ -344,7 +344,7 @@ const formatSingleCondition = (condition) => {
         }
     }
     // 多选框条件
-    else if (condition.type === 'checkbox' && condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
+    else if (condition.type === FormComponentType.CHECKBOX && condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
             description = `${condition.label} 未选择`;
         } else {

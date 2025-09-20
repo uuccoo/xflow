@@ -23,6 +23,7 @@ import RadioEditor from './editors/RadioEditor.vue'
 import CheckboxEditor from './editors/CheckboxEditor.vue'
 import DateRangeEditor from './editors/DateRangeEditor.vue'
 import CommonEditor from './editors/CommonEditor.vue'
+import { FormComponentType } from '@/enums'
 
 // 接收组件属性
 const props = defineProps({
@@ -35,17 +36,17 @@ const props = defineProps({
 // 根据组件类型获取对应的编辑器组件
 const getEditorComponent = (type) => {
     switch (type) {
-        case 'columns':
+        case FormComponentType.COLUMNS:
             return ColumnsEditor
-        case 'text':
+        case FormComponentType.TEXT:
             return TextEditor
-        case 'number':
+        case FormComponentType.NUMBER:
             return NumberEditor
-        case 'radio':
+        case FormComponentType.RADIO:
             return RadioEditor
-        case 'checkbox':
+        case FormComponentType.CHECKBOX:
             return CheckboxEditor
-        case 'daterange':
+        case FormComponentType.DATERANGE:
             return DateRangeEditor
         default:
             return CommonEditor

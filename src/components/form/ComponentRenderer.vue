@@ -2,7 +2,7 @@
   <!-- 包装器 - 包含组件内容和操作按钮 -->
   <div class="form-item-wrapper-outer">
     <!-- 分栏容器组件 -->
-    <div v-if="component.type === 'columns'" class="form-item column-container">
+    <div v-if="component.type === FormComponentType.COLUMNS" class="form-item column-container">
       <div class="form-item-label" v-if="component.label">
         {{ component.label }}
       </div>
@@ -61,6 +61,7 @@ import { h, defineAsyncComponent } from 'vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
+import { FormComponentType } from '@/enums';
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -115,20 +116,20 @@ const getGridTemplateColumns = (layoutValue) => {
 // 渲染表单控件
 const renderField = () => {
   switch (props.component.type) {
-    case 'input':
+    case FormComponentType.INPUT:
       return h(ElInput, {
         placeholder: props.component.placeholder || '请输入' + props.component.label,
         modelValue: props.component.defaultValue,
         disabled: true
       });
-    case 'textarea':
+    case FormComponentType.TEXTAREA:
       return h(ElInput, {
         type: 'textarea',
         placeholder: props.component.placeholder || '请输入' + props.component.label,
         modelValue: props.component.defaultValue,
         disabled: true
       });
-    case 'number':
+    case FormComponentType.NUMBER:
       return h(ElInputNumber, {
         placeholder: props.component.placeholder || '请输入数字',
         modelValue: props.component.defaultValue,
@@ -138,7 +139,7 @@ const renderField = () => {
         step: props.component.step,
         style: { width: '100%', "max-width": '220px' }
       });
-    case 'radio':
+    case FormComponentType.RADIO:
       // 根据 asDropdown 属性决定渲染下拉框还是单选框组
       if (props.component.asDropdown) {
         return h(ElSelect, {
@@ -158,7 +159,7 @@ const renderField = () => {
           )
         );
       }
-    case 'checkbox':
+    case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
       if (props.component.asDropdown) {
         return h(ElSelect, {
@@ -179,14 +180,14 @@ const renderField = () => {
           )
         );
       }
-    case 'date':
+    case FormComponentType.DATE:
       return h(ElDatePicker, {
         type: 'date',
         placeholder: props.component.placeholder || '请选择日期',
         modelValue: props.component.defaultValue,
         disabled: true
       });
-    case 'daterange':
+    case FormComponentType.DATERANGE:
       return h(ElDatePicker, {
         type: 'datetimerange',
         placeholder: props.component.placeholder || '请选择日期时间区间',
@@ -198,7 +199,7 @@ const renderField = () => {
         style: { width: '100%' },
         disabled: true
       });
-    case 'upload':
+    case FormComponentType.UPLOAD:
       return h(ElUpload, {
         action: '#',
         disabled: true,
@@ -207,7 +208,7 @@ const renderField = () => {
       }, {
         default: () => h(ElButton, { disabled: true }, { default: () => '点击上传' })
       });
-    case 'image':
+    case FormComponentType.IMAGE:
       return h(ElUpload, {
         class: 'avatar-uploader',
         action: '#',
@@ -218,7 +219,7 @@ const renderField = () => {
       }, {
         default: () => h(ElIcon, {}, { default: () => h(Plus) })
       });
-    case 'text':
+    case FormComponentType.TEXT:
       return h('div', {
         style: {
           fontSize: props.component.fontSize || '14px',

@@ -36,7 +36,7 @@
                             />
 
                             <!-- 数字输入框条件 -->
-                            <template v-else-if="condition.type === 'number'">
+                            <template v-else-if="condition.type === FormComponentType.NUMBER">
                                 <!-- 条件类型选择 -->
                                 <el-select v-model="condition.conditionType" class="condition-select">
                                     <el-option v-for="option in numberConditionOptions" :key="option.value"
@@ -49,7 +49,7 @@
                             </template>
 
                             <!-- 单选框条件 -->
-                            <template v-else-if="condition.type === 'radio'">
+                            <template v-else-if="condition.type === FormComponentType.RADIO">
                                 <div class="checkbox-options-container">
                                     <el-checkbox-group v-model="condition.selectedOptions">
                                         <el-checkbox v-for="option in condition.options" :key="option.value"
@@ -61,7 +61,7 @@
                             </template>
 
                             <!-- 多选框条件 -->
-                            <template v-else-if="condition.type === 'checkbox'">
+                            <template v-else-if="condition.type === FormComponentType.CHECKBOX">
                                 <!-- 条件类型选择 -->
                                 <el-select v-model="condition.conditionType" class="condition-select">
                                     <el-option v-for="option in checkboxConditionOptions" :key="option.value"
@@ -142,6 +142,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 import { generateUniqueId } from '@/utils/idGenerator'
+import { FormComponentType } from '@/enums'
 
 // 接收节点数据
 const props = defineProps({
@@ -190,11 +191,11 @@ const getRequiredFormFields = () => {
 
         for (const item of items) {
             // 如果是分栏容器，递归处理其子组件
-            if (item.type === 'columns' && item.children && item.children.length > 0) {
+            if (item.type === FormComponentType.COLUMNS && item.children && item.children.length > 0) {
                 result = result.concat(collectRequiredFields(item.children));
             }
             // 如果是必填的单选框、多选框或数字输入框，加入结果
-            else if (item.required && item.label && ['radio', 'checkbox', 'number'].includes(item.type)) {
+            else if (item.required && item.label && [FormComponentType.RADIO, FormComponentType.CHECKBOX, FormComponentType.NUMBER].includes(item.type)) {
                 result.push(item);
             }
         }
@@ -301,14 +302,14 @@ const confirmAddCondition = () => {
                     };
 
                     // 根据字段类型决定如何初始化条件
-                    if (formItem.type === 'number') {
+                    if (formItem.type === FormComponentType.NUMBER) {
                         // 数字输入框类型
                         currentGroupConditions.push({
                             ...commonFields,
                             conditionType: 'lt', // 默认"小于"条件
                             value: null, // 单个数值
                         });
-                    } else if (formItem.type === 'radio') {
+                    } else if (formItem.type === FormComponentType.RADIO) {
                         // 单选框类型
                         const fieldOptions = formItem.options || [];
                         currentGroupConditions.push({
@@ -316,7 +317,7 @@ const confirmAddCondition = () => {
                             selectedOptions: [], // 选中的选项列表
                             options: fieldOptions, // 可选选项列表
                         });
-                    } else if (formItem.type === 'checkbox') {
+                    } else if (formItem.type === FormComponentType.CHECKBOX) {
                         // 多选框类型
                         const fieldOptions = formItem.options || [];
                         currentGroupConditions.push({

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { generateUniqueId } from '@/utils/idGenerator'
+import { FormComponentType } from '@/enums'
 
 export const useFormDesignStore = defineStore('formDesign', () => {
   // 设计区域的表单控件列表
@@ -19,7 +20,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       items: [
         {
           id: '',
-          type: 'columns',
+          type: FormComponentType.COLUMNS,
           icon: 'Grid',
           name: '分栏容器',
           label: '分栏容器',
@@ -33,7 +34,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
       items: [
         {
           id: '',
-          type: 'input',
+          type: FormComponentType.INPUT,
           icon: 'EditPen',
           name: '单行文本',
           label: '单行文本',
@@ -44,7 +45,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'textarea',
+          type: FormComponentType.TEXTAREA,
           icon: 'Tickets',
           name: '多行文本',
           label: '多行文本',
@@ -55,7 +56,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'number',
+          type: FormComponentType.NUMBER,
           icon: 'EditPen',
           name: '数字输入框',
           label: '数字输入框',
@@ -69,7 +70,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'text',
+          type: FormComponentType.TEXT,
           icon: 'InfoFilled',
           name: '说明文字',
           label: '说明文字',
@@ -79,7 +80,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'radio',
+          type: FormComponentType.RADIO,
           icon: 'Check',
           name: '单选框',
           label: '单选框',
@@ -94,7 +95,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'checkbox',
+          type: FormComponentType.CHECKBOX,
           icon: 'CircleCheck',
           name: '多选框',
           label: '多选框',
@@ -109,7 +110,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'date',
+          type: FormComponentType.DATE,
           icon: 'Calendar',
           name: '日期选择',
           label: '日期选择',
@@ -119,7 +120,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'daterange',
+          type: FormComponentType.DATERANGE,
           icon: 'Calendar',
           name: '日期区间',
           label: '日期区间',
@@ -131,7 +132,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'upload',
+          type: FormComponentType.UPLOAD,
           icon: 'Upload',
           name: '文件上传',
           label: '文件上传',
@@ -141,7 +142,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
-          type: 'image',
+          type: FormComponentType.IMAGE,
           icon: 'Picture',
           name: '图片上传',
           label: '图片上传',
@@ -164,7 +165,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
 
   // 克隆组件
   const cloneComponent = (component) => {
-    if (component.type === 'columns') {
+    if (component.type === FormComponentType.COLUMNS) {
       // 创建分栏容器时，直接使用一维数组存储子组件
       return {
         ...component,
@@ -190,14 +191,14 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     activeItem.value = item
 
     // 如果选中的是分栏组件，并且没有布局值，设置默认值
-    if (item.type === 'columns' && !item.layoutValue) {
+    if (item.type === FormComponentType.COLUMNS && !item.layoutValue) {
       item.layoutValue = '1:1'
     }
   }
 
   // 删除组件
   const deleteItem = (component, index, parentComponent) => {
-    if (parentComponent && parentComponent.type === 'columns' && parentComponent.children) {
+    if (parentComponent && parentComponent.type === FormComponentType.COLUMNS && parentComponent.children) {
       // 从分栏容器的children中删除
       parentComponent.children.splice(index, 1)
     } else {
@@ -214,7 +215,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 复制组件
   const copyItem = (component, index, parentComponent) => {
     // 确定要操作的数组
-    const arr = parentComponent?.type === 'columns' ? parentComponent.children : formItems.value
+    const arr = parentComponent?.type === FormComponentType.COLUMNS ? parentComponent.children : formItems.value
     const sourceItem = arr[index]
 
     // 深拷贝组件
@@ -233,7 +234,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     component.id = generateUniqueId()
 
     // 如果是分栏容器，递归处理其中的子组件
-    if (component.type === 'columns' && component.children) {
+    if (component.type === FormComponentType.COLUMNS && component.children) {
       for (const childComponent of component.children) {
         updateComponentIds(childComponent)
       }
@@ -242,7 +243,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
 
   // 更新分栏布局
   const updateColumnsLayout = (layout) => {
-    if (!activeItem.value || activeItem.value.type !== 'columns') return
+    if (!activeItem.value || activeItem.value.type !== FormComponentType.COLUMNS) return
     activeItem.value.layoutValue = layout
   }
 
@@ -269,7 +270,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   const addOption = () => {
     if (!activeItem.value) return
     // 确保组件是单选框或多选框
-    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
       // 生成唯一的选项值
       const uniqueValue = `option_${generateUniqueId()}`
 
@@ -284,18 +285,18 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 移除单选/多选选项
   const removeOption = (index) => {
     if (!activeItem.value) return
-    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
       // 至少保留一个选项
       if (activeItem.value.options.length > 1) {
         activeItem.value.options.splice(index, 1)
         // 如果删除的是当前选中的默认值，清空默认值
         if (
-          activeItem.value.type === 'radio' &&
+          activeItem.value.type === FormComponentType.RADIO &&
           activeItem.value.defaultValue === activeItem.value.options[index]?.value
         ) {
           activeItem.value.defaultValue = ''
         } else if (
-          activeItem.value.type === 'checkbox' &&
+          activeItem.value.type === FormComponentType.CHECKBOX &&
           activeItem.value.defaultValue.includes(activeItem.value.options[index]?.value)
         ) {
           const valueIndex = activeItem.value.defaultValue.indexOf(
@@ -312,7 +313,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 移动选项位置
   const moveOption = (index, direction) => {
     if (!activeItem.value) return
-    if (activeItem.value.type === 'radio' || activeItem.value.type === 'checkbox') {
+    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
       const options = activeItem.value.options
       const newIndex = index + direction
 
