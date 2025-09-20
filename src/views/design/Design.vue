@@ -11,6 +11,7 @@ import { ArrowLeft, Close } from '@element-plus/icons-vue'
 import { formApi } from '@/api'
 // 导入环境工具函数
 import { isDevelopment } from '@/utils/env'
+import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
 
 // 导入各个组件
 import BasicSettings from './BasicSettings.vue'
@@ -273,7 +274,7 @@ const resetFormData = () => {
   flowDesignStore.flowData.name = '未命名流程'
   flowDesignStore.flowData.version = '1.0'
   flowDesignStore.flowData.initiator = {
-    id: 1,
+    id: INITIATOR_NODE_ID,
     type: FlowNodeType.INITIATOR,
     name: '发起人',
     props: {

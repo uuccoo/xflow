@@ -2,6 +2,7 @@ import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
+import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
 
 export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 存储完整流程数据
@@ -10,7 +11,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     name: '未命名流程',
     version: '1.0',
     initiator: {
-      id: 1,
+      id: INITIATOR_NODE_ID,
       type: FlowNodeType.INITIATOR,
       name: '发起人',
       props: {

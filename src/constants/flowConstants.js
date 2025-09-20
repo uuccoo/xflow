@@ -13,3 +13,10 @@ export const CONDITION_TYPE_INITIATOR = 'initiator';
  * 在表单条件配置和数据处理时使用
  */
 export const CONDITION_FIELD_ID_INITIATOR = 'initiator';
+
+/**
+ * 发起人节点ID
+ * 用于标识流程中发起人节点的唯一ID
+ * 在流程数据结构和节点操作中使用
+ */
+export const INITIATOR_NODE_ID = 'initiator';
