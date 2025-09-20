@@ -83,6 +83,7 @@ import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
 import { FlowNodeType, FormComponentType } from '@/enums'
+import { CONDITION_TYPE_INITIATOR } from '@/constants/flowConstants'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -309,7 +310,7 @@ const formatSingleCondition = (condition) => {
     let description = '';
 
     // 根据条件类型生成描述
-    if (condition.type === 'initiator') {
+    if (condition.type === CONDITION_TYPE_INITIATOR) {
         if (condition.users && condition.users.length) {
             const userNames = condition.users.map(u => u.name).join('、');
             description = `发起人为：${userNames}`;

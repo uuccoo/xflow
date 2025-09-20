@@ -31,7 +31,7 @@
 
                             <!-- 发起人条件时显示人员选择器 -->
                             <designated-person-selector
-                                v-if="condition.type === 'initiator'"
+                                v-if="condition.type === CONDITION_TYPE_INITIATOR"
                                 v-model="condition.users"
                             />
 
@@ -118,7 +118,7 @@
             <span>请选择用来区分审批流程的条件字段，已选{{ selectedFieldIds.length }}个</span>
             <div class="condition-selection">
                 <el-checkbox-group v-model="selectedFieldIds">
-                    <el-checkbox label="initiator">发起人</el-checkbox>
+                    <el-checkbox :label="CONDITION_FIELD_ID_INITIATOR">发起人</el-checkbox>
                     <!-- 动态显示所有必填表单项 -->
                     <el-checkbox v-for="item in requiredItems" :key="item.id" :label="item.id">{{ item.label
                     }}</el-checkbox>
@@ -143,6 +143,7 @@ import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 import { generateUniqueId } from '@/utils/idGenerator'
 import { FormComponentType } from '@/enums'
+import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
 
 // 接收节点数据
 const props = defineProps({
@@ -226,9 +227,9 @@ const initFormData = () => {
 function createInitiatorCondition() {
     return {
         id: generateUniqueId(),
-        type: 'initiator',
+        type: CONDITION_TYPE_INITIATOR,
         label: '发起人',
-        fieldId: 'initiator',
+        fieldId: CONDITION_FIELD_ID_INITIATOR,
         users: []
     }
 }
@@ -285,7 +286,7 @@ const confirmAddCondition = () => {
         // 检查该字段是否已存在于当前组
         const exists = currentGroupConditions.some(c => (c.fieldId) === selectedField);
         if (!exists) {
-            if (selectedField === 'initiator') {
+            if (selectedField === CONDITION_FIELD_ID_INITIATOR) {
                 // 发起人类型
                 currentGroupConditions.push(createInitiatorCondition());
             } else {
