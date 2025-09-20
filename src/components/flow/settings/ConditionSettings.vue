@@ -37,8 +37,8 @@
 
                             <!-- 数字输入框条件 -->
                             <template v-else-if="condition.type === FormComponentType.NUMBER">
-                                <!-- 条件类型选择 -->
-                                <el-select v-model="condition.conditionType" class="condition-select">
+                                <!-- 操作符选择 -->
+                                <el-select v-model="condition.operator" class="condition-select">
                                     <el-option v-for="option in numberConditionOptions" :key="option.value"
                                         :label="option.label" :value="option.value" />
                                 </el-select>
@@ -62,8 +62,8 @@
 
                             <!-- 多选框条件 -->
                             <template v-else-if="condition.type === FormComponentType.CHECKBOX">
-                                <!-- 条件类型选择 -->
-                                <el-select v-model="condition.conditionType" class="condition-select">
+                                <!-- 操作符选择 -->
+                                <el-select v-model="condition.operator" class="condition-select">
                                     <el-option v-for="option in checkboxConditionOptions" :key="option.value"
                                         :label="option.label" :value="option.value" />
                                 </el-select>
@@ -306,7 +306,7 @@ const confirmAddCondition = () => {
                         // 数字输入框类型
                         currentGroupConditions.push({
                             ...commonFields,
-                            conditionType: 'lt', // 默认"小于"条件
+                            operator: 'lt', // 默认"小于"操作符
                             value: null, // 单个数值
                         });
                     } else if (formItem.type === FormComponentType.RADIO) {
@@ -322,7 +322,7 @@ const confirmAddCondition = () => {
                         const fieldOptions = formItem.options || [];
                         currentGroupConditions.push({
                             ...commonFields,
-                            conditionType: 'exact', // 默认"完全等于"条件
+                            operator: 'exact', // 默认"完全等于"操作符
                             selectedOptions: [], // 选中的选项列表
                             options: fieldOptions, // 可选选项列表
                         });

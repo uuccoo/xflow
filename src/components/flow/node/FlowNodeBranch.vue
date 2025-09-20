@@ -318,16 +318,16 @@ const formatSingleCondition = (condition) => {
         }
     }
     // 数字类型条件
-    else if (condition.type === FormComponentType.NUMBER && condition.conditionType && typeof condition.value === 'number') {
-        const typeMap = {
+    else if (condition.type === FormComponentType.NUMBER && condition.operator && typeof condition.value === 'number') {
+        const operatorMap = {
             'lt': '小于',
             'lte': '小于等于',
             'eq': '等于',
             'gte': '大于等于',
             'gt': '大于'
         };
-        const typeText = typeMap[condition.conditionType] || '';
-        description = `${condition.label} ${typeText} ${condition.value}`;
+        const operatorText = operatorMap[condition.operator] || '';
+        description = `${condition.label} ${operatorText} ${condition.value}`;
     }
     // 单选框条件
     else if (condition.type === FormComponentType.RADIO && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
@@ -344,7 +344,7 @@ const formatSingleCondition = (condition) => {
         }
     }
     // 多选框条件
-    else if (condition.type === FormComponentType.CHECKBOX && condition.conditionType && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
+    else if (condition.type === FormComponentType.CHECKBOX && condition.operator && condition.selectedOptions && Array.isArray(condition.selectedOptions)) {
         if (condition.selectedOptions.length === 0) {
             description = `${condition.label} 未选择`;
         } else {
@@ -354,8 +354,8 @@ const formatSingleCondition = (condition) => {
                 return option ? option.label : value;
             }).join('、');
 
-            const typeText = condition.conditionType === 'exact' ? '完全等于' : '包含';
-            description = `${condition.label} ${typeText} ${selectedLabels}`;
+            const operatorText = condition.operator === 'exact' ? '完全等于' : '包含';
+            description = `${condition.label} ${operatorText} ${selectedLabels}`;
         }
     }
     // 默认情况
