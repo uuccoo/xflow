@@ -3,7 +3,7 @@
         <!-- 分支顶部按钮 - 根据分支类型显示不同按钮 -->
         <div class="branch-add-btn">
             <el-button size="small" type="primary" plain round @click="addBranch"
-                v-if="branchType === 'condition'">添加条件</el-button>
+                v-if="branchType === FlowNodeType.CONDITION">添加条件</el-button>
             <el-button size="small" type="primary" plain round @click="addBranch" v-else>添加分支</el-button>
         </div>
 
@@ -21,7 +21,7 @@
                     <div class="branch-header">
                         {{ branch.name }}
                         <!-- 优先级标签 - 仅在条件分支类型且非默认条件时显示 -->
-                        <div class="priority-tag" v-if="branchType === 'condition' && !branch.isDefault">优先级{{ branch.priority }}</div>
+                        <div class="priority-tag" v-if="branchType === FlowNodeType.CONDITION && !branch.isDefault">优先级{{ branch.priority }}</div>
 
                         <!-- 复制按钮 - 只在非默认条件下显示 -->
                         <el-icon class="node-copy" v-if="!branch.isDefault" @click.stop="copyBranch(branchIndex)">
@@ -39,7 +39,7 @@
                         @click="!branch.isDefault ? editBranch(branchIndex, branch) : undefined"
                         :class="{ 'default-condition': branch.isDefault }">
                         <!-- 条件分支内容 -->
-                        <template v-if="branchType === 'condition'">
+                        <template v-if="branchType === FlowNodeType.CONDITION">
                             <span class="condition-text" v-html="getConditionDescription(branch)"></span>
                         </template>
                         <!-- 其他类型分支内容可在此扩展 -->
@@ -82,6 +82,7 @@ import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
+import { FlowNodeType } from '@/enums'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -110,7 +111,7 @@ const branchType = computed(() => props.node.type)
 
 // 根据分支类型获取分支集合
 const branches = computed(() => {
-    if (branchType.value === 'condition') {
+    if (branchType.value === FlowNodeType.CONDITION) {
         return props.node.branches || [];
     }
     // 未来可以在这里添加其他类型的分支数据获取逻辑
@@ -121,7 +122,7 @@ const branches = computed(() => {
 
 // 添加分支
 const addBranch = () => {
-    if (branchType.value === 'condition') {
+    if (branchType.value === FlowNodeType.CONDITION) {
         addConditionBranch();
     } else {
         // 其他类型分支的添加逻辑可在此扩展
@@ -131,7 +132,7 @@ const addBranch = () => {
 
 // 删除分支
 const deleteBranch = (branchIndex) => {
-    if (branchType.value === 'condition') {
+    if (branchType.value === FlowNodeType.CONDITION) {
         deleteConditionBranch(branchIndex);
     } else {
         // 其他类型分支的删除逻辑可在此扩展
@@ -141,7 +142,7 @@ const deleteBranch = (branchIndex) => {
 
 // 编辑分支
 const editBranch = (branchIndex, branch) => {
-    if (branchType.value === 'condition') {
+    if (branchType.value === FlowNodeType.CONDITION) {
         editCondition(branchIndex, branch);
     } else {
         // 其他类型分支的编辑逻辑可在此扩展
@@ -151,7 +152,7 @@ const editBranch = (branchIndex, branch) => {
 
 // 复制分支
 const copyBranch = (branchIndex) => {
-    if (branchType.value === 'condition') {
+    if (branchType.value === FlowNodeType.CONDITION) {
         // 调用store中的复制方法
         flowStore.copyConditionBranch(props.node, branchIndex);
     } else {
@@ -223,7 +224,7 @@ const deleteConditionBranch = (condIndex) => {
 
 // 编辑条件表达式
 const editCondition = (condIndex, condition) => {
-    condition.type = 'condition'; // 确保条件对象包含类型信息
+    condition.type = FlowNodeType.CONDITION; // 确保条件对象包含类型信息
     // 传递父节点 props.node 作为 parentNode
     flowStore.selectNode(condition, condIndex, null, props.node);
 

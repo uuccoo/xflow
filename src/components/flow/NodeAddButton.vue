@@ -33,6 +33,7 @@
 import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { useFlowDesignStore } from '@/stores/flowDesignStore';
+import { FlowNodeType } from '@/enums'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
@@ -60,27 +61,27 @@ const props = defineProps({
 const createNodeByType = (type, nodeId) => {
     // 节点类型配置映射
     const nodeConfigs = {
-        approver: {
+        [FlowNodeType.APPROVER]: {
             name: '审批人',
             props: {
                 approvers: [],
                 mode: 'anyone', // 任意一人通过即可，可选值：anyone, all
             },
         },
-        copyTo: {
+        [FlowNodeType.COPY_TO]: {
             name: '抄送人',
             props: {
                 users: [],
             },
         },
-        process: {
+        [FlowNodeType.PROCESS]: {
             name: '办理',
             props: {
                 processors: [],
                 mode: 'sequential', // 串行处理，可选值：sequential, parallel
             },
         },
-        condition: {
+        [FlowNodeType.CONDITION]: {
             name: '条件分支',
             props: {
                 // 移除 conditions 字段
@@ -103,20 +104,20 @@ const createNodeByType = (type, nodeId) => {
                 },
             ],
         },
-        automation: {
+        [FlowNodeType.AUTOMATION]: {
             name: '自动化',
             props: {
                 actions: [],
             },
         },
-        connector: {
+        [FlowNodeType.CONNECTOR]: {
             name: '连接器',
             props: {
                 connector: '',
                 config: {},
             },
         },
-        payment: {
+        [FlowNodeType.PAYMENT]: {
             name: '付款人',
             props: {
                 payers: [],

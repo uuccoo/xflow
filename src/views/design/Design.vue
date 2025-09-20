@@ -274,7 +274,7 @@ const resetFormData = () => {
   flowDesignStore.flowData.version = '1.0'
   flowDesignStore.flowData.initiator = {
     id: 1,
-    type: 'initiator',
+    type: FlowNodeType.INITIATOR,
     name: '发起人',
     props: {
       initiator: [],

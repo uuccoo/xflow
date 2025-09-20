@@ -32,6 +32,7 @@
 import { ArrowRight, Delete } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
+import { FlowNodeType } from '@/enums'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -75,11 +76,11 @@ const nodeContentText = computed(() => {
 
     // 根据节点类型处理不同内容
     switch (type) {
-        case 'approver':
+        case FlowNodeType.APPROVER:
             return getApproverContent(nodeProps);
-        case 'copyTo':
+        case FlowNodeType.COPY_TO:
             return nodeProps.users?.length > 0 ? formatUserNames(nodeProps.users) : '请选择抄送人';
-        case 'process':
+        case FlowNodeType.PROCESS:
             return getProcessorContent(nodeProps);
         default:
             return '点击配置';

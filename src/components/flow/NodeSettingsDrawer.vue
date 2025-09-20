@@ -60,6 +60,7 @@ import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
+import { FlowNodeType } from '@/enums'
 
 // 导入各种节点设置组件
 import InitiatorSettings from './settings/InitiatorSettings.vue'
@@ -86,7 +87,7 @@ const nodeComponentRef = ref(null)
 
 // 判断是否为条件节点中的分支
 const isConditionBranch = computed(() => {
-    return flowStore.selectedNode?.node?.type === 'condition'
+    return flowStore.selectedNode?.node?.type === FlowNodeType.CONDITION
 })
 
 // 获取非默认分支数量，动态生成优先级选项
@@ -162,12 +163,12 @@ const nodeComponent = computed(() => {
 
     // 根据节点类型返回对应的组件
     switch (nodeType) {
-        case 'initiator': return InitiatorSettings
-        case 'approver': return ApproverSettings
-        case 'copyTo': return CopyToSettings
-        case 'process': return ProcessSettings
-        case 'condition': return ConditionSettings
-        case 'automation': return AutomationSettings
+        case FlowNodeType.INITIATOR: return InitiatorSettings
+        case FlowNodeType.APPROVER: return ApproverSettings
+        case FlowNodeType.COPY_TO: return CopyToSettings
+        case FlowNodeType.PROCESS: return ProcessSettings
+        case FlowNodeType.CONDITION: return ConditionSettings
+        case FlowNodeType.AUTOMATION: return AutomationSettings
         default: return DefaultSettings
     }
 })

@@ -25,7 +25,7 @@
       <!-- 流程图主体 -->
       <div class="flow-chart" :style="zoomStyle">
         <!-- 发起人节点 -->
-        <flow-node-renderer :node="{ type: 'initiator' }" :index="-1" />
+        <flow-node-renderer :node="{ type: FlowNodeType.INITIATOR }" :index="-1" />
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
         <node-add-button :position="0" />
@@ -55,6 +55,7 @@ import NodeAddButton from '@/components/flow/NodeAddButton.vue'
 import FlowNodeRenderer from '@/components/flow/node/FlowNodeRenderer.vue'
 import NodeSettingsDrawer from '@/components/flow/NodeSettingsDrawer.vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
+import { FlowNodeType } from '@/enums'
 import { computed, ref } from 'vue'
 
 // 使用 Pinia store

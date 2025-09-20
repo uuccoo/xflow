@@ -1,7 +1,7 @@
 <template>
     <div class="universal-flow-node">
         <!-- 发起人节点 -->
-        <initiator-node v-if="node.type === 'initiator'" />
+        <initiator-node v-if="node.type === FlowNodeType.INITIATOR" />
 
         <!-- 普通节点（审批人、抄送人、办理、付款人等） -->
         <flow-node v-else-if="isRegularNode" :node="node" :index="index" :branch="branch" />
@@ -21,6 +21,7 @@ import FlowNodeBranch from './FlowNodeBranch.vue';
 import FlowNodeEnd from './FlowNodeEnd.vue';
 import InitiatorNode from './FlowNodeInitiator.vue';
 import { useFlowDesignStore } from '@/stores/flowDesignStore';
+import { FlowNodeType } from '@/enums';
 
 // 获取 flowDesignStore
 const flowStore = useFlowDesignStore();
@@ -47,14 +48,21 @@ const emit = defineEmits([
 
 // 判断是否为普通节点（非分支类节点）
 const isRegularNode = computed(() => {
-    const regularTypes = ['approver', 'copyTo', 'process', 'payment', 'automation', 'connector'];
+    const regularTypes = [
+        FlowNodeType.APPROVER,
+        FlowNodeType.COPY_TO,
+        FlowNodeType.PROCESS,
+        FlowNodeType.PAYMENT,
+        FlowNodeType.AUTOMATION,
+        FlowNodeType.CONNECTOR
+    ];
     return regularTypes.includes(props.node.type);
 });
 
 // 判断是否为分支节点
 const isBranchNode = computed(() => {
     // 当前支持的分支类型列表，未来可以扩展
-    const branchTypes = ['condition'];
+    const branchTypes = [FlowNodeType.CONDITION];
     return branchTypes.includes(props.node.type);
 });
 
