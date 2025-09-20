@@ -7,7 +7,6 @@
                     v-model="users"
                     title="选择抄送人"
                     button-text="添加"
-                    selector-type="copyTo"
                     :required="true"
                     :only-select-users="true"
                 />

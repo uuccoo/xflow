@@ -30,7 +30,6 @@
                     v-model="processors"
                     title="选择办理人"
                     button-text="添加"
-                    selector-type="process"
                     :required="true"
                     :only-select-users="true"
                 />
@@ -65,7 +64,6 @@
                     v-model="initiatorSelectRange"
                     title="选择发起人自选范围"
                     button-text="添加"
-                    selector-type="processRange"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
                     :only-select-users="true"

@@ -12,7 +12,6 @@
                     v-model="selectedInitiators"
                     title="选择发起人范围"
                     button-text="添加"
-                    selector-type="initiator"
                     :required="true"
                 />
             </el-form-item>
