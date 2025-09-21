@@ -61,20 +61,20 @@ const props = defineProps({
 const createNodeByType = (type, nodeId) => {
     // 节点类型配置映射
     const nodeConfigs = {
-        [FlowNodeType.APPROVER]: {
+        [FlowNodeType.APPROVE]: {
             name: '审批人',
             props: {
                 approvers: [],
                 mode: 'anyone', // 任意一人通过即可，可选值：anyone, all
             },
         },
-        [FlowNodeType.COPY_TO]: {
+        [FlowNodeType.CC]: {
             name: '抄送人',
             props: {
                 users: [],
             },
         },
-        [FlowNodeType.PROCESS]: {
+        [FlowNodeType.HANDLE]: {
             name: '办理',
             props: {
                 processors: [],

@@ -25,7 +25,7 @@
       <!-- 流程图主体 -->
       <div class="flow-chart" :style="zoomStyle">
         <!-- 发起人节点 -->
-        <flow-node-renderer :node="{ type: FlowNodeType.INITIATOR }" :index="-1" />
+        <flow-node-renderer :node="{ type: FlowNodeType.INITIATE }" :index="-1" />
 
         <!-- 发起人节点后的添加按钮 - 始终显示 -->
         <node-add-button :position="0" />

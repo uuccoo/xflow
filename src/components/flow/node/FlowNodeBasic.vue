@@ -76,11 +76,11 @@ const nodeContentText = computed(() => {
 
     // 根据节点类型处理不同内容
     switch (type) {
-        case FlowNodeType.APPROVER:
+        case FlowNodeType.APPROVE:
             return getApproverContent(nodeProps);
-        case FlowNodeType.COPY_TO:
+        case FlowNodeType.CC:
             return nodeProps.users?.length > 0 ? formatUserNames(nodeProps.users) : '请选择抄送人';
-        case FlowNodeType.PROCESS:
+        case FlowNodeType.HANDLE:
             return getProcessorContent(nodeProps);
         default:
             return '点击配置';

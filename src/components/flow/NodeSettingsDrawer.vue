@@ -163,10 +163,10 @@ const nodeComponent = computed(() => {
 
     // 根据节点类型返回对应的组件
     switch (nodeType) {
-        case FlowNodeType.INITIATOR: return InitiatorSettings
-        case FlowNodeType.APPROVER: return ApproverSettings
-        case FlowNodeType.COPY_TO: return CopyToSettings
-        case FlowNodeType.PROCESS: return ProcessSettings
+        case FlowNodeType.INITIATE: return InitiatorSettings
+        case FlowNodeType.APPROVE: return ApproverSettings
+        case FlowNodeType.CC: return CopyToSettings
+        case FlowNodeType.HANDLE: return ProcessSettings
         case FlowNodeType.CONDITION: return ConditionSettings
         case FlowNodeType.AUTOMATION: return AutomationSettings
         default: return DefaultSettings

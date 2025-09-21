@@ -1,7 +1,7 @@
 <template>
     <div class="universal-flow-node">
         <!-- 发起人节点 -->
-        <initiator-node v-if="node.type === FlowNodeType.INITIATOR" />
+        <initiator-node v-if="node.type === FlowNodeType.INITIATE" />
 
         <!-- 普通节点（审批人、抄送人、办理、付款人等） -->
         <flow-node v-else-if="isRegularNode" :node="node" :index="index" :branch="branch" />
@@ -49,9 +49,9 @@ const emit = defineEmits([
 // 判断是否为普通节点（非分支类节点）
 const isRegularNode = computed(() => {
     const regularTypes = [
-        FlowNodeType.APPROVER,
-        FlowNodeType.COPY_TO,
-        FlowNodeType.PROCESS,
+        FlowNodeType.APPROVE,
+        FlowNodeType.CC,
+        FlowNodeType.HANDLE,
         FlowNodeType.PAYMENT,
         FlowNodeType.AUTOMATION,
         FlowNodeType.CONNECTOR

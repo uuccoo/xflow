@@ -12,7 +12,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     version: '1.0',
     initiator: {
       id: INITIATOR_NODE_ID,
-      type: FlowNodeType.INITIATOR,
+      type: FlowNodeType.INITIATE,
       name: '发起人',
       props: {
         initiator: [],
@@ -23,9 +23,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 节点选项
   const nodeOptions = [
-    { type: FlowNodeType.APPROVER, label: '审批人', icon: 'User', color: '#67c23a', headerBg: '#f0f9eb' },
-    { type: FlowNodeType.COPY_TO, label: '抄送人', icon: 'Document', color: '#409eff', headerBg: '#ecf5ff' },
-    { type: FlowNodeType.PROCESS, label: '办理', icon: 'Edit', color: '#e6a23c', headerBg: '#fdf6ec' },
+    { type: FlowNodeType.APPROVE, label: '审批人', icon: 'User', color: '#67c23a', headerBg: '#f0f9eb' },
+    { type: FlowNodeType.CC, label: '抄送人', icon: 'Document', color: '#409eff', headerBg: '#ecf5ff' },
+    { type: FlowNodeType.HANDLE, label: '办理', icon: 'Edit', color: '#e6a23c', headerBg: '#fdf6ec' },
     {
       type: FlowNodeType.CONDITION,
       label: '条件分支',
