@@ -225,25 +225,22 @@ const fetchOrganizationData = async () => {
     loadingError.value = false
     
     try {
-        // 构建请求参数
         const requestData = props.filter
 
-        const response = await userApi.getCurrentUserOrgTree(requestData)
+        const orgTreeData = await userApi.getCurrentUserOrgTree(requestData)
 
-        if (response.data) {
-            const transformedData = transformApiData(response.data)
+        if (orgTreeData) {
+            const transformedData = transformApiData(orgTreeData)
             if (transformedData) {
                 return transformedData
             }
         }
         
-        // 如果数据结构不对或为空，抛出错误
         throw new Error('组织架构数据格式不正确')
     } catch (error) {
         console.error('获取组织架构数据失败:', error)
         loadingError.value = true
         
-        // 如果API请求失败，返回空数据结构
         return {
             id: 'empty',
             name: '组织架构',

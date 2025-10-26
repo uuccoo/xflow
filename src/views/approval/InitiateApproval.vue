@@ -60,12 +60,11 @@ const getIconComponent = (iconName) => {
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const response = await getFormGroupsWithForms(keyword);
-    if (response && response.data && Array.isArray(response.data)) {
-      // 处理API返回的数据
-      formGroups.value = response.data.map(group => ({
+    const groupList = await getFormGroupsWithForms(keyword);
+    if (groupList && Array.isArray(groupList)) {
+      formGroups.value = groupList.map(group => ({
         ...group,
-        collapsed: false // 默认展开所有表单组
+        collapsed: false
       }));
     }
   } catch (error) {

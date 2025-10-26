@@ -50,22 +50,15 @@ const saveNewGroup = async () => {
   
   groupNameLoading.value = true
   try {
-    const res = await formGroupApi.createFormGroup({
+    const newGroup = await formGroupApi.createFormGroup({
       name: newGroupName.value.trim(),
       sortOrder: 0
     })
     
-    if (res.code === 200) {
-      ElMessage.success('分组创建成功')
-      // 通知父组件创建成功，并传递创建的分组数据
-      emit('group-created', res.data)
-      // 关闭对话框
-      closeDialog()
-    } else {
-      ElMessage.error(res.message || '分组创建失败')
-    }
+    ElMessage.success('分组创建成功')
+    emit('group-created', newGroup)
+    closeDialog()
   } catch (error) {
-    ElMessage.error('分组创建失败')
     console.error('创建分组失败:', error)
   } finally {
     groupNameLoading.value = false

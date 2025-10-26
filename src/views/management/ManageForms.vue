@@ -198,12 +198,11 @@ const getIconComponent = (iconName) => {
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const response = await getFormGroupsWithForms(keyword, true);
-    if (response && response.data && Array.isArray(response.data)) {
-      // 处理API返回的数据
-      formGroups.value = response.data.map(group => ({
+    const groupList = await getFormGroupsWithForms(keyword, true);
+    if (groupList && Array.isArray(groupList)) {
+      formGroups.value = groupList.map(group => ({
         ...group,
-        collapsed: false // 默认展开所有表单组
+        collapsed: false
       }));
     }
   } catch (error) {
@@ -274,10 +273,9 @@ const publishForm = async (form) => {
   try {
     await formApi.publishForm(form.id);
     ElMessage.success('表单启用成功！');
-    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+    fetchFormGroupsWithForms(searchKeyword.value);
   } catch (error) {
     console.error('表单启用失败:', error);
-    ElMessage.error('表单启用失败，请稍后重试');
   }
 };
 
@@ -292,10 +290,9 @@ const disableForm = async (form) => {
     try {
       await formApi.disableForm(form.id);
       ElMessage.success('表单已停用！');
-      fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+      fetchFormGroupsWithForms(searchKeyword.value);
     } catch (error) {
       console.error('停用表单失败:', error);
-      ElMessage.error('停用表单失败，请稍后重试');
     }
   }).catch(() => {
     // 用户取消操作，不做任何处理
@@ -320,12 +317,10 @@ const deleteForm = async (id) => {
   try {
     await formApi.deleteForm(id);
     ElMessage.success('表单删除成功！');
-    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
-    // 如果删除的是已选中的表单，需要从selectedForms中移除
+    fetchFormGroupsWithForms(searchKeyword.value);
     selectedForms.value = selectedForms.value.filter(formId => formId !== id);
   } catch (error) {
     console.error('删除表单失败:', error);
-    ElMessage.error('删除表单失败，请稍后重试');
   }
 };
 
@@ -372,10 +367,9 @@ const batchMoveToGroup = async () => {
     });
     ElMessage.success('批量移动分组成功！');
     showBatchMove.value = false;
-    fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
+    fetchFormGroupsWithForms(searchKeyword.value);
   } catch (error) {
     console.error('批量移动分组失败:', error);
-    ElMessage.error('批量移动分组失败，请稍后重试');
   }
 };
 

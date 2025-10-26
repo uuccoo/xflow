@@ -41,9 +41,9 @@ const newGroupDialogVisible = ref(false) // 新建分组对话框可见性
 // 获取分组列表
 const fetchGroupList = async () => {
   try {
-    const res = await formGroupApi.getFormGroupList()
-    if (res.code === 200) {
-      groupOptions.value = res.data.map(group => ({
+    const groupList = await formGroupApi.getFormGroupList()
+    if (groupList) {
+      groupOptions.value = groupList.map(group => ({
         value: group.id,
         label: group.name
       }))
