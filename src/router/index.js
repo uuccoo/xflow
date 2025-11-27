@@ -28,6 +28,11 @@ const routes = [
     path: '/design',
     component: () => import('@/views/design/Design.vue'),
   },
+  {
+    path: '/approval-form',
+    name: 'approval-form',
+    component: () => import('@/views/approval/ApprovalFormView.vue'),
+  },
 ]
 
 const router = createRouter({

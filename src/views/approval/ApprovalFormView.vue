@@ -16,7 +16,6 @@
             <div class="form-section">
                 <div class="form-header">
                     <h1 class="form-title">{{ formTitle }}</h1>
-                    <div v-if="isPreview" class="preview-badge">预览模式</div>
                 </div>
                 <el-divider></el-divider>
 
@@ -48,7 +47,7 @@
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import { formApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
@@ -60,16 +59,6 @@ const router = useRouter();
 // 判断是否为开发环境（使用通用工具函数）
 const isDevMode = computed(() => isDevelopment());
 
-// 定义props和emits
-const props = defineProps({
-    preview: {
-        type: Boolean,
-        default: false
-    }
-});
-
-const emit = defineEmits(['close-preview']);
-
 // 表单相关状态
 const formData = ref(null);
 const formTitle = ref('表单填写');
@@ -78,45 +67,8 @@ const submitting = ref(false);
 const formValues = reactive({});
 const formRef = ref(null);
 
-// 判断是否为预览模式
-const isPreview = computed(() => props.preview);
-
 // 获取表单详情
 const loadForm = async () => {
-    // 检查是否为预览模式
-    if (isPreview.value) {
-        try {
-            // 从sessionStorage获取预览数据
-            const previewDataStr = sessionStorage.getItem('formPreviewData');
-            if (previewDataStr) {
-                const previewData = JSON.parse(previewDataStr);
-                formData.value = previewData;
-                formTitle.value = previewData.basicSettings?.formName || '表单预览';
-
-                // 初始化表单字段和默认值
-                if (previewData.formDesign && previewData.formDesign.formItems) {
-                    previewData.formDesign.formItems.forEach(item => {
-                        if (item.id) {
-                            formValues[item.id] = item.defaultValue || '';
-                        }
-                    });
-                }
-                loading.value = false;
-                return;
-            } else {
-                ElMessage.error('预览数据不存在，可能已过期');
-                goBack();
-                return;
-            }
-        } catch (error) {
-            console.error('加载预览数据失败:', error);
-            ElMessage.error('加载预览数据失败: ' + (error.message || '未知错误'));
-            loading.value = false;
-            return;
-        }
-    }
-
-    // 非预览模式，正常加载表单
     const formId = route.query.id;
     const formCode = route.query.code;
 
@@ -136,13 +88,13 @@ const loadForm = async () => {
             result = await formApi.getFormByCode(formCode);
         }
 
-        if (result && result.data) {
-            formData.value = result.data;
-            formTitle.value = result.data.basicSettings?.formName || '表单填写';
+        if (result) {
+            formData.value = result;
+            formTitle.value = result.basicSettings?.formName || '表单填写';
 
             // 初始化表单字段和默认值
-            if (result.data.formDesign && result.data.formDesign.formItems) {
-                result.data.formDesign.formItems.forEach(item => {
+            if (result.formDesign && result.formDesign.formItems) {
+                result.formDesign.formItems.forEach(item => {
                     if (item.id) {
                         formValues[item.id] = item.defaultValue || '';
                     }
@@ -166,13 +118,7 @@ const reloadForm = () => {
 
 // 返回上一页
 const goBack = () => {
-    if (props.preview) {
-        // 如果是通过props传递的预览模式，发送关闭预览事件
-        emit('close-preview');
-    } else {
-        // 否则使用路由后退
-        router.back();
-    }
+    router.back();
 };
 
 // 更新表单值
@@ -225,15 +171,6 @@ const debugFormData = () => {
 
 // 提交表单
 const submitForm = async () => {
-    // 如果是预览模式，提示用户
-    if (isPreview.value) {
-        ElMessage({
-            message: '预览模式下不能提交表单',
-            type: 'warning'
-        });
-        return;
-    }
-
     // 表单验证
     if (!validateForm()) {
         return;
@@ -255,8 +192,8 @@ const submitForm = async () => {
 
         ElMessage.success('表单已提交成功');
 
-        // 提交成功后返回到审批中心
-        router.push('/home/approvals');
+        // 提交成功后返回到发起审批
+        router.push('/home/initiate');
     } catch (error) {
         if (error !== 'cancel') {
             console.error('提交表单失败:', error);
@@ -338,16 +275,6 @@ onMounted(() => {
     font-weight: 500;
     margin: 0;
     color: #303133;
-}
-
-.preview-badge {
-    position: absolute;
-    right: 0;
-    background-color: #E6A23C;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
 }
 
 .form-content {
