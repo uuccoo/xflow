@@ -19,7 +19,7 @@ import FormDesign from './FormDesign.vue'
 import FlowDesign from './FlowDesign.vue'
 import MoreSettings from './MoreSettings.vue'
 // 导入预览组件
-import ApprovalFormView from '@/views/approval/ApprovalFormView.vue'
+import FormPreview from '@/components/form/FormPreview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -392,7 +392,7 @@ onMounted(() => {
 
   <!-- 全屏预览组件 -->
   <div v-if="showPreview" class="preview-overlay">
-    <ApprovalFormView :preview="true" @close-preview="closePreview" />
+    <FormPreview @close-preview="closePreview" />
   </div>
 </template>
 
