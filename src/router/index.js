@@ -16,11 +16,6 @@ const routes = [
         name: 'initiate-approval',
         component: () => import('@/views/approval/InitiateApproval.vue'),
       },
-      {
-        path: 'approvals',
-        name: 'approval-center',
-        component: () => import('@/views/approval/ApprovalCenter.vue'),
-      },
       // 管理相关路由
       {
         path: 'manage-forms',
@@ -32,11 +27,6 @@ const routes = [
   {
     path: '/design',
     component: () => import('@/views/design/Design.vue'),
-  },
-  {
-    path: '/approval-form',
-    name: 'approval-form',
-    component: () => import('@/views/approval/ApprovalFormView.vue'),
   },
 ]
 

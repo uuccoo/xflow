@@ -19,7 +19,7 @@ import FormDesign from './FormDesign.vue'
 import FlowDesign from './FlowDesign.vue'
 import MoreSettings from './MoreSettings.vue'
 // 导入预览组件
-import ApprovalFormView from '@/views/approval/ApprovalFormView.vue'
+import FormPreview from '@/components/form/FormPreview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,7 +110,6 @@ const loadExistingData = (data) => {
     return true
   } catch (error) {
     console.error('加载数据失败:', error)
-    ElMessage.error('加载数据失败: ' + error.message)
     return false
   } finally {
     loading.value = false
@@ -215,19 +214,17 @@ const publish = async () => {
 
     // 使用API发布表单
     const formId = basicSettingsStore.id
-    let result
+    let publishedForm
 
     if (formId) {
-      // 更新已有表单
-      result = await formApi.updateForm(formId, finalData)
+      publishedForm = await formApi.updateForm(formId, finalData)
     } else {
-      // 创建新表单
-      result = await formApi.saveForm(finalData)
+      publishedForm = await formApi.saveForm(finalData)
     }
 
     // 更新表单ID
-    if (result.data && result.data.id) {
-      basicSettingsStore.id = result.data.id
+    if (publishedForm && publishedForm.id) {
+      basicSettingsStore.id = publishedForm.id
     }
 
     ElMessage({
@@ -235,14 +232,9 @@ const publish = async () => {
       message: '表单已成功发布',
       duration: 3000
     })
-
-    // 可以添加保存后的逻辑，如跳转到表单列表页
-    // router.push('/form/list')
   } catch (error) {
     console.error('发布失败:', error)
-    ElMessage.error('发布失败: ' + (error.message || '未知错误'))
   } finally {
-    // 重置发布状态
     publishing.value = false
   }
 }
@@ -307,13 +299,12 @@ watch(
     if (formId) {
       try {
         loading.value = true;
-        const result = await formApi.getFormDetail(formId);
-        if (result && result.data) {
-          loadExistingData(result.data);
+        const formDetailData = await formApi.getFormDetail(formId);
+        if (formDetailData) {
+          loadExistingData(formDetailData);
         }
       } catch (error) {
         console.error('加载表单数据失败:', error);
-        ElMessage.error('加载表单数据失败: ' + (error.message || '未知错误'));
       } finally {
         loading.value = false;
       }
@@ -321,18 +312,16 @@ watch(
       try {
         loading.value = true;
         console.log('通过表单编码加载:', formCode);
-        const result = await formApi.getFormByCode(formCode);
-        if (result && result.data) {
-          loadExistingData(result.data);
+        const formDetailData = await formApi.getFormByCode(formCode);
+        if (formDetailData) {
+          loadExistingData(formDetailData);
         }
       } catch (error) {
         console.error('加载表单数据失败:', error);
-        ElMessage.error('加载表单数据失败: ' + (error.message || '未知错误'));
       } finally {
         loading.value = false;
       }
     } else {
-      // 既没有formId也没有formCode，说明是创建新表单，需要重置所有数据
       resetFormData();
     }
   },
@@ -403,7 +392,7 @@ onMounted(() => {
 
   <!-- 全屏预览组件 -->
   <div v-if="showPreview" class="preview-overlay">
-    <ApprovalFormView :preview="true" @close-preview="closePreview" />
+    <FormPreview @close-preview="closePreview" />
   </div>
 </template>
 

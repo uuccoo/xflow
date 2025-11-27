@@ -65,9 +65,14 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const res = response.data
+    const { hideErrorMsg } = response.config || {}
+    
     // 根据后端API的响应格式调整
     if (res.code && res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
+      // 如果未配置 hideErrorMsg，则显示错误提示
+      if (!hideErrorMsg) {
+        ElMessage.error(res.message || '请求失败')
+      }
 
       // 处理特定错误码，如401未授权
       if (res.code === 401) {
@@ -76,13 +81,17 @@ service.interceptors.response.use(
       }
 
       return Promise.reject(new Error(res.message || '请求失败'))
-    } else {
-      return res
     }
+    
+    // 直接返回 data 字段，如果没有 data 则返回整个 res
+    return res.data !== undefined ? res.data : res
   },
   (error) => {
-    console.error('请求错误', error)
-    ElMessage.error(error.message || '网络请求失败')
+    const { hideErrorMsg } = error.config || {}
+    if (!hideErrorMsg) {
+      console.error('请求错误', error)
+      ElMessage.error(error.message || '网络请求失败')
+    }
     return Promise.reject(error)
   },
 )

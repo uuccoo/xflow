@@ -48,7 +48,6 @@ const activeMenu = ref('');
 
 const menuItems = [
   { name: '发起审批', route: '/home/initiate' },
-  { name: '审批中心', route: '/home/approvals' }
 ];
 
 // 管理相关的菜单项
