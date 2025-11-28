@@ -29,6 +29,11 @@
       <!-- 表单组分类列表 -->
       <div v-for="(group, groupIndex) in formGroups" :key="groupIndex" class="form-group">
         <div class="group-header" @click="toggleGroup(group)">
+          <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
+            <el-icon>
+              <arrow-down />
+            </el-icon>
+          </span>
           <div class="group-header-left">
             <span class="group-title">{{ group.name }}</span>
             <span class="form-count">({{ group.forms.length }})</span>
@@ -59,50 +64,49 @@
                 </div>
               </div>
             </el-popover>
-            <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
-              <el-icon>
-                <arrow-down />
-              </el-icon>
-            </span>
           </div>
         </div>
 
-        <div v-if="!group.collapsed" class="form-list">
-          <div class="form-items">
-            <div v-for="form in group.forms" :key="form.id" class="form-item">
-              <div class="form-checkbox">
-                <input type="checkbox" :checked="selectedForms.includes(form.id)"
-                  @click.stop="toggleFormSelection(form.id)" />
-              </div>
-              <div class="form-content">
+        <div v-if="!group.collapsed && group.forms.length > 0" class="form-list">
+          <!-- 列名表头行 -->
+          <div class="list-header">
+            <span class="col col-checkbox"></span>
+            <span class="col col-form">表单</span>
+            <span class="col col-initiator">谁可以发起</span>
+            <span class="col col-update">最后更新</span>
+            <span class="col col-actions">操作</span>
+          </div>
+          <!-- 表单数据行 -->
+          <div v-for="form in group.forms" :key="form.id" class="list-item">
+            <span class="col col-checkbox">
+              <input type="checkbox" :checked="selectedForms.includes(form.id)"
+                @click.stop="toggleFormSelection(form.id)" />
+            </span>
+            <span class="col col-form">
+              <div class="form-info">
                 <div class="form-item-icon" :style="{ backgroundColor: form.iconColor || '#1677ff' }">
                   <el-icon color="#ffffff" size="20">
                     <component :is="getIconComponent(form.icon)" />
                   </el-icon>
                 </div>
-                <div class="form-item-info">
-                  <div class="form-item-name">{{ form.name }}</div>
-                  <div class="form-item-details">
-                    <span class="form-code">{{ form.code }}</span>
-                    <span class="form-status" :class="getStatusClass(form.status)">
-                      {{ getStatusText(form.status) }}
-                    </span>
-                    <span class="form-date">创建: {{ formatDate(form.createTime) }}</span>
-                    <span class="form-date">更新: {{ formatDate(form.updatedAt) }}</span>
-                  </div>
-                </div>
-                <div class="form-item-actions">
-                  <button class="btn-action btn-edit" @click.stop="editForm(form)">编辑</button>
-                  <button class="btn-action btn-publish" @click.stop="publishForm(form)"
-                    v-if="form.status === 2">启用</button>
-                  <button class="btn-action btn-disable" @click.stop="disableForm(form)"
-                    v-if="form.status === 1">停用</button>
-                  <!-- 只有在已停用表单组中才显示删除按钮 -->
-                  <button class="btn-action btn-delete" @click.stop="confirmDeleteForm(form)"
-                    v-if="group.id === 'disabled'">删除</button>
-                </div>
+                <span class="form-name">{{ form.name }}</span>
               </div>
-            </div>
+            </span>
+            <span class="col col-initiator">全部可见</span>
+            <span class="col col-update">
+              {{ form.updatedByUser?.realName }} 更新于 {{ form.updatedAt }}
+            </span>
+            <span class="col col-actions">
+              <span class="action-link" @click.stop="editForm(form)">编辑</span>
+              <span class="action-divider" v-if="form.status === 2 || form.status === 1"></span>
+              <span class="action-link" @click.stop="publishForm(form)"
+                v-if="form.status === 2">启用</span>
+              <span class="action-link" @click.stop="disableForm(form)"
+                v-if="form.status === 1">停用</span>
+              <span class="action-divider" v-if="group.id === 'disabled'"></span>
+              <span class="action-link delete" @click.stop="confirmDeleteForm(form)"
+                v-if="group.id === 'disabled'">删除</span>
+            </span>
           </div>
         </div>
       </div>
@@ -216,33 +220,6 @@ const debounceSearch = () => {
   searchTimer = setTimeout(() => {
     fetchFormGroupsWithForms(searchKeyword.value);
   }, 300);
-};
-
-// 日期格式化
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-// 获取状态对应的CSS类
-const getStatusClass = (status) => {
-  switch (status) {
-    case 0: return 'status-draft';
-    case 1: return 'status-published';
-    case 2: return 'status-disabled';
-    default: return '';
-  }
-};
-
-// 获取状态对应的文本
-const getStatusText = (status) => {
-  switch (status) {
-    case 0: return '草稿';
-    case 1: return '已发布';
-    case 2: return '已停用';
-    default: return '未知状态';
-  }
 };
 
 // 切换表单组的展开/折叠状态
@@ -381,10 +358,6 @@ const goToCreateForm = () => {
 // 处理新分组创建成功的回调
 const handleGroupCreated = () => {
   fetchFormGroupsWithForms(searchKeyword.value);
-};
-
-const toggleGroupSettings = (group) => {
-  group.showSettings = !group.showSettings;
 };
 
 const showRenameGroup = (group) => {
@@ -605,16 +578,18 @@ onMounted(() => {
 
 /* 表单组 */
 .form-group {
-  border-bottom: 1px solid #f0f0f0;
+  margin: 16px 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background-color: #ffffff;
+  overflow: hidden;
 }
 
 .group-header {
   padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  background-color: #fafafa;
 }
 
 .group-header-left {
@@ -634,6 +609,13 @@ onMounted(() => {
   color: #8c8c8c;
 }
 
+.group-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
 .group-toggle-icon svg {
   transition: transform 0.2s ease;
 }
@@ -642,39 +624,72 @@ onMounted(() => {
   transform: rotate(-90deg);
 }
 
-.form-list {
-  background-color: white;
-  padding: 16px;
-}
-
-.form-items {
+/* 列名表头行 */
+.list-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 12px 15px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  font-weight: bold;
+  font-size: 14px;
+  color: #606266;
 }
 
-.form-item {
+/* 数据行 */
+.list-item {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  transition: background 0.2s;
+  font-size: 14px;
+  align-items: center;
+}
+
+.list-item:hover {
+  background-color: #f0f6ff;
+  cursor: pointer;
+}
+
+/* 列样式 */
+.col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.col-checkbox {
+  width: 40px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  transition: all 0.3s;
+  justify-content: center;
 }
 
-.form-item:hover {
-  border-color: #d9d9d9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.col-form {
+  flex: 1.5;
+  min-width: 200px;
 }
 
-.form-checkbox {
-  padding: 0 12px;
+.col-initiator {
+  flex: 1.5;
+  min-width: 100px;
 }
 
-.form-content {
+.col-update {
+  flex: 2.5;
+  min-width: 200px;
+}
+
+.col-actions {
   flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* 表单信息区域 */
+.form-info {
   display: flex;
   align-items: center;
-  padding: 12px;
 }
 
 .form-item-icon {
@@ -688,102 +703,36 @@ onMounted(() => {
   border-radius: 6px;
 }
 
-.form-item-info {
-  flex: 1;
-}
-
-.form-item-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #262626;
-  margin-bottom: 4px;
-}
-
-.form-item-details {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #8c8c8c;
-}
-
-.form-code {
-  background-color: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 2px;
-}
-
-.form-status {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.status-draft {
-  background-color: #e6f4ff;
-  color: #0958d9;
-}
-
-.status-published {
-  background-color: #f6ffed;
-  color: #389e0d;
-}
-
-.status-disabled {
-  background-color: #fff2e8;
-  color: #d4380d;
-}
-
-.form-item-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: 16px;
-}
-
-.btn-action {
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
+/* 操作链接样式 */
+.action-link {
   cursor: pointer;
-  transition: all 0.3s;
+  color: #1890ff;
+  transition: color 0.2s;
 }
 
-.btn-edit {
-  background-color: #e6f4ff;
-  color: #0958d9;
+.action-link:hover {
+  color: #40a9ff;
 }
 
-.btn-edit:hover {
-  background-color: #bae0ff;
+.action-link:active {
+  color: #096dd9;
 }
 
-.btn-publish {
-  background-color: #f6ffed;
-  color: #389e0d;
+.action-divider {
+  margin: 0 8px;
+  color: #d9d9d9;
 }
 
-.btn-publish:hover {
-  background-color: #d9f7be;
+.action-link.delete {
+  color: #f5222d;
 }
 
-.btn-disable {
-  background-color: #fff2e8;
-  color: #d4380d;
+.action-link.delete:hover {
+  color: #ff4d4f;
 }
 
-.btn-disable:hover {
-  background-color: #ffd8bf;
-}
-
-.btn-delete {
-  background-color: #fff1f0;
+.action-link.delete:active {
   color: #cf1322;
-}
-
-.btn-delete:hover {
-  background-color: #ffccc7;
 }
 
 .empty-state {
@@ -883,10 +832,6 @@ onMounted(() => {
   border-color: #0958d9;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
 .form-group label {
   display: block;
   margin-bottom: 8px;
@@ -910,6 +855,7 @@ select:focus {
 }
 
 .group-actions {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
