@@ -118,51 +118,50 @@
     </div>
 
     <!-- 批量移动分组对话框 -->
-    <div class="modal" v-if="showBatchMove">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>批量移动分组</h3>
-          <span class="close-modal" @click="showBatchMove = false">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>选择目标分组</label>
-            <select v-model="targetGroupId">
-              <option value="">请选择分组</option>
-              <option v-for="group in formGroups" :key="group.id" :value="group.id">
-                {{ group.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showBatchMove = false">取消</button>
-          <button class="btn-confirm" @click="batchMoveToGroup">确定</button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showBatchMove"
+      title="批量移动分组"
+      width="400px"
+      align-center
+    >
+      <el-select v-model="targetGroupId" placeholder="请选择分组">
+        <el-option
+          v-for="group in formGroups"
+          :key="group.id"
+          :label="group.name"
+          :value="group.id"
+        />
+      </el-select>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showBatchMove = false">取消</el-button>
+          <el-button type="primary" @click="batchMoveToGroup">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 重命名分组对话框 -->
-    <div class="modal" v-if="showRenameDialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>重命名分组</h3>
-          <span class="close-modal" @click="showRenameDialog = false">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>分组名称</label>
-            <input type="text" class="form-input" v-model="editingGroupName" placeholder="请输入分组名称" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showRenameDialog = false">取消</button>
-          <button class="btn-confirm" @click="renameGroup" :disabled="groupActionLoading">
-            {{ groupActionLoading ? '处理中...' : '确定' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showRenameDialog"
+      title="重命名分组"
+      width="400px"
+      align-center
+    >
+      <el-input
+        v-model="editingGroupName"
+        placeholder="请输入分组名称"
+        clearable
+        @keyup.enter="renameGroup"
+      />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showRenameDialog = false">取消</el-button>
+          <el-button type="primary" @click="renameGroup" :loading="groupActionLoading">
+            确定
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -184,8 +183,6 @@ let searchTimer = null;
 
 // 新建分组对话框相关
 const newGroupDialogVisible = ref(false); // 新建分组对话框可见性
-const newGroupName = ref(''); // 新建分组名称
-const groupNameLoading = ref(false); // 保存按钮加载状态
 
 // 重命名分组相关变量
 const showRenameDialog = ref(false); // 重命名分组对话框可见性
@@ -744,116 +741,6 @@ onMounted(() => {
   font-size: 16px;
 }
 
-/* 模态对话框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 4px;
-  width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #262626;
-}
-
-.close-modal {
-  cursor: pointer;
-  font-size: 18px;
-  color: #bfbfbf;
-}
-
-.close-modal:hover {
-  color: #595959;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
-  text-align: right;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn-cancel {
-  background-color: white;
-  border: 1px solid #d9d9d9;
-  color: #595959;
-  padding: 6px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-cancel:hover {
-  border-color: #bfbfbf;
-  color: #262626;
-}
-
-.btn-confirm {
-  background-color: #1677ff;
-  border: 1px solid #1677ff;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-confirm:hover {
-  background-color: #0958d9;
-  border-color: #0958d9;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #262626;
-}
-
-select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-select:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-  outline: none;
-}
-
 .group-actions {
   margin-left: auto;
   display: flex;
@@ -875,20 +762,6 @@ select:focus {
 
 .group-settings:hover {
   background-color: rgba(0, 0, 0, 0.06);
-}
-
-.form-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-}
-
-.form-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
 }
 
 .group-settings-menu {
@@ -914,5 +787,12 @@ select:focus {
 :deep(.group-settings-popover) {
   padding: 0;
   min-width: 100px;
+}
+
+/* Element UI 对话框页脚样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
 </style>
