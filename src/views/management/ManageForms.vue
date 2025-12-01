@@ -3,15 +3,31 @@
     <div class="search-container">
       <div class="page-title">表单管理</div>
       <div class="action-area">
-        <div class="search-box">
-          <input type="text" class="search-input" placeholder="搜索表单" v-model="searchKeyword" @input="debounceSearch" />
-        </div>
-        <button class="btn-create" @click="goToCreateForm">
+        <el-input 
+          v-model="searchKeyword" 
+          placeholder="搜索表单" 
+          @input="debounceSearch"
+          clearable
+          class="search-input"
+        />
+        <el-button type="primary" @click="goToCreateForm">
           <span class="plus-icon">+</span> 创建表单
-        </button>
-        <button class="btn-create-group" @click="newGroupDialogVisible = true">
-          <span class="plus-icon">+</span> 新建分组
-        </button>
+        </el-button>
+        <el-dropdown trigger="click" :show-arrow="false" placement="bottom-end" @command="handleSettingsCommand">
+          <el-button type="primary">更多</el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="newGroup">
+                <el-icon><plus /></el-icon>
+                <span>新建分组</span>
+              </el-dropdown-item>
+              <el-dropdown-item command="sortGroup">
+                <el-icon><rank /></el-icon>
+                <span>分组排序</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" :inline="false" />
       </div>
     </div>
@@ -20,8 +36,9 @@
     <div class="batch-actions-bar" v-if="selectedForms.length > 0">
       <span class="selected-count">已选择 {{ selectedForms.length }} 项</span>
       <div class="action-buttons">
-        <button class="btn-batch" @click="showBatchMove = true">移动分组</button>
-        <button class="btn-batch btn-danger" @click="confirmBatchDelete">批量删除</button>
+        <el-button @click="selectedForms = []">取消</el-button>
+        <el-button @click="showBatchMove = true">移动分组</el-button>
+        <el-button type="danger" @click="confirmBatchDelete">批量删除</el-button>
       </div>
     </div>
 
@@ -40,30 +57,26 @@
           </div>
           <div class="group-actions">
             <!-- 只有当分组id不是'disabled'时才显示设置按钮 -->
-            <el-popover v-if="group.id !== 'disabled'" placement="bottom-end" :width="100" trigger="click"
-              :hide-after="0" popper-class="group-settings-popover" @show="handlePopoverShow" @hide="handlePopoverHide">
-              <template #reference>
-                <span class="group-settings" @click.stop>
-                  <el-icon>
-                    <setting />
-                  </el-icon>
-                </span>
+            <el-dropdown v-if="group.id !== 'disabled'" trigger="click" :show-arrow="false" placement="bottom-end" 
+              @command="(command) => handleGroupCommand(command, group)">
+              <el-button text @click.stop>
+                <el-icon>
+                  <setting />
+                </el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="rename">
+                    <el-icon><edit /></el-icon>
+                    <span>重命名</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete">
+                    <el-icon><delete /></el-icon>
+                    <span>删除分组</span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
               </template>
-              <div class="group-settings-menu">
-                <div class="menu-item" @click="showRenameGroup(group)">
-                  <el-icon>
-                    <edit />
-                  </el-icon>
-                  <span>重命名</span>
-                </div>
-                <div class="menu-item" @click="confirmDeleteGroup(group)">
-                  <el-icon>
-                    <delete />
-                  </el-icon>
-                  <span>删除分组</span>
-                </div>
-              </div>
-            </el-popover>
+            </el-dropdown>
           </div>
         </div>
 
@@ -79,8 +92,10 @@
           <!-- 表单数据行 -->
           <div v-for="form in group.forms" :key="form.id" class="list-item">
             <span class="col col-checkbox">
-              <input type="checkbox" :checked="selectedForms.includes(form.id)"
-                @click.stop="toggleFormSelection(form.id)" />
+              <el-checkbox 
+                :model-value="selectedForms.includes(form.id)"
+                @change="toggleFormSelection(form.id)"
+              />
             </span>
             <span class="col col-form">
               <div class="form-info">
@@ -171,6 +186,7 @@ import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { Setting, Plus, Rank } from '@element-plus/icons-vue';
 import GroupCreator from '@/components/common/GroupCreator.vue';
 
 const router = useRouter();
@@ -357,11 +373,28 @@ const handleGroupCreated = () => {
   fetchFormGroupsWithForms(searchKeyword.value);
 };
 
+// 处理设置下拉菜单命令
+const handleSettingsCommand = (command) => {
+  if (command === 'newGroup') {
+    newGroupDialogVisible.value = true;
+  } else if (command === 'sortGroup') {
+    // TODO: 实现分组排序功能
+  }
+};
+
+// 处理分组下拉菜单命令
+const handleGroupCommand = (command, group) => {
+  if (command === 'rename') {
+    showRenameGroup(group);
+  } else if (command === 'delete') {
+    confirmDeleteGroup(group);
+  }
+};
+
 const showRenameGroup = (group) => {
   editingGroupId.value = group.id; // 保存当前编辑的分组ID
   editingGroupName.value = group.name;
   showRenameDialog.value = true;
-  group.showSettings = false; // 关闭设置下拉菜单
 };
 
 const confirmDeleteGroup = (group) => {
@@ -412,16 +445,6 @@ const renameGroup = async () => {
   }
 };
 
-// 处理弹出框显示
-const handlePopoverShow = () => {
-  // 可以在这里添加弹出框显示时的逻辑
-};
-
-// 处理弹出框隐藏
-const handlePopoverHide = () => {
-  // 可以在这里添加弹出框隐藏时的逻辑
-};
-
 onMounted(() => {
   fetchFormGroupsWithForms();
 });
@@ -431,6 +454,8 @@ onMounted(() => {
 .manage-forms {
   padding: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .search-container {
@@ -456,44 +481,8 @@ onMounted(() => {
   gap: 12px;
 }
 
-.search-box {
-  position: relative;
-  width: 240px;
-}
-
 .search-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-}
-
-.search-input::placeholder {
-  color: #bfbfbf;
-}
-
-.btn-create {
-  background-color: #1677ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.btn-create:hover {
-  background-color: #0958d9;
+  width: 240px;
 }
 
 .plus-icon {
@@ -502,27 +491,10 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.btn-create-group {
-  background-color: #52c41a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.btn-create-group:hover {
-  background-color: #389e0d;
-}
-
 /* 批量操作栏 */
 .batch-actions-bar {
   background-color: #f5f5f5;
-  padding: 12px 20px;
+  padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -539,38 +511,10 @@ onMounted(() => {
   gap: 12px;
 }
 
-.btn-batch {
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: white;
-  color: #595959;
-  border: 1px solid #d9d9d9;
-  transition: all 0.3s;
-}
-
-.btn-batch:hover {
-  color: #1677ff;
-  border-color: #1677ff;
-}
-
-.btn-danger {
-  background-color: #ff4d4f;
-  color: white;
-  border: 1px solid #ff4d4f;
-}
-
-.btn-danger:hover {
-  background-color: #cf1322;
-  border-color: #cf1322;
-}
-
 /* 表单容器 */
 .forms-container {
+  flex: 1;
   overflow-y: auto;
-  height: calc(100vh - 110px);
 }
 
 /* 表单组 */
@@ -739,54 +683,6 @@ onMounted(() => {
   padding: 60px;
   color: #bfbfbf;
   font-size: 16px;
-}
-
-.group-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.group-settings {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.group-settings:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-.group-settings-menu {
-  padding: 4px 0;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #606266;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.menu-item:hover {
-  background-color: #f5f7fa;
-}
-
-/* 为El-Popover添加自定义样式 */
-:deep(.group-settings-popover) {
-  padding: 0;
-  min-width: 100px;
 }
 
 /* Element UI 对话框页脚样式 */
