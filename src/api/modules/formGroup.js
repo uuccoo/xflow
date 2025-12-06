@@ -62,10 +62,23 @@ export function deleteFormGroup(id) {
   })
 }
 
+/**
+ * 批量更新表单分组排序
+ * @param {Array<String>} sortedIds 按新顺序排列的分组ID列表
+ */
+export function updateFormGroupSortOrders(sortedIds) {
+  return request({
+    url: '/form-groups/sort-orders',
+    method: 'put',
+    data: sortedIds,
+  })
+}
+
 export default {
   getFormGroupList,
   getFormGroupsWithForms,
   createFormGroup,
   updateFormGroup,
   deleteFormGroup,
+  updateFormGroupSortOrders,
 }

@@ -22,7 +22,7 @@
                 <span>新建分组</span>
               </el-dropdown-item>
               <el-dropdown-item command="sortGroup">
-                <el-icon><rank /></el-icon>
+                <el-icon><sort /></el-icon>
                 <span>分组排序</span>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -177,6 +177,13 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 分组排序对话框 -->
+    <GroupSortDialog 
+      v-model:visible="showSortDialog" 
+      :groups="formGroups" 
+      @save="handleSortSave" 
+    />
   </div>
 </template>
 
@@ -186,8 +193,9 @@ import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import { Setting, Plus, Rank } from '@element-plus/icons-vue';
+import { Setting, Plus, Sort } from '@element-plus/icons-vue';
 import GroupCreator from '@/components/common/GroupCreator.vue';
+import GroupSortDialog from '@/components/management/GroupSortDialog.vue';
 
 const router = useRouter();
 const formGroups = ref([]);
@@ -205,6 +213,9 @@ const showRenameDialog = ref(false); // 重命名分组对话框可见性
 const editingGroupName = ref(''); // 编辑中的分组名称
 const editingGroupId = ref(null); // 当前编辑的分组ID
 const groupActionLoading = ref(false); // 分组操作按钮加载状态
+
+// 分组排序对话框相关变量
+const showSortDialog = ref(false); // 分组排序对话框可见性
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -378,8 +389,13 @@ const handleSettingsCommand = (command) => {
   if (command === 'newGroup') {
     newGroupDialogVisible.value = true;
   } else if (command === 'sortGroup') {
-    // TODO: 实现分组排序功能
+    showSortDialog.value = true;
   }
+};
+
+// 处理分组排序保存
+const handleSortSave = () => {
+  fetchFormGroupsWithForms(searchKeyword.value);
 };
 
 // 处理分组下拉菜单命令
@@ -563,6 +579,10 @@ onMounted(() => {
 
 .group-toggle-icon.collapsed svg {
   transform: rotate(-90deg);
+}
+
+.group-actions {
+  margin-left: auto;
 }
 
 /* 列名表头行 */
