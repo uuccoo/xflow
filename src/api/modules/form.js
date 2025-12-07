@@ -128,4 +128,17 @@ export default {
       data,
     })
   },
+
+  /**
+   * 批量更新表单排序
+   * @param {Array<String>} formIds 表单ID列表，按照列表顺序进行排序
+   * @returns {Promise<Object>}
+   */
+  updateFormSortOrders(formIds) {
+    return request({
+      url: '/forms/sort-orders',
+      method: 'put',
+      data: formIds,
+    })
+  },
 }

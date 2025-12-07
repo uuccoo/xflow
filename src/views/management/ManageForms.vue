@@ -66,6 +66,10 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item command="sortForms">
+                    <el-icon><sort /></el-icon>
+                    <span>表单排序</span>
+                  </el-dropdown-item>
                   <el-dropdown-item command="rename">
                     <el-icon><edit /></el-icon>
                     <span>重命名</span>
@@ -184,6 +188,13 @@
       :groups="formGroups" 
       @save="handleSortSave" 
     />
+
+    <!-- 表单排序对话框 -->
+    <FormSortDialog 
+      v-model:visible="showFormSortDialog" 
+      :forms="currentGroupForms" 
+      @save="handleFormSortSave" 
+    />
   </div>
 </template>
 
@@ -196,6 +207,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { Setting, Plus, Sort } from '@element-plus/icons-vue';
 import GroupCreator from '@/components/common/GroupCreator.vue';
 import GroupSortDialog from '@/components/management/GroupSortDialog.vue';
+import FormSortDialog from '@/components/management/FormSortDialog.vue';
 
 const router = useRouter();
 const formGroups = ref([]);
@@ -216,6 +228,11 @@ const groupActionLoading = ref(false); // 分组操作按钮加载状态
 
 // 分组排序对话框相关变量
 const showSortDialog = ref(false); // 分组排序对话框可见性
+
+// 表单排序对话框相关变量
+const showFormSortDialog = ref(false); // 表单排序对话框可见性
+const currentGroupForms = ref([]); // 当前分组的表单列表
+const currentSortingGroupId = ref(null); // 当前正在排序的分组ID
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -400,11 +417,25 @@ const handleSortSave = () => {
 
 // 处理分组下拉菜单命令
 const handleGroupCommand = (command, group) => {
-  if (command === 'rename') {
+  if (command === 'sortForms') {
+    showFormSort(group);
+  } else if (command === 'rename') {
     showRenameGroup(group);
   } else if (command === 'delete') {
     confirmDeleteGroup(group);
   }
+};
+
+// 显示表单排序对话框
+const showFormSort = (group) => {
+  currentSortingGroupId.value = group.id;
+  currentGroupForms.value = group.forms || [];
+  showFormSortDialog.value = true;
+};
+
+// 处理表单排序保存
+const handleFormSortSave = () => {
+  fetchFormGroupsWithForms(searchKeyword.value);
 };
 
 const showRenameGroup = (group) => {
@@ -414,10 +445,10 @@ const showRenameGroup = (group) => {
 };
 
 const confirmDeleteGroup = (group) => {
-  ElMessageBox.confirm(`此操作将永久删除分组"${group.name}"，是否继续？`, '确认删除分组', {
+  ElMessageBox.confirm(`删除分组后，该分组内表单将被移动到「其他」分组中。`, '确认删除分组吗？', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    type: 'warning'
+    type: 'info'
   }).then(() => {
     deleteGroup(group.id);
   }).catch(() => {
