@@ -117,15 +117,24 @@
               {{ form.updatedByUser?.realName }} 更新于 {{ form.updatedAt }}
             </span>
             <span class="col col-actions">
-              <span class="action-link" @click.stop="editForm(form)">编辑</span>
-              <span class="action-divider" v-if="form.status === 2 || form.status === 1"></span>
-              <span class="action-link" @click.stop="enableForm(form)"
-                v-if="form.status === 2">启用</span>
-              <span class="action-link" @click.stop="disableForm(form)"
-                v-if="form.status === 1">停用</span>
-              <span class="action-divider" v-if="group.id === 'disabled'"></span>
-              <span class="action-link delete" @click.stop="confirmDeleteForm(form)"
-                v-if="group.id === 'disabled'">删除</span>
+              <el-button class="action-btn" link type="primary" @click.stop="editForm(form)">编辑</el-button>
+              <el-dropdown class="action-dropdown" trigger="click" :show-arrow="false" placement="bottom-end" 
+                @command="(command) => handleFormCommand(command, form, group)">
+                <el-button class="action-btn" link type="primary" @click.stop>更多</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="enable" v-if="form.status === 2">
+                      启用
+                    </el-dropdown-item>
+                    <el-dropdown-item command="disable" v-if="form.status === 1">
+                      停用
+                    </el-dropdown-item>
+                    <el-dropdown-item command="delete" v-if="group.id === 'disabled'">
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </span>
           </div>
         </div>
@@ -205,7 +214,7 @@ import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import { Setting, Plus, Sort } from '@element-plus/icons-vue';
+import { Setting, Plus, Sort,Delete } from '@element-plus/icons-vue';
 import GroupCreator from '@/components/common/GroupCreator.vue';
 import GroupSortDialog from '@/components/management/GroupSortDialog.vue';
 import FormSortDialog from '@/components/management/FormSortDialog.vue';
@@ -426,6 +435,17 @@ const handleGroupCommand = (command, group) => {
   }
 };
 
+// 处理表单操作下拉菜单命令
+const handleFormCommand = (command, form, group) => {
+  if (command === 'enable') {
+    enableForm(form);
+  } else if (command === 'disable') {
+    disableForm(form);
+  } else if (command === 'delete') {
+    confirmDeleteForm(form);
+  }
+};
+
 // 显示表单排序对话框
 const showFormSort = (group) => {
   currentSortingGroupId.value = group.id;
@@ -638,7 +658,6 @@ onMounted(() => {
 
 .list-item:hover {
   background-color: #f0f6ff;
-  cursor: pointer;
 }
 
 /* 列样式 */
@@ -694,36 +713,17 @@ onMounted(() => {
   border-radius: 6px;
 }
 
-/* 操作链接样式 */
-.action-link {
+/* 操作按钮和下拉菜单样式 */
+.action-btn {
+  padding: 0;
+  vertical-align: middle;
+  margin-right: 16px;
   cursor: pointer;
-  color: #1890ff;
-  transition: color 0.2s;
 }
 
-.action-link:hover {
-  color: #40a9ff;
-}
-
-.action-link:active {
-  color: #096dd9;
-}
-
-.action-divider {
-  margin: 0 8px;
-  color: #d9d9d9;
-}
-
-.action-link.delete {
-  color: #f5222d;
-}
-
-.action-link.delete:hover {
-  color: #ff4d4f;
-}
-
-.action-link.delete:active {
-  color: #cf1322;
+.action-dropdown {
+  vertical-align: middle;
+  cursor: pointer;
 }
 
 .empty-state {
