@@ -36,9 +36,9 @@
     <div class="batch-actions-bar" v-if="selectedForms.length > 0">
       <span class="selected-count">已选择 {{ selectedForms.length }} 项</span>
       <div class="action-buttons">
-        <el-button @click="selectedForms = []">取消</el-button>
+        <el-button text type="danger" @click="selectedForms = []">取消</el-button>
         <el-button @click="showBatchMove = true">移动分组</el-button>
-        <el-button type="danger" @click="confirmBatchDelete">批量删除</el-button>
+        <el-button @click="confirmBatchDisable">批量停用</el-button>
       </div>
     </div>
 
@@ -70,11 +70,11 @@
                     <el-icon><sort /></el-icon>
                     <span>表单排序</span>
                   </el-dropdown-item>
-                  <el-dropdown-item command="rename">
+                  <el-dropdown-item command="rename" :disabled="group.system === true">
                     <el-icon><edit /></el-icon>
                     <span>重命名</span>
                   </el-dropdown-item>
-                  <el-dropdown-item command="delete">
+                  <el-dropdown-item command="delete" :disabled="group.system === true">
                     <el-icon><delete /></el-icon>
                     <span>删除分组</span>
                   </el-dropdown-item>
@@ -98,6 +98,7 @@
             <span class="col col-checkbox">
               <el-checkbox 
                 :model-value="selectedForms.includes(form.id)"
+                :disabled="group.id === 'disabled'"
                 @change="toggleFormSelection(form.id)"
               />
             </span>
@@ -118,7 +119,7 @@
             <span class="col col-actions">
               <span class="action-link" @click.stop="editForm(form)">编辑</span>
               <span class="action-divider" v-if="form.status === 2 || form.status === 1"></span>
-              <span class="action-link" @click.stop="publishForm(form)"
+              <span class="action-link" @click.stop="enableForm(form)"
                 v-if="form.status === 2">启用</span>
               <span class="action-link" @click.stop="disableForm(form)"
                 v-if="form.status === 1">停用</span>
@@ -286,10 +287,10 @@ const editForm = (form) => {
   });
 };
 
-// 发布表单
-const publishForm = async (form) => {
+// 启用表单
+const enableForm = async (form) => {
   try {
-    await formApi.publishForm(form.id);
+    await formApi.enableForm(form.id);
     ElMessage.success('表单启用成功！');
     fetchFormGroupsWithForms(searchKeyword.value);
   } catch (error) {
@@ -342,32 +343,31 @@ const deleteForm = async (id) => {
   }
 };
 
-// 确认批量删除
-const confirmBatchDelete = () => {
+// 确认批量停用
+const confirmBatchDisable = () => {
   if (selectedForms.value.length === 0) return;
 
-  ElMessageBox.confirm(`此操作将永久删除选中的${selectedForms.value.length}个表单，是否继续？`, '确认批量删除', {
+  ElMessageBox.confirm(`停用的表单会被移动到「已停用」分组中。`, `确认停用选中的${selectedForms.value.length}个表单吗？`, {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    batchDeleteForms();
+    batchDisableForms();
   }).catch(() => {
     // 用户取消操作，不做任何处理
   });
 };
 
-// 批量删除
-const batchDeleteForms = async () => {
+// 批量停用
+const batchDisableForms = async () => {
   try {
-    const deletePromises = selectedForms.value.map(id => formApi.deleteForm(id));
-    await Promise.all(deletePromises);
-    ElMessage.success('批量删除成功！');
+    await formApi.batchDisableForms(selectedForms.value);
+    ElMessage.success('批量停用成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
     selectedForms.value = []; // 清空选择
   } catch (error) {
-    console.error('批量删除失败:', error);
-    ElMessage.error('批量删除失败，请稍后重试');
+    console.error('批量停用失败:', error);
+    ElMessage.error('批量停用失败，请稍后重试');
   }
 };
 
@@ -448,7 +448,7 @@ const confirmDeleteGroup = (group) => {
   ElMessageBox.confirm(`删除分组后，该分组内表单将被移动到「其他」分组中。`, '确认删除分组吗？', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    type: 'info'
+    type: 'warning'
   }).then(() => {
     deleteGroup(group.id);
   }).catch(() => {
@@ -555,7 +555,6 @@ onMounted(() => {
 
 .action-buttons {
   display: flex;
-  gap: 12px;
 }
 
 /* 表单容器 */
