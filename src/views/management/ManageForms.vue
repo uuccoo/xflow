@@ -123,6 +123,9 @@
                 <el-button class="action-btn" link type="primary" @click.stop>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <el-dropdown-item command="move" v-if="group.id !== 'disabled'">
+                      移动到
+                    </el-dropdown-item>
                     <el-dropdown-item command="enable" v-if="form.status === 2">
                       启用
                     </el-dropdown-item>
@@ -155,7 +158,7 @@
     >
       <el-select v-model="targetGroupId" placeholder="请选择分组">
         <el-option
-          v-for="group in formGroups"
+          v-for="group in formGroups.filter(g => g.id !== 'disabled')"
           :key="group.id"
           :label="group.name"
           :value="group.id"
@@ -165,6 +168,29 @@
         <span class="dialog-footer">
           <el-button @click="showBatchMove = false">取消</el-button>
           <el-button type="primary" @click="batchMoveToGroup">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showSingleMoveDialog"
+      :title="`移动「${movingFormName}」到分组`"
+      width="400px"
+      align-center
+      @closed="resetSingleMoveState"
+    >
+      <el-select v-model="singleMoveTargetGroupId" placeholder="请选择分组">
+        <el-option
+          v-for="group in formGroups.filter(g => g.id !== 'disabled')"
+          :key="group.id"
+          :label="group.name"
+          :value="group.id"
+        />
+      </el-select>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showSingleMoveDialog = false">取消</el-button>
+          <el-button type="primary" @click="moveFormToGroup">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -226,6 +252,12 @@ const showBatchMove = ref(false);
 const targetGroupId = ref('');
 const searchKeyword = ref('');
 let searchTimer = null;
+
+// 单个表单移动分组相关变量
+const showSingleMoveDialog = ref(false);
+const singleMoveTargetGroupId = ref('');
+const movingFormId = ref(null);
+const movingFormName = ref('');
 
 // 新建分组对话框相关
 const newGroupDialogVisible = ref(false); // 新建分组对话框可见性
@@ -400,6 +432,40 @@ const batchMoveToGroup = async () => {
   }
 };
 
+const openMoveFormDialog = (form, group) => {
+  movingFormId.value = form.id;
+  movingFormName.value = form.name;
+  singleMoveTargetGroupId.value = (group?.id && group.id !== 'disabled') ? group.id : '';
+  showSingleMoveDialog.value = true;
+};
+
+const moveFormToGroup = async () => {
+  if (!singleMoveTargetGroupId.value) {
+    ElMessage.warning('请选择目标分组');
+    return;
+  }
+
+  if (!movingFormId.value) {
+    return;
+  }
+
+  try {
+    await formApi.updateFormGroup(movingFormId.value, singleMoveTargetGroupId.value);
+    ElMessage.success('表单移动成功！');
+    showSingleMoveDialog.value = false;
+    fetchFormGroupsWithForms(searchKeyword.value);
+  } catch (error) {
+    console.error('移动表单失败:', error);
+    ElMessage.error('移动表单失败，请稍后重试');
+  }
+};
+
+const resetSingleMoveState = () => {
+  movingFormId.value = null;
+  movingFormName.value = '';
+  singleMoveTargetGroupId.value = '';
+};
+
 // 跳转到创建表单页面
 const goToCreateForm = () => {
   router.push('/design');
@@ -437,7 +503,9 @@ const handleGroupCommand = (command, group) => {
 
 // 处理表单操作下拉菜单命令
 const handleFormCommand = (command, form, group) => {
-  if (command === 'enable') {
+  if (command === 'move') {
+    openMoveFormDialog(form, group);
+  } else if (command === 'enable') {
     enableForm(form);
   } else if (command === 'disable') {
     disableForm(form);

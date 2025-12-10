@@ -130,6 +130,19 @@ export default {
   },
 
   /**
+   * 更新单个表单分组
+   * @param {String} id 表单ID
+   * @param {String} groupId 分组ID
+   * @returns {Promise<Object>}
+   */
+  updateFormGroup(id, groupId) {
+    return request({
+      url: `/forms/${id}/group/${groupId}`,
+      method: 'put',
+    })
+  },
+
+  /**
    * 批量更新表单排序
    * @param {Array<String>} formIds 表单ID列表，按照列表顺序进行排序
    * @returns {Promise<Object>}
