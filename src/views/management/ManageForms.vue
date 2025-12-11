@@ -1,6 +1,6 @@
 <template>
   <div class="manage-forms">
-    <div class="search-container">
+    <div class="page-header">
       <div class="page-title">表单管理</div>
       <div class="action-area">
         <el-input 
@@ -593,15 +593,15 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.search-container {
-  padding: 16px;
+.page-header {
+  height: 60px;
+  padding: 0 20px;
   background-color: #ffffff;
   border-bottom: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 20px;
-  padding-right: 20px;
+  flex-shrink: 0;
 }
 
 .page-title {
