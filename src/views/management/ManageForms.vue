@@ -1,17 +1,33 @@
 <template>
   <div class="manage-forms">
-    <div class="search-container">
+    <div class="page-header">
       <div class="page-title">表单管理</div>
       <div class="action-area">
-        <div class="search-box">
-          <input type="text" class="search-input" placeholder="搜索表单" v-model="searchKeyword" @input="debounceSearch" />
-        </div>
-        <button class="btn-create" @click="goToCreateForm">
+        <el-input 
+          v-model="searchKeyword" 
+          placeholder="搜索表单" 
+          @input="debounceSearch"
+          clearable
+          class="search-input"
+        />
+        <el-button type="primary" @click="goToCreateForm">
           <span class="plus-icon">+</span> 创建表单
-        </button>
-        <button class="btn-create-group" @click="newGroupDialogVisible = true">
-          <span class="plus-icon">+</span> 新建分组
-        </button>
+        </el-button>
+        <el-dropdown trigger="click" :show-arrow="false" placement="bottom-end" @command="handleSettingsCommand">
+          <el-button type="primary">更多</el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="newGroup">
+                <el-icon><plus /></el-icon>
+                <span>新建分组</span>
+              </el-dropdown-item>
+              <el-dropdown-item command="sortGroup">
+                <el-icon><sort /></el-icon>
+                <span>分组排序</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" :inline="false" />
       </div>
     </div>
@@ -20,8 +36,9 @@
     <div class="batch-actions-bar" v-if="selectedForms.length > 0">
       <span class="selected-count">已选择 {{ selectedForms.length }} 项</span>
       <div class="action-buttons">
-        <button class="btn-batch" @click="showBatchMove = true">移动分组</button>
-        <button class="btn-batch btn-danger" @click="confirmBatchDelete">批量删除</button>
+        <el-button text type="danger" @click="selectedForms = []">取消</el-button>
+        <el-button @click="showBatchMove = true">移动分组</el-button>
+        <el-button @click="confirmBatchDisable">批量停用</el-button>
       </div>
     </div>
 
@@ -29,80 +46,99 @@
       <!-- 表单组分类列表 -->
       <div v-for="(group, groupIndex) in formGroups" :key="groupIndex" class="form-group">
         <div class="group-header" @click="toggleGroup(group)">
+          <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
+            <el-icon>
+              <arrow-down />
+            </el-icon>
+          </span>
           <div class="group-header-left">
             <span class="group-title">{{ group.name }}</span>
             <span class="form-count">({{ group.forms.length }})</span>
           </div>
           <div class="group-actions">
             <!-- 只有当分组id不是'disabled'时才显示设置按钮 -->
-            <el-popover v-if="group.id !== 'disabled'" placement="bottom-end" :width="100" trigger="click"
-              :hide-after="0" popper-class="group-settings-popover" @show="handlePopoverShow" @hide="handlePopoverHide">
-              <template #reference>
-                <span class="group-settings" @click.stop>
-                  <el-icon>
-                    <setting />
-                  </el-icon>
-                </span>
+            <el-dropdown v-if="group.id !== 'disabled'" trigger="click" :show-arrow="false" placement="bottom-end" 
+              @command="(command) => handleGroupCommand(command, group)">
+              <el-button text @click.stop>
+                <el-icon>
+                  <setting />
+                </el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="sortForms">
+                    <el-icon><sort /></el-icon>
+                    <span>表单排序</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="rename" :disabled="group.system === true">
+                    <el-icon><edit /></el-icon>
+                    <span>重命名</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" :disabled="group.system === true">
+                    <el-icon><delete /></el-icon>
+                    <span>删除分组</span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
               </template>
-              <div class="group-settings-menu">
-                <div class="menu-item" @click="showRenameGroup(group)">
-                  <el-icon>
-                    <edit />
-                  </el-icon>
-                  <span>重命名</span>
-                </div>
-                <div class="menu-item" @click="confirmDeleteGroup(group)">
-                  <el-icon>
-                    <delete />
-                  </el-icon>
-                  <span>删除分组</span>
-                </div>
-              </div>
-            </el-popover>
-            <span class="group-toggle-icon" :class="{ 'collapsed': group.collapsed }">
-              <el-icon>
-                <arrow-down />
-              </el-icon>
-            </span>
+            </el-dropdown>
           </div>
         </div>
 
-        <div v-if="!group.collapsed" class="form-list">
-          <div class="form-items">
-            <div v-for="form in group.forms" :key="form.id" class="form-item">
-              <div class="form-checkbox">
-                <input type="checkbox" :checked="selectedForms.includes(form.id)"
-                  @click.stop="toggleFormSelection(form.id)" />
-              </div>
-              <div class="form-content">
+        <div v-if="!group.collapsed && group.forms.length > 0" class="form-list">
+          <!-- 列名表头行 -->
+          <div class="list-header">
+            <span class="col col-checkbox"></span>
+            <span class="col col-form">表单</span>
+            <span class="col col-initiator">谁可以发起</span>
+            <span class="col col-update">最后更新</span>
+            <span class="col col-actions">操作</span>
+          </div>
+          <!-- 表单数据行 -->
+          <div v-for="form in group.forms" :key="form.id" class="list-item">
+            <span class="col col-checkbox">
+              <el-checkbox 
+                :model-value="selectedForms.includes(form.id)"
+                :disabled="group.id === 'disabled'"
+                @change="toggleFormSelection(form.id)"
+              />
+            </span>
+            <span class="col col-form">
+              <div class="form-info">
                 <div class="form-item-icon" :style="{ backgroundColor: form.iconColor || '#1677ff' }">
                   <el-icon color="#ffffff" size="20">
                     <component :is="getIconComponent(form.icon)" />
                   </el-icon>
                 </div>
-                <div class="form-item-info">
-                  <div class="form-item-name">{{ form.name }}</div>
-                  <div class="form-item-details">
-                    <span class="form-code">{{ form.code }}</span>
-                    <span class="form-status" :class="getStatusClass(form.status)">
-                      {{ getStatusText(form.status) }}
-                    </span>
-                    <span class="form-date">创建: {{ formatDate(form.createTime) }}</span>
-                    <span class="form-date">更新: {{ formatDate(form.updatedAt) }}</span>
-                  </div>
-                </div>
-                <div class="form-item-actions">
-                  <button class="btn-action btn-edit" @click.stop="editForm(form)">编辑</button>
-                  <button class="btn-action btn-publish" @click.stop="publishForm(form)"
-                    v-if="form.status === 2">启用</button>
-                  <button class="btn-action btn-disable" @click.stop="disableForm(form)"
-                    v-if="form.status === 1">停用</button>
-                  <!-- 只有在已停用表单组中才显示删除按钮 -->
-                  <button class="btn-action btn-delete" @click.stop="confirmDeleteForm(form)"
-                    v-if="group.id === 'disabled'">删除</button>
-                </div>
+                <span class="form-name">{{ form.name }}</span>
               </div>
-            </div>
+            </span>
+            <span class="col col-initiator">全部可见</span>
+            <span class="col col-update">
+              {{ form.updatedByUser?.realName }} 更新于 {{ form.updatedAt }}
+            </span>
+            <span class="col col-actions">
+              <el-button class="action-btn" link type="primary" @click.stop="editForm(form)">编辑</el-button>
+              <el-dropdown class="action-dropdown" trigger="click" :show-arrow="false" placement="bottom-end" 
+                @command="(command) => handleFormCommand(command, form, group)">
+                <el-button class="action-btn" link type="primary" @click.stop>更多</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="move" v-if="group.id !== 'disabled'">
+                      移动到
+                    </el-dropdown-item>
+                    <el-dropdown-item command="enable" v-if="form.status === 2">
+                      启用
+                    </el-dropdown-item>
+                    <el-dropdown-item command="disable" v-if="form.status === 1">
+                      停用
+                    </el-dropdown-item>
+                    <el-dropdown-item command="delete" v-if="group.id === 'disabled'">
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </span>
           </div>
         </div>
       </div>
@@ -114,51 +150,87 @@
     </div>
 
     <!-- 批量移动分组对话框 -->
-    <div class="modal" v-if="showBatchMove">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>批量移动分组</h3>
-          <span class="close-modal" @click="showBatchMove = false">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>选择目标分组</label>
-            <select v-model="targetGroupId">
-              <option value="">请选择分组</option>
-              <option v-for="group in formGroups" :key="group.id" :value="group.id">
-                {{ group.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showBatchMove = false">取消</button>
-          <button class="btn-confirm" @click="batchMoveToGroup">确定</button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showBatchMove"
+      title="批量移动分组"
+      width="400px"
+      align-center
+    >
+      <el-select v-model="targetGroupId" placeholder="请选择分组">
+        <el-option
+          v-for="group in formGroups.filter(g => g.id !== 'disabled')"
+          :key="group.id"
+          :label="group.name"
+          :value="group.id"
+        />
+      </el-select>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showBatchMove = false">取消</el-button>
+          <el-button type="primary" @click="batchMoveToGroup">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showSingleMoveDialog"
+      :title="`移动「${movingFormName}」到分组`"
+      width="400px"
+      align-center
+      @closed="resetSingleMoveState"
+    >
+      <el-select v-model="singleMoveTargetGroupId" placeholder="请选择分组">
+        <el-option
+          v-for="group in formGroups.filter(g => g.id !== 'disabled')"
+          :key="group.id"
+          :label="group.name"
+          :value="group.id"
+        />
+      </el-select>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showSingleMoveDialog = false">取消</el-button>
+          <el-button type="primary" @click="moveFormToGroup">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 重命名分组对话框 -->
-    <div class="modal" v-if="showRenameDialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>重命名分组</h3>
-          <span class="close-modal" @click="showRenameDialog = false">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>分组名称</label>
-            <input type="text" class="form-input" v-model="editingGroupName" placeholder="请输入分组名称" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showRenameDialog = false">取消</button>
-          <button class="btn-confirm" @click="renameGroup" :disabled="groupActionLoading">
-            {{ groupActionLoading ? '处理中...' : '确定' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showRenameDialog"
+      title="重命名分组"
+      width="400px"
+      align-center
+    >
+      <el-input
+        v-model="editingGroupName"
+        placeholder="请输入分组名称"
+        clearable
+        @keyup.enter="renameGroup"
+      />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showRenameDialog = false">取消</el-button>
+          <el-button type="primary" @click="renameGroup" :loading="groupActionLoading">
+            确定
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 分组排序对话框 -->
+    <GroupSortDialog 
+      v-model:visible="showSortDialog" 
+      :groups="formGroups" 
+      @save="handleSortSave" 
+    />
+
+    <!-- 表单排序对话框 -->
+    <FormSortDialog 
+      v-model:visible="showFormSortDialog" 
+      :forms="currentGroupForms" 
+      @save="handleFormSortSave" 
+    />
   </div>
 </template>
 
@@ -168,7 +240,10 @@ import { useRouter } from 'vue-router';
 import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { Setting, Plus, Sort,Delete } from '@element-plus/icons-vue';
 import GroupCreator from '@/components/common/GroupCreator.vue';
+import GroupSortDialog from '@/components/management/GroupSortDialog.vue';
+import FormSortDialog from '@/components/management/FormSortDialog.vue';
 
 const router = useRouter();
 const formGroups = ref([]);
@@ -178,16 +253,28 @@ const targetGroupId = ref('');
 const searchKeyword = ref('');
 let searchTimer = null;
 
+// 单个表单移动分组相关变量
+const showSingleMoveDialog = ref(false);
+const singleMoveTargetGroupId = ref('');
+const movingFormId = ref(null);
+const movingFormName = ref('');
+
 // 新建分组对话框相关
 const newGroupDialogVisible = ref(false); // 新建分组对话框可见性
-const newGroupName = ref(''); // 新建分组名称
-const groupNameLoading = ref(false); // 保存按钮加载状态
 
 // 重命名分组相关变量
 const showRenameDialog = ref(false); // 重命名分组对话框可见性
 const editingGroupName = ref(''); // 编辑中的分组名称
 const editingGroupId = ref(null); // 当前编辑的分组ID
 const groupActionLoading = ref(false); // 分组操作按钮加载状态
+
+// 分组排序对话框相关变量
+const showSortDialog = ref(false); // 分组排序对话框可见性
+
+// 表单排序对话框相关变量
+const showFormSortDialog = ref(false); // 表单排序对话框可见性
+const currentGroupForms = ref([]); // 当前分组的表单列表
+const currentSortingGroupId = ref(null); // 当前正在排序的分组ID
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -218,33 +305,6 @@ const debounceSearch = () => {
   }, 300);
 };
 
-// 日期格式化
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-// 获取状态对应的CSS类
-const getStatusClass = (status) => {
-  switch (status) {
-    case 0: return 'status-draft';
-    case 1: return 'status-published';
-    case 2: return 'status-disabled';
-    default: return '';
-  }
-};
-
-// 获取状态对应的文本
-const getStatusText = (status) => {
-  switch (status) {
-    case 0: return '草稿';
-    case 1: return '已发布';
-    case 2: return '已停用';
-    default: return '未知状态';
-  }
-};
-
 // 切换表单组的展开/折叠状态
 const toggleGroup = (group) => {
   group.collapsed = !group.collapsed;
@@ -268,10 +328,10 @@ const editForm = (form) => {
   });
 };
 
-// 发布表单
-const publishForm = async (form) => {
+// 启用表单
+const enableForm = async (form) => {
   try {
-    await formApi.publishForm(form.id);
+    await formApi.enableForm(form.id);
     ElMessage.success('表单启用成功！');
     fetchFormGroupsWithForms(searchKeyword.value);
   } catch (error) {
@@ -324,32 +384,31 @@ const deleteForm = async (id) => {
   }
 };
 
-// 确认批量删除
-const confirmBatchDelete = () => {
+// 确认批量停用
+const confirmBatchDisable = () => {
   if (selectedForms.value.length === 0) return;
 
-  ElMessageBox.confirm(`此操作将永久删除选中的${selectedForms.value.length}个表单，是否继续？`, '确认批量删除', {
+  ElMessageBox.confirm(`停用的表单会被移动到「已停用」分组中。`, `确认停用选中的${selectedForms.value.length}个表单吗？`, {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    batchDeleteForms();
+    batchDisableForms();
   }).catch(() => {
     // 用户取消操作，不做任何处理
   });
 };
 
-// 批量删除
-const batchDeleteForms = async () => {
+// 批量停用
+const batchDisableForms = async () => {
   try {
-    const deletePromises = selectedForms.value.map(id => formApi.deleteForm(id));
-    await Promise.all(deletePromises);
-    ElMessage.success('批量删除成功！');
+    await formApi.batchDisableForms(selectedForms.value);
+    ElMessage.success('批量停用成功！');
     fetchFormGroupsWithForms(searchKeyword.value); // 刷新列表
     selectedForms.value = []; // 清空选择
   } catch (error) {
-    console.error('批量删除失败:', error);
-    ElMessage.error('批量删除失败，请稍后重试');
+    console.error('批量停用失败:', error);
+    ElMessage.error('批量停用失败，请稍后重试');
   }
 };
 
@@ -373,6 +432,40 @@ const batchMoveToGroup = async () => {
   }
 };
 
+const openMoveFormDialog = (form, group) => {
+  movingFormId.value = form.id;
+  movingFormName.value = form.name;
+  singleMoveTargetGroupId.value = (group?.id && group.id !== 'disabled') ? group.id : '';
+  showSingleMoveDialog.value = true;
+};
+
+const moveFormToGroup = async () => {
+  if (!singleMoveTargetGroupId.value) {
+    ElMessage.warning('请选择目标分组');
+    return;
+  }
+
+  if (!movingFormId.value) {
+    return;
+  }
+
+  try {
+    await formApi.updateFormGroup(movingFormId.value, singleMoveTargetGroupId.value);
+    ElMessage.success('表单移动成功！');
+    showSingleMoveDialog.value = false;
+    fetchFormGroupsWithForms(searchKeyword.value);
+  } catch (error) {
+    console.error('移动表单失败:', error);
+    ElMessage.error('移动表单失败，请稍后重试');
+  }
+};
+
+const resetSingleMoveState = () => {
+  movingFormId.value = null;
+  movingFormName.value = '';
+  singleMoveTargetGroupId.value = '';
+};
+
 // 跳转到创建表单页面
 const goToCreateForm = () => {
   router.push('/design');
@@ -383,19 +476,64 @@ const handleGroupCreated = () => {
   fetchFormGroupsWithForms(searchKeyword.value);
 };
 
-const toggleGroupSettings = (group) => {
-  group.showSettings = !group.showSettings;
+// 处理设置下拉菜单命令
+const handleSettingsCommand = (command) => {
+  if (command === 'newGroup') {
+    newGroupDialogVisible.value = true;
+  } else if (command === 'sortGroup') {
+    showSortDialog.value = true;
+  }
+};
+
+// 处理分组排序保存
+const handleSortSave = () => {
+  fetchFormGroupsWithForms(searchKeyword.value);
+};
+
+// 处理分组下拉菜单命令
+const handleGroupCommand = (command, group) => {
+  if (command === 'sortForms') {
+    showFormSort(group);
+  } else if (command === 'rename') {
+    showRenameGroup(group);
+  } else if (command === 'delete') {
+    confirmDeleteGroup(group);
+  }
+};
+
+// 处理表单操作下拉菜单命令
+const handleFormCommand = (command, form, group) => {
+  if (command === 'move') {
+    openMoveFormDialog(form, group);
+  } else if (command === 'enable') {
+    enableForm(form);
+  } else if (command === 'disable') {
+    disableForm(form);
+  } else if (command === 'delete') {
+    confirmDeleteForm(form);
+  }
+};
+
+// 显示表单排序对话框
+const showFormSort = (group) => {
+  currentSortingGroupId.value = group.id;
+  currentGroupForms.value = group.forms || [];
+  showFormSortDialog.value = true;
+};
+
+// 处理表单排序保存
+const handleFormSortSave = () => {
+  fetchFormGroupsWithForms(searchKeyword.value);
 };
 
 const showRenameGroup = (group) => {
   editingGroupId.value = group.id; // 保存当前编辑的分组ID
   editingGroupName.value = group.name;
   showRenameDialog.value = true;
-  group.showSettings = false; // 关闭设置下拉菜单
 };
 
 const confirmDeleteGroup = (group) => {
-  ElMessageBox.confirm(`此操作将永久删除分组"${group.name}"，是否继续？`, '确认删除分组', {
+  ElMessageBox.confirm(`删除分组后，该分组内表单将被移动到「其他」分组中。`, '确认删除分组吗？', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -442,16 +580,6 @@ const renameGroup = async () => {
   }
 };
 
-// 处理弹出框显示
-const handlePopoverShow = () => {
-  // 可以在这里添加弹出框显示时的逻辑
-};
-
-// 处理弹出框隐藏
-const handlePopoverHide = () => {
-  // 可以在这里添加弹出框隐藏时的逻辑
-};
-
 onMounted(() => {
   fetchFormGroupsWithForms();
 });
@@ -461,17 +589,19 @@ onMounted(() => {
 .manage-forms {
   padding: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.search-container {
-  padding: 16px;
+.page-header {
+  height: 60px;
+  padding: 0 20px;
   background-color: #ffffff;
   border-bottom: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 20px;
-  padding-right: 20px;
+  flex-shrink: 0;
 }
 
 .page-title {
@@ -486,44 +616,8 @@ onMounted(() => {
   gap: 12px;
 }
 
-.search-box {
-  position: relative;
-  width: 240px;
-}
-
 .search-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-}
-
-.search-input::placeholder {
-  color: #bfbfbf;
-}
-
-.btn-create {
-  background-color: #1677ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.btn-create:hover {
-  background-color: #0958d9;
+  width: 240px;
 }
 
 .plus-icon {
@@ -532,27 +626,10 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.btn-create-group {
-  background-color: #52c41a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.btn-create-group:hover {
-  background-color: #389e0d;
-}
-
 /* 批量操作栏 */
 .batch-actions-bar {
   background-color: #f5f5f5;
-  padding: 12px 20px;
+  padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -566,55 +643,28 @@ onMounted(() => {
 
 .action-buttons {
   display: flex;
-  gap: 12px;
-}
-
-.btn-batch {
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: white;
-  color: #595959;
-  border: 1px solid #d9d9d9;
-  transition: all 0.3s;
-}
-
-.btn-batch:hover {
-  color: #1677ff;
-  border-color: #1677ff;
-}
-
-.btn-danger {
-  background-color: #ff4d4f;
-  color: white;
-  border: 1px solid #ff4d4f;
-}
-
-.btn-danger:hover {
-  background-color: #cf1322;
-  border-color: #cf1322;
 }
 
 /* 表单容器 */
 .forms-container {
+  flex: 1;
   overflow-y: auto;
-  height: calc(100vh - 110px);
 }
 
 /* 表单组 */
 .form-group {
-  border-bottom: 1px solid #f0f0f0;
+  margin: 16px 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background-color: #ffffff;
+  overflow: hidden;
 }
 
 .group-header {
   padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  background-color: #fafafa;
 }
 
 .group-header-left {
@@ -634,6 +684,13 @@ onMounted(() => {
   color: #8c8c8c;
 }
 
+.group-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
 .group-toggle-icon svg {
   transition: transform 0.2s ease;
 }
@@ -642,39 +699,75 @@ onMounted(() => {
   transform: rotate(-90deg);
 }
 
-.form-list {
-  background-color: white;
-  padding: 16px;
+.group-actions {
+  margin-left: auto;
 }
 
-.form-items {
+/* 列名表头行 */
+.list-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 12px 15px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  font-weight: bold;
+  font-size: 14px;
+  color: #606266;
 }
 
-.form-item {
+/* 数据行 */
+.list-item {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  transition: background 0.2s;
+  font-size: 14px;
+  align-items: center;
+}
+
+.list-item:hover {
+  background-color: #f0f6ff;
+}
+
+/* 列样式 */
+.col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.col-checkbox {
+  width: 40px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  transition: all 0.3s;
+  justify-content: center;
 }
 
-.form-item:hover {
-  border-color: #d9d9d9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.col-form {
+  flex: 1.5;
+  min-width: 200px;
 }
 
-.form-checkbox {
-  padding: 0 12px;
+.col-initiator {
+  flex: 1.5;
+  min-width: 100px;
 }
 
-.form-content {
+.col-update {
+  flex: 2.5;
+  min-width: 200px;
+}
+
+.col-actions {
   flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* 表单信息区域 */
+.form-info {
   display: flex;
   align-items: center;
-  padding: 12px;
 }
 
 .form-item-icon {
@@ -688,102 +781,17 @@ onMounted(() => {
   border-radius: 6px;
 }
 
-.form-item-info {
-  flex: 1;
-}
-
-.form-item-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #262626;
-  margin-bottom: 4px;
-}
-
-.form-item-details {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #8c8c8c;
-}
-
-.form-code {
-  background-color: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 2px;
-}
-
-.form-status {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.status-draft {
-  background-color: #e6f4ff;
-  color: #0958d9;
-}
-
-.status-published {
-  background-color: #f6ffed;
-  color: #389e0d;
-}
-
-.status-disabled {
-  background-color: #fff2e8;
-  color: #d4380d;
-}
-
-.form-item-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: 16px;
-}
-
-.btn-action {
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
+/* 操作按钮和下拉菜单样式 */
+.action-btn {
+  padding: 0;
+  vertical-align: middle;
+  margin-right: 16px;
   cursor: pointer;
-  transition: all 0.3s;
 }
 
-.btn-edit {
-  background-color: #e6f4ff;
-  color: #0958d9;
-}
-
-.btn-edit:hover {
-  background-color: #bae0ff;
-}
-
-.btn-publish {
-  background-color: #f6ffed;
-  color: #389e0d;
-}
-
-.btn-publish:hover {
-  background-color: #d9f7be;
-}
-
-.btn-disable {
-  background-color: #fff2e8;
-  color: #d4380d;
-}
-
-.btn-disable:hover {
-  background-color: #ffd8bf;
-}
-
-.btn-delete {
-  background-color: #fff1f0;
-  color: #cf1322;
-}
-
-.btn-delete:hover {
-  background-color: #ffccc7;
+.action-dropdown {
+  vertical-align: middle;
+  cursor: pointer;
 }
 
 .empty-state {
@@ -795,178 +803,10 @@ onMounted(() => {
   font-size: 16px;
 }
 
-/* 模态对话框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 4px;
-  width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #262626;
-}
-
-.close-modal {
-  cursor: pointer;
-  font-size: 18px;
-  color: #bfbfbf;
-}
-
-.close-modal:hover {
-  color: #595959;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
-  text-align: right;
+/* Element UI 对话框页脚样式 */
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn-cancel {
-  background-color: white;
-  border: 1px solid #d9d9d9;
-  color: #595959;
-  padding: 6px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-cancel:hover {
-  border-color: #bfbfbf;
-  color: #262626;
-}
-
-.btn-confirm {
-  background-color: #1677ff;
-  border: 1px solid #1677ff;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-confirm:hover {
-  background-color: #0958d9;
-  border-color: #0958d9;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #262626;
-}
-
-select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-select:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-  outline: none;
-}
-
-.group-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.group-settings {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.group-settings:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-.form-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-}
-
-.form-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-}
-
-.group-settings-menu {
-  padding: 4px 0;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #606266;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.menu-item:hover {
-  background-color: #f5f7fa;
-}
-
-/* 为El-Popover添加自定义样式 */
-:deep(.group-settings-popover) {
-  padding: 0;
-  min-width: 100px;
+  gap: 6px;
 }
 </style>

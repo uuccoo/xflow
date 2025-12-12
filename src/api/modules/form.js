@@ -81,14 +81,14 @@ export default {
   },
 
   /**
-   * 发布表单
+   * 启用表单
    * @param {String} id 表单ID
    * @returns {Promise<Object>}
    */
-  publishForm(id) {
+  enableForm(id) {
     return request({
-      url: `/forms/${id}/publish`,
-      method: 'post',
+      url: `/forms/${id}/enable`,
+      method: 'put',
     })
   },
 
@@ -100,7 +100,7 @@ export default {
   disableForm(id) {
     return request({
       url: `/forms/${id}/disable`,
-      method: 'post',
+      method: 'put',
     })
   },
 
@@ -126,6 +126,45 @@ export default {
       url: '/forms/batch-update-group',
       method: 'post',
       data,
+    })
+  },
+
+  /**
+   * 更新单个表单分组
+   * @param {String} id 表单ID
+   * @param {String} groupId 分组ID
+   * @returns {Promise<Object>}
+   */
+  updateFormGroup(id, groupId) {
+    return request({
+      url: `/forms/${id}/group/${groupId}`,
+      method: 'put',
+    })
+  },
+
+  /**
+   * 批量更新表单排序
+   * @param {Array<String>} formIds 表单ID列表，按照列表顺序进行排序
+   * @returns {Promise<Object>}
+   */
+  updateFormSortOrders(formIds) {
+    return request({
+      url: '/forms/sort-orders',
+      method: 'put',
+      data: formIds,
+    })
+  },
+
+  /**
+   * 批量停用表单
+   * @param {Array<String>} formIds 表单ID列表
+   * @returns {Promise<Object>}
+   */
+  batchDisableForms(formIds) {
+    return request({
+      url: '/forms/batch-disable',
+      method: 'put',
+      data: formIds,
     })
   },
 }

@@ -52,7 +52,6 @@ const saveNewGroup = async () => {
   try {
     const newGroup = await formGroupApi.createFormGroup({
       name: newGroupName.value.trim(),
-      sortOrder: 0
     })
     
     ElMessage.success('分组创建成功')
