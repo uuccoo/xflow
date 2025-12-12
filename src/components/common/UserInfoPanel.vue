@@ -1,6 +1,6 @@
 <template>
   <div class="user-info-container">
-    <el-dropdown trigger="click" @command="handleCommand" placement="right-end">
+    <el-dropdown trigger="click" @command="handleCommand" placement="top">
       <div class="user-info">
         <div class="avatar">{{ userStore.displayName.charAt(0) || 'U' }}</div>
         <div class="user-name">{{ userStore.displayName }}</div>
@@ -10,7 +10,7 @@
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item command="switchUser">
-            <el-icon><SwitchButton /></el-icon>
+            <el-icon><Switch /></el-icon>
             <span>切换账号</span>
           </el-dropdown-item>
         </el-dropdown-menu>
@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { SwitchButton, ArrowDown } from '@element-plus/icons-vue';
+import { Switch, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
@@ -86,7 +86,6 @@ const handleUserSelectConfirm = (data) => {
 <style scoped>
 /* 用户信息区域样式 */
 .user-info-container {
-  padding: 10px;
   border-top: 1px solid #e0e0e0;
   position: relative;
   /* 确保菜单可以溢出 */
@@ -98,16 +97,17 @@ const handleUserSelectConfirm = (data) => {
 }
 
 .user-info {
+  height: 48px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 8px;
   border-radius: 4px;
   transition: all 0.2s;
+  padding: 0 20px;
 }
 
 .user-info:hover {
-  background-color: #f0f5ff;
+  background-color: #ececec;
 }
 
 .avatar {
@@ -132,7 +132,7 @@ const handleUserSelectConfirm = (data) => {
 }
 
 .dropdown-icon {
-  font-size: 10px;
+  font-size: 15px;
   transition: transform 0.3s;
   color: #909399;
   margin-left: 5px;

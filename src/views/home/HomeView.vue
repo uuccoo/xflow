@@ -12,9 +12,6 @@
         </li>
       </ul>
 
-      <!-- 管理菜单分隔线 -->
-      <el-divider class="custom-divider"></el-divider>
-
       <!-- 管理相关菜单项 -->
       <ul class="menu-list admin-menu">
         <li v-for="(item, index) in adminMenuItems" :key="index" :class="{ active: activeMenu === item.route }"
@@ -80,7 +77,6 @@ const navigateTo = (route) => {
   width: 200px;
   background-color: #f5f5f5;
   border-right: 1px solid #e0e0e0;
-  padding: 20px 0 0 0; /* 移除底部填充，为用户区域留出空间 */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -91,9 +87,10 @@ const navigateTo = (route) => {
 .menu-title {
   font-size: 18px;
   font-weight: bold;
-  padding: 0 20px 20px;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 20px;
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
   /* 防止标题被压缩 */
 }
@@ -112,17 +109,20 @@ const navigateTo = (route) => {
 }
 
 .menu-list li {
-  padding: 12px 20px;
+  height: 48px;
+  padding: 0 20px;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
 }
 
 .menu-list li:hover {
-  background-color: #e6f7ff;
+  background-color: #ececec;
 }
 
 .menu-list li.active {
-  background-color: #e6f7ff;
+  background-color: #dceeff;
   color: #1890ff;
   border-right: 3px solid #1890ff;
 }
@@ -138,6 +138,7 @@ const navigateTo = (route) => {
   /* 如果菜单项太多，允许滚动 */
   max-height: 60vh;
   /* 限制最大高度 */
+  margin-top: 20px;
 }
 
 /* 用户信息区域样式 */
@@ -152,10 +153,5 @@ const navigateTo = (route) => {
 :deep(.el-dropdown-menu__item) {
   display: flex;
   align-items: center;
-}
-/* 自定义分割线上下间距 */
-.custom-divider {
-  margin-top: 20px;
-  margin-bottom: 20px;
 }
 </style>
