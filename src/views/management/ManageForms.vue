@@ -13,7 +13,7 @@
         <el-button type="primary" @click="goToCreateForm">
           <span class="plus-icon">+</span> 创建表单
         </el-button>
-        <el-dropdown trigger="click" :show-arrow="false" placement="bottom-end" @command="handleSettingsCommand">
+        <el-dropdown trigger="hover" placement="bottom-end" @command="handleSettingsCommand">
           <el-button type="primary">更多</el-button>
           <template #dropdown>
             <el-dropdown-menu>
@@ -57,7 +57,7 @@
           </div>
           <div class="group-actions">
             <!-- 只有当分组id不是'disabled'时才显示设置按钮 -->
-            <el-dropdown v-if="group.id !== 'disabled'" trigger="click" :show-arrow="false" placement="bottom-end" 
+            <el-dropdown v-if="group.id !== 'disabled'" trigger="hover" placement="bottom-end" 
               @command="(command) => handleGroupCommand(command, group)">
               <el-button text @click.stop>
                 <el-icon>
@@ -118,7 +118,7 @@
             </span>
             <span class="col col-actions">
               <el-button class="action-btn" link type="primary" @click.stop="editForm(form)">编辑</el-button>
-              <el-dropdown class="action-dropdown" trigger="click" :show-arrow="false" placement="bottom-end" 
+              <el-dropdown class="action-dropdown" trigger="hover" placement="bottom-end" 
                 @command="(command) => handleFormCommand(command, form, group)">
                 <el-button class="action-btn" link type="primary" @click.stop>更多</el-button>
                 <template #dropdown>
