@@ -1,1 +1,7 @@
 @import './base.css';
+
+/* 去除 el-tooltip 聚焦时的轮廓线 */
+.el-tooltip__trigger:focus-visible {
+	outline: none !important;
+	outline-offset: 0 !important;
+}
