@@ -11,18 +11,18 @@
             <el-skeleton :rows="10" animated />
         </div>
         
-        <div v-else-if="formData" class="approval-sections">
+        <div v-else-if="formFillData" class="approval-sections">
             <!-- 表单区域 -->
             <div class="form-section">
                 <div class="form-header">
-                    <h1 class="form-title">{{ formTitle }}</h1>
+                    <h1 class="form-title">{{ formName }}</h1>
                 </div>
                 <el-divider></el-divider>
 
                 <!-- 表单填写部分 -->
                 <div class="form-content">
                     <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
-                        <div v-for="item in formData.formDesign.formItems" :key="item.id" class="form-item-container">
+                        <div v-for="item in formFillData.formItems" :key="item.id" class="form-item-container">
                             <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
                         </div>
                     </el-form>
@@ -60,8 +60,9 @@ const router = useRouter();
 const isDevMode = computed(() => isDevelopment());
 
 // 表单相关状态
-const formData = ref(null);
-const formTitle = ref('表单填写');
+// 填写页表单数据（后端 FormFillResp）
+const formFillData = ref(null);
+const formName = ref('表单填写');
 const loading = ref(true);
 const submitting = ref(false);
 const formValues = reactive({});
@@ -80,21 +81,21 @@ const loadForm = async () => {
     loading.value = true;
 
     try {
-        let result;
+        let fillData;
 
         if (formId) {
-            result = await formApi.getFormDetail(formId);
+            fillData = await formApi.getFormFillById(formId);
         } else if (formCode) {
-            result = await formApi.getFormByCode(formCode);
+            fillData = await formApi.getFormFillByCode(formCode);
         }
 
-        if (result) {
-            formData.value = result;
-            formTitle.value = result.basicSettings?.formName || '表单填写';
+        if (fillData) {
+            formFillData.value = fillData;
+            formName.value = fillData.formName || '表单填写';
 
             // 初始化表单字段和默认值
-            if (result.formDesign && result.formDesign.formItems) {
-                result.formDesign.formItems.forEach(item => {
+            if (Array.isArray(fillData.formItems)) {
+                fillData.formItems.forEach(item => {
                     if (item.id) {
                         formValues[item.id] = item.defaultValue || '';
                     }
@@ -130,11 +131,11 @@ const updateValue = (id, value) => {
 
 // 验证表单
 const validateForm = () => {
-    if (!formData.value || !formData.value.formDesign) {
+    if (!formFillData.value || !Array.isArray(formFillData.value.formItems)) {
         return false;
     }
 
-    const requiredItems = formData.value.formDesign.formItems.filter(item => item.required);
+    const requiredItems = formFillData.value.formItems.filter(item => item.required);
     for (const item of requiredItems) {
         if (!item.id) continue;
 
@@ -151,14 +152,15 @@ const validateForm = () => {
 // 调试表单数据
 const debugFormData = () => {
     console.group('表单调试信息');
-    console.log('表单基础信息:', formData.value);
+    console.log('表单基础信息:', formFillData.value);
     console.log('用户填写的表单值:', formValues);
     
     // 创建要提交到后端的数据结构
     const submissionData = {
-        formId: formData.value.id,
-        formCode: formData.value.basicSettings?.formCode,
-        formName: formData.value.basicSettings?.formName,
+        formId: formFillData.value?.id,
+        formCode: route.query.code,
+        formName: formFillData.value?.formName,
+        formVersion: formFillData.value?.formVersion,
         formValues: { ...formValues },
         submitTime: new Date().toISOString()
     };
@@ -188,7 +190,7 @@ const submitForm = async () => {
 
         // 提交表单数据
         // 这里需要添加调用提交审批API的代码
-        // 假设API为 submitApproval(formData, formValues)
+        // 假设API为 submitApproval(formFillData, formValues)
 
         ElMessage.success('表单已提交成功');
 

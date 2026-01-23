@@ -30,6 +30,18 @@ export default {
   },
 
   /**
+   * 获取填写页表单数据（最小结构）
+   * @param {String} id 表单ID
+   * @returns {Promise<Object>}
+   */
+  getFormFillById(id) {
+    return request({
+      url: `/forms/${id}/fill`,
+      method: 'get',
+    })
+  },
+
+  /**
    * 根据表单编码获取表单详情
    * @param {String} code 表单编码
    * @returns {Promise<Object>}
@@ -37,6 +49,18 @@ export default {
   getFormByCode(code) {
     return request({
       url: `/forms/code/${code}`,
+      method: 'get',
+    })
+  },
+
+  /**
+   * 根据表单编码获取填写页表单数据（最小结构）
+   * @param {String} code 表单编码
+   * @returns {Promise<Object>}
+   */
+  getFormFillByCode(code) {
+    return request({
+      url: `/forms/code/${code}/fill`,
       method: 'get',
     })
   },
