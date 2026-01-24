@@ -12,6 +12,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
   const formCode = ref('') // 表单编码
   const groupId = ref('') // 所在分组ID
   const description = ref('') // 表单说明
+  const formVersion = ref('') // 表单版本
 
   // 发起人范围设置
   const initiatorScope = ref('all')
@@ -32,6 +33,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     formCode,
     groupId,
     description,
+    formVersion,
 
     // 发起人设置
     initiatorScope,

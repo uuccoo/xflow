@@ -73,7 +73,8 @@ const loadExistingData = (data) => {
       basicSettingsStore.formCode = data.basicSettings.formCode || ''
       basicSettingsStore.groupId = data.basicSettings.groupId || ''
       basicSettingsStore.description = data.basicSettings.description || ''
-
+      
+      basicSettingsStore.formVersion = data.formVersion || ''
       // 发起人设置
       if (data.basicSettings.initiatorScope) {
         basicSettingsStore.initiatorScope = data.basicSettings.initiatorScope
@@ -205,11 +206,8 @@ const publish = async () => {
       // 更多设置数据
       moreSettings: { ...moreSettingsStore.settings },
 
-      // 元数据
-      metadata: {
-        publishTime: new Date().toISOString(),
-        version: '1.0.0'
-      }
+      // 表单版本
+      formVersion: basicSettingsStore.formVersion
     }
 
     // 使用API发布表单
@@ -251,6 +249,7 @@ const resetFormData = () => {
   basicSettingsStore.formCode = ''
   basicSettingsStore.groupId = ''
   basicSettingsStore.description = ''
+  basicSettingsStore.formVersion = ''
 
   basicSettingsStore.initiatorScope = 'all'
   basicSettingsStore.selectedInitiators = []
