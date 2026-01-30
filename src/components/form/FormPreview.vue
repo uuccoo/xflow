@@ -143,7 +143,7 @@ const debugFormData = () => {
     // 创建要提交到后端的数据结构
     const submissionData = {
         formId: formData.value.id,
-        formCode: formData.value.basicSettings?.formCode,
+        formCode: formData.value.formCode,
         formName: formData.value.basicSettings?.formName,
         formValues: { ...formValues },
         submitTime: new Date().toISOString()

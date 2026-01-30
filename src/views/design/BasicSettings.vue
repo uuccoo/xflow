@@ -9,6 +9,8 @@ import { ElMessage } from 'element-plus'
 
 // 使用 Pinia store
 const basicStore = useBasicSettingsStore()
+// 直接使用 basicSettings 引用，简化访问（不要解构字段，避免丢失响应式）
+const basicSettings = basicStore.basicSettings
 
 // 从ElementPlusIconsVue中获取所有图标
 const iconList = computed(() =>
@@ -30,7 +32,7 @@ const toggleColorPicker = () => {
 }
 
 const selectIcon = (iconName) => {
-  basicStore.selectedIcon = iconName
+  basicSettings.selectedIcon = iconName
   popoverVisible.value = false // 选择后关闭弹窗
 }
 
@@ -61,7 +63,7 @@ const handleGroupCreated = (newGroup) => {
     label: newGroup.name
   })
   // 设置当前选中的分组为新建的分组
-  basicStore.groupId = newGroup.id
+  basicSettings.groupId = newGroup.id
 }
 
 // 组件挂载时获取分组列表
@@ -76,14 +78,14 @@ onMounted(() => {
       <el-form class="form-container" label-position="top" label-width="100px">
         <el-form-item label="表单图标">
           <div class="icon-selection">
-            <div class="icon-box" :style="{ backgroundColor: basicStore.iconColor }">
+            <div class="icon-box" :style="{ backgroundColor: basicSettings.iconColor }">
               <el-icon size="32" color="#ffffff">
-                <component :is="basicStore.selectedIcon" />
+                <component :is="basicSettings.selectedIcon" />
               </el-icon>
             </div>
             <div class="option-item">
               <span class="clickable-text" @click="toggleColorPicker">选择背景色</span>
-              <el-color-picker v-model="basicStore.iconColor" size="small" v-model:visible="colorPickerVisible"
+              <el-color-picker v-model="basicSettings.iconColor" size="small" v-model:visible="colorPickerVisible"
                 :predefine="['#FF8800', '#409EFF', '#67C23A', '#E6A23C', '#F56C6C']" />
             </div>
             <div class="option-item">
@@ -91,7 +93,7 @@ onMounted(() => {
               <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
                 <template #reference>
                   <el-icon size="20">
-                    <component :is="basicStore.selectedIcon" />
+                    <component :is="basicSettings.selectedIcon" />
                   </el-icon>
                 </template>
                 <div class="icon-picker-container">
@@ -109,11 +111,11 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="表单名称" required>
-          <el-input v-model="basicStore.formName" placeholder="请输入" maxlength="50" show-word-limit></el-input>
+          <el-input v-model="basicSettings.formName" placeholder="请输入" maxlength="50" show-word-limit></el-input>
         </el-form-item>
         <el-form-item label="所在分组" required>
           <div class="group-selection-container">
-            <el-select v-model="basicStore.groupId" placeholder="请选择" size="large" class="group-select">
+            <el-select v-model="basicSettings.groupId" placeholder="请选择" size="large" class="group-select">
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" inline
@@ -121,20 +123,20 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="表单说明">
-          <el-input v-model="basicStore.description" maxlength="100" style="width: 100%" placeholder="请输入"
+          <el-input v-model="basicSettings.description" maxlength="100" style="width: 100%" placeholder="请输入"
             show-word-limit type="textarea" :rows="3" />
         </el-form-item>
 
         <!-- 谁可以发起设置 -->
         <el-form-item label="谁可以发起">
-          <el-select v-model="basicStore.initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
+          <el-select v-model="basicSettings.initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
             <el-option label="所有人" value="all"></el-option>
             <el-option label="指定人员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicStore.initiatorScope !== 'all'" required>
+        <el-form-item v-if="basicSettings.initiatorScope !== 'all'" required>
           <designated-person-selector
-            v-model="basicStore.selectedInitiators"
+            v-model="basicSettings.selectedInitiators"
             title="选择发起人范围"
             button-text="添加"
             :required="true"
@@ -143,14 +145,14 @@ onMounted(() => {
 
         <!-- 模板管理员设置 -->
         <el-form-item label="模板管理员">
-          <el-select v-model="basicStore.adminScope" placeholder="请选择模板管理员" style="width: 100%">
+          <el-select v-model="basicSettings.adminScope" placeholder="请选择模板管理员" style="width: 100%">
             <el-option label="所有管理员" value="all"></el-option>
             <el-option label="指定管理员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicStore.adminScope === 'specified'" required>
+        <el-form-item v-if="basicSettings.adminScope === 'specified'" required>
           <designated-person-selector
-            v-model="basicStore.selectedAdmins"
+            v-model="basicSettings.selectedAdmins"
             title="选择管理员"
             button-text="添加"
             :required="true"
