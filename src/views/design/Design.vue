@@ -80,29 +80,7 @@ const loadExistingData = (data) => {
 
 // 预览和发布功能
 const preview = () => {
-  // 收集所有表单数据
-  const previewData = {
-    id: basicSettingsStore.id,
-    formCode: basicSettingsStore.formCode,
-    formVersion: basicSettingsStore.formVersion,
-
-    // 基础设置数据
-    basicSettings: basicSettingsStore.toPayload(),
-
-    // 表单设计数据
-    formDesign: formDesignStore.toPayload(),
-
-    // 流程设计数据
-    flowDesign: flowDesignStore.toPayload(),
-
-    // 更多设置数据
-    moreSettings: moreSettingsStore.toPayload(),
-  }
-
-  // 将预览数据存储到sessionStorage，避免数据传递问题
-  sessionStorage.setItem('formPreviewData', JSON.stringify(previewData))
-
-  // 显示预览组件，不进行路由跳转
+  // 显示预览组件（预览组件直接从 store 读取数据）
   showPreview.value = true
 }
 
@@ -376,7 +354,7 @@ header {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 1000;
   background-color: #f5f6f6;
   overflow-y: auto;
 }
