@@ -5,21 +5,26 @@ import { FlowNodeType } from '@/enums'
 import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
 
 export const useFlowDesignStore = defineStore('flowDesign', () => {
-  // 存储完整流程数据
-  const flowData = reactive({
-    id: 'flow_' + Date.now(),
-    name: '未命名流程',
-    version: '1.0',
-    initiator: {
-      id: INITIATOR_NODE_ID,
-      type: FlowNodeType.INITIATE,
-      name: '发起人',
-      props: {
-        initiator: [],
+  // 创建默认流程数据（工厂函数，避免默认对象被复用导致引用串改）
+  const createDefaultFlowData = () => {
+    return {
+      id: 'flow_' + Date.now(),
+      name: '未命名流程',
+      version: '1.0',
+      initiator: {
+        id: INITIATOR_NODE_ID,
+        type: FlowNodeType.INITIATE,
+        name: '发起人',
+        props: {
+          initiator: [],
+        },
       },
-    },
-    nodes: [],
-  })
+      nodes: [],
+    }
+  }
+
+  // 存储完整流程数据
+  const flowData = reactive(createDefaultFlowData())
 
   // 节点选项
   const nodeOptions = [
@@ -84,32 +89,27 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     drawerVisible.value = false
   }
 
-  // 导出完整流程数据
-  const exportFlowData = () => {
+  // 重置流程设计数据
+  // 注意：这里用 Object.assign 保持 flowData 的响应式引用不变
+  const resetFlowDesign = () => {
+    Object.assign(flowData, createDefaultFlowData())
+    // 其他状态也一并重置
+    selectedNode.value = null
+    drawerVisible.value = false
+  }
+
+  // 导出流程设计数据（用于预览/发布组装）
+  const toPayload = () => {
     return {
       ...flowData,
-      updateTime: new Date().toISOString(),
     }
   }
 
-  // 导入流程数据
-  const importFlowData = (data) => {
-    if (!data) {
-      throw new Error('流程数据无效')
-    }
-
-    // 重置当前数据
-    flowData.id = data.id
-    flowData.name = data.name || '未命名流程'
-    flowData.version = data.version || '1.0'
-
-    // 导入发起人
-    if (data.initiator) {
-      flowData.initiator = data.initiator
-    }
-
-    // 导入节点
-    flowData.nodes = data.nodes || []
+  // 加载流程设计数据（全量覆盖，用于加载接口数据）
+  // 注意：建议在外层切换表单时先 reset，再调用该方法
+  const loadFlowDesign = (data) => {
+    // 外层已先 resetFlowDesign，这里直接覆盖写入即可（不做深拷贝/默认值兜底）
+    Object.assign(flowData, data || {})
     return true
   }
 
@@ -204,8 +204,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     closeDrawer,
     cancelNodeEdit,
     clearSelectedNode,
-    exportFlowData,
-    importFlowData,
+    toPayload,
+    loadFlowDesign,
+    resetFlowDesign,
     deleteNode,
     editCondition,
     formatUserNames,

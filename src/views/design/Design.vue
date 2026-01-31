@@ -1,17 +1,14 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { useMoreSettingsStore } from '@/stores/moreSettingsStore'
-import { ArrowLeft, Close } from '@element-plus/icons-vue'
+import { ArrowLeft } from '@element-plus/icons-vue'
 // 导入API
 import { formApi } from '@/api'
-// 导入环境工具函数
-import { isDevelopment } from '@/utils/env'
-import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
 
 // 导入各个组件
 import BasicSettings from './BasicSettings.vue'
@@ -24,15 +21,13 @@ import FormPreview from '@/components/form/FormPreview.vue'
 const route = useRoute()
 const router = useRouter()
 const basicSettingsStore = useBasicSettingsStore()
+const basicSettings = basicSettingsStore.basicSettings
 const formDesignStore = useFormDesignStore()
 const flowDesignStore = useFlowDesignStore()
 const moreSettingsStore = useMoreSettingsStore()
 
 // 当前激活的组件
 const activeComponent = ref('basicSettings')
-
-// 判断是否为开发环境
-const isDevMode = computed(() => isDevelopment())
 
 // 是否显示预览
 const showPreview = ref(false)
@@ -57,54 +52,21 @@ const loadExistingData = (data) => {
   loading.value = true
 
   try {
-    // 加载基础设置
-    if (data.basicSettings) {
-      // 图标和颜色
-      if (data.basicSettings.iconColor) {
-        basicSettingsStore.iconColor = data.basicSettings.iconColor
-      }
-      if (data.basicSettings.selectedIcon) {
-        basicSettingsStore.selectedIcon = data.basicSettings.selectedIcon
-      }
+    // 加载表单元信息（ID/编码/版本）
+    basicSettingsStore.loadFormMeta(data.id, data.formCode, data.formVersion)
 
-      // 表单信息 - 直接使用扁平化的字段
-      basicSettingsStore.id = data.basicSettings.id || ''
-      basicSettingsStore.formName = data.basicSettings.formName || ''
-      basicSettingsStore.formCode = data.basicSettings.formCode || ''
-      basicSettingsStore.groupId = data.basicSettings.groupId || ''
-      basicSettingsStore.description = data.basicSettings.description || ''
+    // 加载基础设置（全量覆盖，避免字段缺失导致旧数据残留）
+    basicSettingsStore.loadBasicSettings(data.basicSettings)
 
-      // 发起人设置
-      if (data.basicSettings.initiatorScope) {
-        basicSettingsStore.initiatorScope = data.basicSettings.initiatorScope
-      }
-      if (data.basicSettings.selectedInitiators) {
-        basicSettingsStore.selectedInitiators = [...data.basicSettings.selectedInitiators]
-      }
-
-      // 管理员设置
-      if (data.basicSettings.adminScope) {
-        basicSettingsStore.adminScope = data.basicSettings.adminScope
-      }
-      if (data.basicSettings.selectedAdmins) {
-        basicSettingsStore.selectedAdmins = [...data.basicSettings.selectedAdmins]
-      }
-    }
-
-    // 加载表单设计数据
-    if (data.formDesign && data.formDesign.formItems) {
-      formDesignStore.formItems = [...data.formDesign.formItems]
-    }
+    // 加载表单设计数据（全量覆盖）
+    formDesignStore.loadFormDesign(data.formDesign)
 
     // 加载流程设计数据
-    if (data.flowDesign) {
-      flowDesignStore.importFlowData(data.flowDesign)
-    }
+    flowDesignStore.loadFlowDesign(data.flowDesign)
 
     // 加载更多设置数据
-    if (data.moreSettings) {
-      Object.assign(moreSettingsStore.settings, data.moreSettings)
-    }
+    // 更多设置页面功能尚未实现，当前 loadMoreSettings 允许空对象兜底
+    moreSettingsStore.loadMoreSettings(data.moreSettings)
 
     ElMessage.success('数据加载成功')
     return true
@@ -118,39 +80,7 @@ const loadExistingData = (data) => {
 
 // 预览和发布功能
 const preview = () => {
-  // 收集所有表单数据
-  const previewData = {
-    // 基础设置数据
-    basicSettings: {
-      iconColor: basicSettingsStore.iconColor,
-      selectedIcon: basicSettingsStore.selectedIcon,
-      id: basicSettingsStore.id || 'preview-' + Date.now(),
-      formName: basicSettingsStore.formName || '预览表单',
-      formCode: basicSettingsStore.formCode,
-      groupId: basicSettingsStore.groupId,
-      description: basicSettingsStore.description,
-      initiatorScope: basicSettingsStore.initiatorScope,
-      selectedInitiators: [...basicSettingsStore.selectedInitiators],
-      adminScope: basicSettingsStore.adminScope,
-      selectedAdmins: [...basicSettingsStore.selectedAdmins]
-    },
-
-    // 表单设计数据
-    formDesign: {
-      formItems: [...formDesignStore.formItems]
-    },
-
-    // 流程设计数据
-    flowDesign: flowDesignStore.exportFlowData(),
-
-    // 更多设置数据
-    moreSettings: { ...moreSettingsStore.settings }
-  }
-
-  // 将预览数据存储到sessionStorage，避免数据传递问题
-  sessionStorage.setItem('formPreviewData', JSON.stringify(previewData))
-
-  // 显示预览组件，不进行路由跳转
+  // 显示预览组件（预览组件直接从 store 读取数据）
   showPreview.value = true
 }
 
@@ -165,13 +95,13 @@ const publish = async () => {
 
   try {
     // 数据验证
-    if (!basicSettingsStore.formName) {
+    if (!basicSettings.formName) {
       ElMessage.error('请设置表单名称')
       router.push('/design/basicSettings')
       return
     }
 
-    if (formDesignStore.formItems.length === 0) {
+    if (formDesignStore.toPayload().formItems.length === 0) {
       ElMessage.error('表单内容不能为空')
       router.push('/design/formDesign')
       return
@@ -180,36 +110,22 @@ const publish = async () => {
     // 收集所有数据 - 直接使用扁平化的字段
     const finalData = {
       // 基础设置数据
-      basicSettings: {
-        iconColor: basicSettingsStore.iconColor,
-        selectedIcon: basicSettingsStore.selectedIcon,
-        id: basicSettingsStore.id,
-        formName: basicSettingsStore.formName,
-        formCode: basicSettingsStore.formCode,
-        groupId: basicSettingsStore.groupId,
-        description: basicSettingsStore.description,
-        initiatorScope: basicSettingsStore.initiatorScope,
-        selectedInitiators: [...basicSettingsStore.selectedInitiators],
-        adminScope: basicSettingsStore.adminScope,
-        selectedAdmins: [...basicSettingsStore.selectedAdmins]
-      },
+      basicSettings: basicSettingsStore.toPayload(),
+
+      // 表单编码（顶层字段）
+      formCode: basicSettingsStore.formCode,
 
       // 表单设计数据
-      formDesign: {
-        formItems: [...formDesignStore.formItems]
-      },
+      formDesign: formDesignStore.toPayload(),
 
       // 流程设计数据
-      flowDesign: flowDesignStore.exportFlowData(),
+      flowDesign: flowDesignStore.toPayload(),
 
       // 更多设置数据
-      moreSettings: { ...moreSettingsStore.settings },
+      moreSettings: moreSettingsStore.toPayload(),
 
-      // 元数据
-      metadata: {
-        publishTime: new Date().toISOString(),
-        version: '1.0.0'
-      }
+      // 表单版本
+      formVersion: basicSettingsStore.formVersion
     }
 
     // 使用API发布表单
@@ -241,50 +157,20 @@ const publish = async () => {
 
 // 重置所有表单数据
 const resetFormData = () => {
+  // 重置表单元信息（ID/编码/版本）
+  basicSettingsStore.resetFormMeta()
+
   // 重置基本设置
-  basicSettingsStore.iconColor = '#FF8800' // 默认值
-  basicSettingsStore.selectedIcon = 'Promotion'
-
-  // 重置表单基础信息
-  basicSettingsStore.id = ''
-  basicSettingsStore.formName = ''
-  basicSettingsStore.formCode = ''
-  basicSettingsStore.groupId = ''
-  basicSettingsStore.description = ''
-
-  basicSettingsStore.initiatorScope = 'all'
-  basicSettingsStore.selectedInitiators = []
-  basicSettingsStore.adminScope = 'all'
-  basicSettingsStore.selectedAdmins = []
+  basicSettingsStore.resetBasicSettings()
 
   // 重置表单设计
-  formDesignStore.formItems = []
-  formDesignStore.activeItem = null
+  formDesignStore.resetFormDesign()
 
   // 重置流程设计
-  flowDesignStore.flowData.id = 'flow-' + Date.now()
-  flowDesignStore.flowData.name = '未命名流程'
-  flowDesignStore.flowData.version = '1.0'
-  flowDesignStore.flowData.initiator = {
-    id: INITIATOR_NODE_ID,
-    type: FlowNodeType.INITIATE,
-    name: '发起人',
-    props: {
-      initiator: [],
-    },
-  }
-  flowDesignStore.flowData.nodes = []
-  flowDesignStore.selectedNode = null
-  flowDesignStore.drawerVisible = false
+  flowDesignStore.resetFlowDesign()
 
   // 重置更多设置
-  if (moreSettingsStore.settings) {
-    moreSettingsStore.settings = {
-      // 默认值，根据实际情况调整
-      enabled: true,
-      options: {}
-    }
-  }
+  moreSettingsStore.resetMoreSettings()
 
   console.log('表单数据已重置')
 }
@@ -296,6 +182,7 @@ watch(
     const formId = newQuery.id;
     const formCode = newQuery.code;
 
+    resetFormData();
     if (formId) {
       try {
         loading.value = true;
@@ -321,30 +208,10 @@ watch(
       } finally {
         loading.value = false;
       }
-    } else {
-      resetFormData();
     }
   },
   { immediate: true }
 )
-
-// 查看表单JSON数据结构
-const viewFormJson = () => {
-  const formData = {
-    formItems: [...formDesignStore.formItems]
-  }
-  console.log('=== 表单JSON数据结构 ===')
-  console.log(JSON.stringify(formData, null, 2))
-  ElMessage.success('表单JSON数据已输出到控制台')
-}
-
-// 查看流程JSON数据结构
-const viewFlowJson = () => {
-  const flowData = flowDesignStore.exportFlowData()
-  console.log('=== 流程JSON数据结构 ===')
-  console.log(JSON.stringify(flowData, null, 2))
-  ElMessage.success('流程JSON数据已输出到控制台')
-}
 
 // 页面加载时，检查URL是否包含表单ID或表单编码，如果有则自动加载
 onMounted(() => {
@@ -361,8 +228,6 @@ onMounted(() => {
       <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
     </el-menu>
     <div class="publish">
-      <el-button size="small" @click="viewFormJson" v-if="isDevMode">查看表单JSON</el-button>
-      <el-button size="small" @click="viewFlowJson" v-if="isDevMode">查看流程JSON</el-button>
       <el-button size="small" @click="preview">预览</el-button>
       <el-button size="small" type="primary" :loading="publishing" @click="publish">
         {{ publishing ? '发布中...' : '发布' }}
@@ -374,12 +239,12 @@ onMounted(() => {
         <span>返回</span>
       </div>
       <div class="form-info">
-        <div class="icon-box" :style="{ backgroundColor: basicSettingsStore.iconColor }">
+        <div class="icon-box" :style="{ backgroundColor: basicSettings.iconColor }">
           <el-icon size="20" color="#ffffff">
-            <component :is="basicSettingsStore.selectedIcon" />
+            <component :is="basicSettings.selectedIcon" />
           </el-icon>
         </div>
-        <span class="form-name">{{ basicSettingsStore.formName }}</span>
+        <span class="form-name">{{ basicSettings.formName }}</span>
       </div>
     </div>
   </header>
@@ -489,7 +354,7 @@ header {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 1000;
   background-color: #f5f6f6;
   overflow-y: auto;
 }

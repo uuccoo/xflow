@@ -7,11 +7,7 @@
             </div>
         </el-tooltip>
 
-        <div v-if="loading" class="loading-container">
-            <el-skeleton :rows="10" animated />
-        </div>
-        
-        <div v-else-if="formData" class="approval-sections">
+        <div class="approval-sections">
             <!-- 表单区域 -->
             <div class="form-section">
                 <div class="form-header">
@@ -22,8 +18,8 @@
 
                 <!-- 表单填写部分 -->
                 <div class="form-content">
-                    <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
-                        <div v-for="item in formData.formDesign.formItems" :key="item.id" class="form-item-container">
+                    <el-form :model="formValues" label-position="top" class="custom-form">
+                        <div v-for="item in formItems" :key="item.id" class="form-item-container">
                             <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
                         </div>
                     </el-form>
@@ -32,74 +28,43 @@
                 <!-- 提交按钮 -->
                 <div class="form-actions">
                     <el-button @click="goBack">取消</el-button>
-                    <el-button type="primary" @click="submitForm" :loading="submitting">提交</el-button>
-                    <el-button type="info" @click="debugFormData" v-if="isDevMode">调试</el-button>
+                    <el-button type="primary" @click="submitForm">提交</el-button>
                 </div>
             </div>
-        </div>
-
-        <div v-else class="error-container">
-            <el-empty description="加载表单失败" />
-            <el-button type="primary" @click="reloadForm">重新加载</el-button>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
-import { isDevelopment } from '@/utils/env';
-
-
-// 判断是否为开发环境（使用通用工具函数）
-const isDevMode = computed(() => isDevelopment());
+import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
+import { useFormDesignStore } from '@/stores/formDesignStore';
 
 // 定义emits
 const emit = defineEmits(['close-preview']);
 
+// 引入 store
+const basicSettingsStore = useBasicSettingsStore();
+const formDesignStore = useFormDesignStore();
+const { formItems } = storeToRefs(formDesignStore);
+
 // 表单相关状态
-const formData = ref(null);
-const formTitle = ref('表单预览');
-const loading = ref(true);
-const submitting = ref(false);
 const formValues = reactive({});
-const formRef = ref(null);
 
-// 获取表单详情
-const loadForm = async () => {
-    try {
-        // 从sessionStorage获取预览数据
-        const previewDataStr = sessionStorage.getItem('formPreviewData');
-        if (previewDataStr) {
-            const previewData = JSON.parse(previewDataStr);
-            formData.value = previewData;
-            formTitle.value = previewData.basicSettings?.formName || '表单预览';
+// 从 store 读取表单标题
+const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
 
-            // 初始化表单字段和默认值
-            if (previewData.formDesign && previewData.formDesign.formItems) {
-                previewData.formDesign.formItems.forEach(item => {
-                    if (item.id) {
-                        formValues[item.id] = item.defaultValue || '';
-                    }
-                });
-            }
-            loading.value = false;
-        } else {
-            ElMessage.error('预览数据不存在，可能已过期');
-            goBack();
+// 初始化表单字段和默认值
+const initFormValues = () => {
+    formItems.value.forEach(item => {
+        if (item.id) {
+            formValues[item.id] = item.defaultValue || '';
         }
-    } catch (error) {
-        console.error('加载预览数据失败:', error);
-        ElMessage.error('加载预览数据失败: ' + (error.message || '未知错误'));
-        loading.value = false;
-    }
-};
-
-// 重新加载表单
-const reloadForm = () => {
-    loadForm();
+    });
 };
 
 // 返回上一页
@@ -116,11 +81,7 @@ const updateValue = (id, value) => {
 
 // 验证表单
 const validateForm = () => {
-    if (!formData.value || !formData.value.formDesign) {
-        return false;
-    }
-
-    const requiredItems = formData.value.formDesign.formItems.filter(item => item.required);
+    const requiredItems = formItems.value.filter(item => item.required);
     for (const item of requiredItems) {
         if (!item.id) continue;
 
@@ -132,27 +93,6 @@ const validateForm = () => {
     }
 
     return true;
-};
-
-// 调试表单数据
-const debugFormData = () => {
-    console.group('表单调试信息');
-    console.log('表单基础信息:', formData.value);
-    console.log('用户填写的表单值:', formValues);
-    
-    // 创建要提交到后端的数据结构
-    const submissionData = {
-        formId: formData.value.id,
-        formCode: formData.value.basicSettings?.formCode,
-        formName: formData.value.basicSettings?.formName,
-        formValues: { ...formValues },
-        submitTime: new Date().toISOString()
-    };
-    
-    console.log('要提交到后端的数据:', submissionData);
-    console.groupEnd();
-    
-    ElMessage.success('表单数据已在控制台打印，请按 F12 查看');
 };
 
 // 提交表单
@@ -167,9 +107,9 @@ const submitForm = async () => {
     });
 };
 
-// 组件挂载时加载表单数据
+// 组件挂载时初始化表单默认值
 onMounted(() => {
-    loadForm();
+    initFormValues();
 });
 </script>
 
@@ -264,20 +204,5 @@ onMounted(() => {
     justify-content: center;
     margin: 30px 0;
     gap: 16px;
-}
-
-.loading-container,
-.error-container {
-    width: 800px;
-    margin-top: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 40px 20px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.error-container .el-button {
-    margin-top: 20px;
 }
 </style>
