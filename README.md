@@ -4,7 +4,7 @@
 
 该项目为`xflow工作流系统`的前端。后端还在开发中
 
-前端使用 vue3+element plus ， 实现了`表单设计`、`审批流程设计`、`发起审批`、`评审中心`,`系统管理`功能，使用ai辅助完成。
+前端使用 vue3+element plus ， 实现了`表单设计`、`审批流程设计`、`发起审批`、`表单管理`功能，使用ai辅助完成。
 
 布局仿照钉钉审批页面，界面简单，易于上手。
 
@@ -20,27 +20,23 @@ freund99@126.com
 
 #### **表单基础设置**
 
-![](./public/profile/basic_setting.png)
+![](http://8.148.65.254:8070/photo/xflow/basic_setting.jpeg)
 
 #### **表单设计**
 
-![](./public/profile/form_design.png)
+![](http://8.148.65.254:8070/photo/xflow/form_design.jpeg)
 
 #### **审批流程设计**
 
-![](./public/profile/flow_design.png)
+![](http://8.148.65.254:8070/photo/xflow/flow_design.jpeg)
 
 #### **发起审批**
 
-![](./public/profile/approval.png)
-
-#### **评审中心**
-
-![](./public/profile/approval_center.png)
+![](http://8.148.65.254:8070/photo/xflow/approval.jpeg)
 
 #### **表单管理**
 
-![](./public/profile/manage_form.png)
+![](http://8.148.65.254:8070/photo/xflow/manage_form.jpeg)
 
 <!-- ### 项目结构
 
