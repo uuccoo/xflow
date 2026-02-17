@@ -2,7 +2,7 @@
     <div class="node-setting-form">
         <el-form label-position="top">
             <el-form-item label="请选择抄送人">
-                <el-radio-group v-model="copyToType" class="copyto-type-selector">
+                <el-radio-group v-model="handlerType" class="copyto-type-selector">
                     <el-radio label="designated">
                         <div class="option-content">指定人员</div>
                     </el-radio>
@@ -22,9 +22,9 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="copyToType === 'designated'" label-position="left" required>
+            <el-form-item v-if="handlerType === 'designated'" label-position="left" required>
                 <designated-person-selector
-                    v-model="users"
+                    v-model="handlers"
                     title="选择抄送人"
                     button-text="添加"
                     :required="true"
@@ -33,7 +33,7 @@
             </el-form-item>
 
             <!-- 发起人自选的子选项 -->
-            <el-form-item v-if="copyToType === 'initiator_select'" label="选择方式">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="选择方式">
                 <div class="initiator-select-options">
                     <el-button :class="{ 'active': initiatorSelectMode === 'single' }"
                         @click="initiatorSelectMode = 'single'">
@@ -47,7 +47,7 @@
             </el-form-item>
 
             <!-- 发起人自选范围类型选择 -->
-            <el-form-item v-if="copyToType === 'initiator_select'" label="用户可选范围">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="用户可选范围">
                 <el-select v-model="initiatorSelectRangeType" placeholder="请选择范围" style="width: 100%">
                     <el-option label="所有人" value="all"></el-option>
                     <el-option label="指定人员" value="specified"></el-option>
@@ -55,7 +55,7 @@
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="copyToType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
+            <el-form-item v-if="handlerType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
                 label-position="left" required>
                 <designated-person-selector
                     v-model="initiatorSelectRange"
@@ -68,7 +68,7 @@
             </el-form-item>
 
             <!-- 部门主管设置 -->
-            <el-form-item v-if="copyToType === 'department_manager'" label="部门主管">
+            <el-form-item v-if="handlerType === 'department_manager'" label="部门主管">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span>发起人的</span>
                     <el-select v-model="managerType" placeholder="请选择主管类型" style="width: 200px;">
@@ -87,7 +87,7 @@
             </el-form-item>
 
             <!-- 发起人自己 -->
-            <el-form-item v-if="copyToType === 'initiator_self'" label="发起人自己">
+            <el-form-item v-if="handlerType === 'initiator_self'" label="发起人自己">
                 <span style="color: #909399;">发起人自己作为抄送人</span>
             </el-form-item>
         </el-form>
@@ -113,14 +113,14 @@ const props = defineProps({
 const flowStore = useFlowDesignStore()
 
 // 表单数据
-const copyToType = ref('designated') // 抄送人类型
+const handlerType = ref('designated') // 抄送人类型
 const initiatorSelectMode = ref('single') // 发起人自选模式
 const initiatorSelectRangeType = ref('all') // 自选范围类型
 const managerType = ref(1) // 主管级别
 const fallbackToHigherManager = ref(false) // 找不到主管时上级接收
 
 // 人员列表
-const users = ref([]) // 抄送人列表
+const handlers = ref([]) // 抄送人列表
 const initiatorSelectRange = ref([]) // 发起人自选人员范围
 
 // 初始化表单数据
@@ -131,7 +131,7 @@ const initFormData = () => {
     }
 
     // 初始化抄送人类型
-    copyToType.value = props.node.props.copyToType || 'designated'
+    handlerType.value = props.node.props.handlerType || 'designated'
 
     // 初始化发起人自选相关
     initiatorSelectMode.value = props.node.props.initiatorSelectMode || 'single'
@@ -142,7 +142,7 @@ const initFormData = () => {
     fallbackToHigherManager.value = props.node.props.fallbackToHigherManager || false
 
     // 初始化人员列表
-    users.value = props.node.props.users || []
+    handlers.value = props.node.props.handlers || []
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
 }
 
@@ -159,12 +159,12 @@ onMounted(() => {
 // 向父组件暴露保存方法
 const saveSettings = () => {
     // 验证必填项
-    if (copyToType.value === 'designated' && users.value.length === 0) {
+    if (handlerType.value === 'designated' && handlers.value.length === 0) {
         ElMessage.warning('请至少选择一名抄送人')
         return false
     }
 
-    if (copyToType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
+    if (handlerType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
         ElMessage.warning('请至少选择一名发起人自选范围人员')
         return false
     }
@@ -175,22 +175,22 @@ const saveSettings = () => {
     }
 
     // 保存抄送人类型
-    props.node.props.copyToType = copyToType.value
+    props.node.props.handlerType = handlerType.value
 
     // 保存发起人自选相关
-    if (copyToType.value === 'initiator_select') {
+    if (handlerType.value === 'initiator_select') {
         props.node.props.initiatorSelectMode = initiatorSelectMode.value
         props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
     }
 
     // 保存部门主管相关
-    if (copyToType.value === 'department_manager') {
+    if (handlerType.value === 'department_manager') {
         props.node.props.managerType = managerType.value
         props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
     }
 
     // 保存人员列表
-    props.node.props.users = users.value
+    props.node.props.handlers = handlers.value
     props.node.props.initiatorSelectRange = initiatorSelectRange.value
 
     return true

@@ -80,7 +80,7 @@ const nodeContentText = computed(() => {
         case FlowNodeType.APPROVE:
             return getApproverContent(nodeProps);
         case FlowNodeType.CC:
-            return nodeProps.users?.length > 0 ? formatUserNames(nodeProps.users) : '请选择抄送人';
+            return nodeProps.handlers?.length > 0 ? formatUserNames(nodeProps.handlers) : '请选择抄送人';
         case FlowNodeType.HANDLE:
             return getProcessorContent(nodeProps);
         default:
@@ -91,9 +91,9 @@ const nodeContentText = computed(() => {
 // 获取审批人节点内容
 const getApproverContent = (nodeProps) => {
     // 根据审批人类型返回不同内容
-    switch (nodeProps.approverType) {
+    switch (nodeProps.handlerType) {
         case 'designated':
-            return nodeProps.approvers?.length > 0 ? formatUserNames(nodeProps.approvers) : '未指定人员';
+            return nodeProps.handlers?.length > 0 ? formatUserNames(nodeProps.handlers) : '未指定人员';
         case 'initiator_select':
             return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
         case 'multi_level_manager':
