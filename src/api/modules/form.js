@@ -5,6 +5,36 @@ import request from '@/utils/request'
  */
 export default {
   /**
+   * 获取表单目录（发起审批页）
+   * @param {String} keyword 可选的搜索关键字，根据表单名称/分组名称进行筛选
+   * @returns {Promise<Object>}
+   */
+  listForInitiate(keyword) {
+    return request({
+      url: '/forms/for-initiate',
+      method: 'get',
+      params: {
+        ...(keyword ? { keyword } : {}),
+      },
+    })
+  },
+
+  /**
+   * 获取表单目录（表单管理页）
+   * @param {String} keyword 可选的搜索关键字，根据表单名称/分组名称进行筛选
+   * @returns {Promise<Object>}
+   */
+  listForManage(keyword) {
+    return request({
+      url: '/forms/for-manage',
+      method: 'get',
+      params: {
+        ...(keyword ? { keyword } : {}),
+      },
+    })
+  },
+
+  /**
    * 获取表单列表
    * @param {Object} params 查询参数
    * @returns {Promise<Object>}

@@ -47,7 +47,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getFormGroupsWithForms } from '@/api/modules/formGroup';
+import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
 const router = useRouter();
@@ -64,7 +64,7 @@ const getIconComponent = (iconName) => {
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const groupList = await getFormGroupsWithForms(keyword);
+    const groupList = await formApi.listForInitiate(keyword);
     if (groupList && Array.isArray(groupList)) {
       formGroups.value = groupList.map(group => ({
         ...group,

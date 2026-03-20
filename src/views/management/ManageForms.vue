@@ -237,7 +237,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
+import { updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { Setting, Plus, Sort,Delete } from '@element-plus/icons-vue';
@@ -285,7 +285,7 @@ const getIconComponent = (iconName) => {
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const groupList = await getFormGroupsWithForms(keyword, true);
+    const groupList = await formApi.listForManage(keyword);
     if (groupList && Array.isArray(groupList)) {
       formGroups.value = groupList.map(group => ({
         ...group,
