@@ -112,7 +112,9 @@
                 <span class="form-name">{{ form.name }}</span>
               </div>
             </span>
-            <span class="col col-initiator">全部可见</span>
+            <span class="col col-initiator" :title="formatInitiators(form.initiators)">
+              {{ formatInitiators(form.initiators) }}
+            </span>
             <span class="col col-update">
               {{ form.updatedByUser?.realName }} 更新于 {{ form.updatedAt }}
             </span>
@@ -237,7 +239,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getFormGroupsWithForms, updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
+import { updateFormGroup, deleteFormGroup } from '@/api/modules/formGroup';
 import formApi from '@/api/modules/form';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { Setting, Plus, Sort,Delete } from '@element-plus/icons-vue';
@@ -282,10 +284,32 @@ const getIconComponent = (iconName) => {
   return ElementPlusIconsVue[iconName] || ElementPlusIconsVue.Document;
 };
 
+// 格式化“谁可以发起”显示文案：空列表表示所有人可发起
+const formatInitiators = (initiators) => {
+  if (!Array.isArray(initiators) || initiators.length === 0) {
+    return '全部可见';
+  }
+
+  const names = initiators
+    .map(actor => {
+      if (!actor) {
+        return '';
+      }
+
+      const name = (actor.name || '').trim();
+      if (name) {
+        return name;
+      }
+    })
+    .filter(Boolean);
+
+  return names.length > 0 ? names.join('、') : '全部可见';
+};
+
 // 获取表单组和表单数据
 const fetchFormGroupsWithForms = async (keyword = '') => {
   try {
-    const groupList = await getFormGroupsWithForms(keyword, true);
+    const groupList = await formApi.listForManage(keyword);
     if (groupList && Array.isArray(groupList)) {
       formGroups.value = groupList.map(group => ({
         ...group,
@@ -751,6 +775,7 @@ onMounted(() => {
 .col-initiator {
   flex: 1.5;
   min-width: 100px;
+  white-space: nowrap;
 }
 
 .col-update {

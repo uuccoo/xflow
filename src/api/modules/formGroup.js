@@ -11,22 +11,6 @@ export function getFormGroupList() {
 }
 
 /**
- * 获取带表单列表的表单分组
- * @param {String} keyword 可选的搜索关键字，根据表单名称进行筛选
- * @param {Boolean} manager 可选参数，是否只获取管理员相关的表单分组
- */
-export function getFormGroupsWithForms(keyword, manager) {
-  return request({
-    url: '/form-groups/with-forms',
-    method: 'get',
-    params: {
-      ...(keyword ? { keyword } : {}),
-      ...(manager !== undefined ? { manager } : {}),
-    },
-  });
-}
-
-/**
  * 创建表单分组
  * @param {Object} data 分组数据 {name, sortOrder}
  */
@@ -76,7 +60,6 @@ export function updateFormGroupSortOrders(sortedIds) {
 
 export default {
   getFormGroupList,
-  getFormGroupsWithForms,
   createFormGroup,
   updateFormGroup,
   deleteFormGroup,
