@@ -2,7 +2,7 @@
     <div class="approval-form-bg">
         <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
         <el-tooltip content="返回" placement="top">
-            <div class="floating-back-button" @click="goBack">
+            <div class="floating-back-button" @click="goToInitiateApproval">
                 <el-icon><arrow-left /></el-icon>
             </div>
         </el-tooltip>
@@ -30,7 +30,7 @@
 
                 <!-- 提交按钮 -->
                 <div class="form-actions">
-                    <el-button @click="goBack">取消</el-button>
+                    <el-button @click="goToInitiateApproval">取消</el-button>
                     <el-button type="primary" @click="submitForm" :loading="submitting">提交</el-button>
                 </div>
             </div>
@@ -112,9 +112,9 @@ const reloadForm = () => {
     loadForm();
 };
 
-// 返回上一页
-const goBack = () => {
-    router.back();
+// 返回发起审批页面
+const goToInitiateApproval = () => {
+    router.push('/home/initiate');
 };
 
 // 更新表单值
