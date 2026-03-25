@@ -142,6 +142,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 import { generateUniqueId } from '@/utils/idGenerator'
+import { collectRequiredConditionFields } from '@/utils/formItems'
 import { FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
 
@@ -157,7 +158,7 @@ const props = defineProps({
 const flowStore = useFlowDesignStore()
 const formDesignStore = useFormDesignStore()
 
-// 存储表单中所有必填项
+// 存储可用于条件判断的必填字段
 const requiredItems = ref([]);
 
 // 条件组列表
@@ -184,35 +185,11 @@ const checkboxConditionOptions = [
     { label: '包含任意', value: 'contains' }
 ];
 
-// 获取表单中的必填项
-const getRequiredFormFields = () => {
-    // 创建一个辅助函数，递归遍历所有表单项，包括分栏容器内的组件
-    const collectRequiredFields = (items) => {
-        let result = [];
-
-        for (const item of items) {
-            // 如果是分栏容器，递归处理其子组件
-            if (item.type === FormComponentType.COLUMNS && item.children && item.children.length > 0) {
-                result = result.concat(collectRequiredFields(item.children));
-            }
-            // 如果是必填的单选框、多选框或数字输入框，加入结果
-            else if (item.required && item.label && [FormComponentType.RADIO, FormComponentType.CHECKBOX, FormComponentType.NUMBER].includes(item.type)) {
-                result.push(item);
-            }
-        }
-
-        return result;
-    };
-
-    // 收集所有表单项中符合条件的字段，直接存储到requiredItems中
-    requiredItems.value = collectRequiredFields(formDesignStore.formItems);
-}
-
 // 初始化表单数据
 const initFormData = () => {
     console.log('初始化表单数据', props.node);
     // 获取必填表单项
-    getRequiredFormFields();
+    requiredItems.value = collectRequiredConditionFields(formDesignStore.formItems);
 
     // 如果节点中已有条件组数据，则使用；否则初始化一个默认条件组
     if (props.node.props && props.node.props.conditionGroups && props.node.props.conditionGroups.length) {
