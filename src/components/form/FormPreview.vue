@@ -36,13 +36,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue';
+import { onMounted, reactive, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
 import { useFormDesignStore } from '@/stores/formDesignStore';
+import { FormComponentType } from '@/enums';
 import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems';
 
 // 定义emits
@@ -77,6 +78,30 @@ const updateValue = (id, value) => {
     }
 };
 
+// 判断必填字段是否为空
+const isRequiredValueEmpty = (item, value) => {
+    if (item?.type === FormComponentType.TEXT) {
+        return false;
+    }
+
+    const arrayRequiredTypes = [
+        FormComponentType.CHECKBOX,
+        FormComponentType.DATERANGE,
+        FormComponentType.UPLOAD,
+        FormComponentType.IMAGE
+    ];
+
+    if (arrayRequiredTypes.includes(item?.type)) {
+        return !Array.isArray(value) || value.length === 0;
+    }
+
+    if (typeof value === 'string') {
+        return value.trim() === '';
+    }
+
+    return value === undefined || value === null;
+};
+
 // 验证表单
 const validateForm = () => {
     const requiredItems = collectRequiredFormItems(formItems.value);
@@ -84,7 +109,7 @@ const validateForm = () => {
         if (!item.id) continue;
 
         const value = formValues[item.id];
-        if (value === undefined || value === null || value === '') {
+        if (isRequiredValueEmpty(item, value)) {
             ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
             return false;
         }
