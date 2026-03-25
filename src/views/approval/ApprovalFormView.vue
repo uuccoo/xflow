@@ -44,12 +44,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import { formApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
+import { FormComponentType } from '@/enums';
+import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems';
 
 const route = useRoute();
 const router = useRouter();
@@ -90,11 +92,7 @@ const loadForm = async () => {
 
             // 初始化表单字段和默认值
             if (Array.isArray(fillData.formItems)) {
-                fillData.formItems.forEach(item => {
-                    if (item.id) {
-                        formValues[item.id] = item.defaultValue || '';
-                    }
-                });
+                Object.assign(formValues, buildDefaultFormValues(fillData.formItems));
             }
         } else {
             ElMessage.error('表单数据获取失败');
@@ -124,18 +122,42 @@ const updateValue = (id, value) => {
     }
 };
 
+// 判断必填字段是否为空
+const isRequiredValueEmpty = (item, value) => {
+    if (item?.type === FormComponentType.TEXT) {
+        return false;
+    }
+
+    const arrayRequiredTypes = [
+        FormComponentType.CHECKBOX,
+        FormComponentType.DATERANGE,
+        FormComponentType.UPLOAD,
+        FormComponentType.IMAGE
+    ];
+
+    if (arrayRequiredTypes.includes(item?.type)) {
+        return !Array.isArray(value) || value.length === 0;
+    }
+
+    if (typeof value === 'string') {
+        return value.trim() === '';
+    }
+
+    return value === undefined || value === null;
+};
+
 // 验证表单
 const validateForm = () => {
     if (!formFillData.value || !Array.isArray(formFillData.value.formItems)) {
         return false;
     }
 
-    const requiredItems = formFillData.value.formItems.filter(item => item.required);
+    const requiredItems = collectRequiredFormItems(formFillData.value.formItems);
     for (const item of requiredItems) {
         if (!item.id) continue;
 
         const value = formValues[item.id];
-        if (value === undefined || value === null || value === '') {
+        if (isRequiredValueEmpty(item, value)) {
             ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
             return false;
         }
