@@ -43,6 +43,7 @@ import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
 import { useFormDesignStore } from '@/stores/formDesignStore';
+import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems';
 
 // 定义emits
 const emit = defineEmits(['close-preview']);
@@ -60,11 +61,8 @@ const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '�
 
 // 初始化表单字段和默认值
 const initFormValues = () => {
-    formItems.value.forEach(item => {
-        if (item.id) {
-            formValues[item.id] = item.defaultValue || '';
-        }
-    });
+    const defaultValues = buildDefaultFormValues(formItems.value);
+    Object.assign(formValues, defaultValues);
 };
 
 // 返回上一页
@@ -81,7 +79,7 @@ const updateValue = (id, value) => {
 
 // 验证表单
 const validateForm = () => {
-    const requiredItems = formItems.value.filter(item => item.required);
+    const requiredItems = collectRequiredFormItems(formItems.value);
     for (const item of requiredItems) {
         if (!item.id) continue;
 

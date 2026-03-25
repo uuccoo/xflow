@@ -40,3 +40,35 @@ export const collectRequiredConditionFields = (items = []) => {
 
   return result
 }
+
+/**
+ * 收集所有必填字段（已拍平，分栏容器不参与）。
+ */
+export const collectRequiredFormItems = (items = []) => {
+  const result = []
+  const flatItems = flattenFormItems(items)
+
+  for (const item of flatItems) {
+    if (item?.required) {
+      result.push(item)
+    }
+  }
+
+  return result
+}
+
+/**
+ * 构建默认表单值（结构：{ [id]: defaultValue }）。
+ */
+export const buildDefaultFormValues = (items = []) => {
+  const defaultValues = {}
+  const flatItems = flattenFormItems(items)
+
+  for (const item of flatItems) {
+    if (item?.id && item.defaultValue !== undefined) {
+      defaultValues[item.id] = item.defaultValue
+    }
+  }
+
+  return defaultValues
+}
