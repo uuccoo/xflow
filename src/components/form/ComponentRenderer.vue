@@ -159,6 +159,13 @@ const renderField = () => {
           )
         );
       }
+    case FormComponentType.IDCARD:
+      return h(ElInput, {
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
+        modelValue: props.component.defaultValue,
+        disabled: true,
+        style: { width: '100%' }
+      });
     case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
       if (props.component.asDropdown) {

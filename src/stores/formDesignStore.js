@@ -49,7 +49,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '单行文本',
           placeholder: '请输入',
           required: false,
-          validator: '',
           defaultValue: '',
         },
         {
@@ -60,7 +59,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '多行文本',
           placeholder: '请输入',
           required: false,
-          validator: '',
           defaultValue: '',
         },
         {
@@ -71,7 +69,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '数字输入框',
           placeholder: '请输入数字',
           required: false,
-          validator: '',
           defaultValue: '',
           min: 0,
           max: 100,
@@ -141,6 +138,21 @@ export const useFormDesignStore = defineStore('formDesign', () => {
         },
         {
           id: '',
+          type: FormComponentType.IDCARD,
+          icon: 'User',
+          name: '身份证',
+          label: '身份证',
+          placeholder: '请输入',
+          required: false,
+          defaultValue: '',
+        },
+      ],
+    },
+    {
+      category: '高级组件',
+      items: [
+        {
+          id: '',
           type: FormComponentType.UPLOAD,
           icon: 'Upload',
           name: '文件上传',
@@ -160,10 +172,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           defaultValue: [],
         },
       ],
-    },
-    {
-      category: '高级组件',
-      items: [],
     },
   ])
 

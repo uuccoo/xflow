@@ -6,8 +6,9 @@
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
         <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
-          <form-renderer :component="element" :form-values="formValues"
-            @update:value="(id, value) => $emit('update:value', id, value)" />
+          <form-renderer :component="element" :form-values="formValues" :validation-errors="validationErrors"
+            @update:value="(id, value) => $emit('update:value', id, value)"
+            @update:error="(id, error) => $emit('update:error', id, error)" />
         </div>
       </div>
     </div>
@@ -21,6 +22,9 @@
       <div class="form-item-control">
         <!-- 根据组件类型渲染不同的表单控件 -->
         <component :is="renderField()" />
+        <div v-if="component.type === FormComponentType.IDCARD && validationErrors[component.id]" class="validation-error">
+          {{ validationErrors[component.id].message }}
+        </div>
       </div>
     </div>
   </div>
@@ -29,6 +33,7 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
+import { validateIdCard } from '@/utils/validators'
 import { FormComponentType } from '@/enums';
 
 // 自引用组件（递归组件）
@@ -42,10 +47,16 @@ const props = defineProps({
   formValues: {
     type: Object,
     default: () => ({})
+  },
+  validationErrors: {
+    type: Object,
+    default: () => ({})
   }
 });
 
-const emit = defineEmits(['update:value']);
+const emit = defineEmits(['update:value', 'update:error']);
+
+// 使用公共校验函数 validateIdCard
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
@@ -114,6 +125,23 @@ const renderField = () => {
           ) || []
         );
       }
+
+    case FormComponentType.IDCARD:
+      return h(ElInput, {
+        modelValue: getValue.value,
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
+        style: { width: '100%' },
+        'onUpdate:modelValue': handleValueChange,
+        onBlur: () => {
+          if (props.component.id) {
+            const error = validateIdCard(getValue.value)
+            emit('update:error', props.component.id, error ? {
+              message: error,
+              label: props.component.label,
+            } : null)
+          }
+        }
+      });
 
     case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
@@ -256,6 +284,12 @@ const renderField = () => {
 
 .form-item-control {
   width: 100%;
+}
+
+.validation-error {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-top: 6px;
 }
 
 .column-container {

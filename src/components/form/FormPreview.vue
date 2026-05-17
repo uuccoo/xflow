@@ -20,7 +20,8 @@
                 <div class="form-content">
                     <el-form :model="formValues" label-position="top" class="custom-form">
                         <div v-for="item in formItems" :key="item.id" class="form-item-container">
-                            <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
+                            <form-renderer :component="item" :form-values="formValues" :validation-errors="validationErrors"
+                                @update:value="updateValue" @update:error="updateError" />
                         </div>
                     </el-form>
                 </div>
@@ -56,6 +57,7 @@ const { formItems } = storeToRefs(formDesignStore);
 
 // 表单相关状态
 const formValues = reactive({});
+const validationErrors = reactive({});
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
@@ -75,6 +77,18 @@ const goBack = () => {
 const updateValue = (id, value) => {
     if (id) {
         formValues[id] = value;
+    }
+};
+
+// 更新校验错误
+const updateError = (id, error) => {
+    if (!id) return;
+    if (error) {
+        validationErrors[id] = error;
+    } else {
+        if (validationErrors[id] !== undefined) {
+            delete validationErrors[id]
+        }
     }
 };
 
@@ -105,6 +119,8 @@ const isRequiredValueEmpty = (item, value) => {
 // 验证表单
 const validateForm = () => {
     const requiredItems = collectRequiredFormItems(formItems.value);
+
+    // 1. 必填项校验
     for (const item of requiredItems) {
         if (!item.id) continue;
 
@@ -112,6 +128,14 @@ const validateForm = () => {
         if (isRequiredValueEmpty(item, value)) {
             ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
             return false;
+        }
+    }
+
+    // 2. 检查父组件维护的 validationErrors 是否存在错误
+    for (const [id, err] of Object.entries(validationErrors)) {
+        if (err?.message) {
+            ElMessage.error(`${err.label || '字段'}: ${err.message}`)
+            return false
         }
     }
 

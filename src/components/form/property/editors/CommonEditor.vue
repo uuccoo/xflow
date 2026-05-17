@@ -12,14 +12,6 @@
         <el-form-item label="是否必填">
             <el-switch v-model="component.required"></el-switch>
         </el-form-item>
-        <el-form-item label="校验规则">
-            <el-select v-model="component.validator" placeholder="请选择校验规则" style="width: 100%">
-                <el-option label="无" value="none"></el-option>
-                <el-option label="邮箱" value="email"></el-option>
-                <el-option label="手机号" value="phone"></el-option>
-                <el-option label="身份证" value="id"></el-option>
-            </el-select>
-        </el-form-item>
         <el-form-item label="默认值">
             <el-input v-model="component.defaultValue" placeholder="请输入默认值"></el-input>
         </el-form-item>
