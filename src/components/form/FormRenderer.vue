@@ -36,6 +36,7 @@ import { computed, defineAsyncComponent, h } from 'vue';
 import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
+import ImageField from './fields/ImageField.vue'
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -212,17 +213,11 @@ const renderField = () => {
       });
 
     case FormComponentType.IMAGE:
-      return h(ElUpload, {
-        class: 'avatar-uploader',
-        action: '#',
-        listType: 'picture-card',
-        autoUpload: false,
-        accept: 'image/*',
-        fileList: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:fileList': (files) => handleValueChange(files)
-      }, {
-        default: () => h(ElIcon, {}, { default: () => h(Plus) })
-      });
+      return h(ImageField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case FormComponentType.NUMBER:
       return h(ElInputNumber, {

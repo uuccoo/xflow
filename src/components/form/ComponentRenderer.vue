@@ -64,6 +64,7 @@ import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 import IdCardField from './fields/IdCardField.vue'
+import ImageField from './fields/ImageField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -223,16 +224,11 @@ const renderField = () => {
         default: () => h(ElButton, { disabled: true }, { default: () => '点击上传' })
       });
     case FormComponentType.IMAGE:
-      return h(ElUpload, {
-        class: 'avatar-uploader',
-        action: '#',
-        disabled: true,
-        listType: 'picture-card',
-        autoUpload: false,
-        accept: 'image/*'
-      }, {
-        default: () => h(ElIcon, {}, { default: () => h(Plus) })
-      });
+        return h(ImageField, {
+          component: props.component,
+          modelValue: props.component.defaultValue || [],
+          readonly: true,
+        })
     case FormComponentType.TEXT:
       return h('div', {
         style: {
