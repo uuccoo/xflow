@@ -37,6 +37,7 @@ import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 import ImageField from './fields/ImageField.vue'
+import UploadField from './fields/UploadField.vue'
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -202,15 +203,11 @@ const renderField = () => {
       });
 
     case FormComponentType.UPLOAD:
-      return h(ElUpload, {
-        action: '#',
-        autoUpload: false,
-        accept: 'image/*',
-        fileList: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:fileList': (files) => handleValueChange(files)
-      }, {
-        default: () => h(ElButton, {}, { default: () => '点击上传' })
-      });
+      return h(UploadField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case FormComponentType.IMAGE:
       return h(ImageField, {

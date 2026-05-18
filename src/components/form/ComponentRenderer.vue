@@ -65,6 +65,7 @@ import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 import IdCardField from './fields/IdCardField.vue'
 import ImageField from './fields/ImageField.vue'
+import UploadField from './fields/UploadField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -215,14 +216,11 @@ const renderField = () => {
         disabled: true
       });
     case FormComponentType.UPLOAD:
-      return h(ElUpload, {
-        action: '#',
-        disabled: true,
-        autoUpload: false,
-        accept: 'image/*'
-      }, {
-        default: () => h(ElButton, { disabled: true }, { default: () => '点击上传' })
-      });
+      return h(UploadField, {
+        component: props.component,
+        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
+        readonly: true,
+      })
     case FormComponentType.IMAGE:
         return h(ImageField, {
           component: props.component,
