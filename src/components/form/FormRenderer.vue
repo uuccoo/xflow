@@ -33,9 +33,9 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
-import { validateIdCard, validatePhone } from '@/utils/validators'
-import { PHONE_AREA_CODES } from '@/constants/phoneAreaCodes'
+import { validateIdCard } from '@/utils/validators'
 import { FormComponentType } from '@/enums';
+import PhoneField from './fields/PhoneField.vue'
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -85,27 +85,6 @@ const handleValueChange = (value) => {
     emit('update:value', props.component.id, value);
   }
 };
-
-const updatePhoneValue = (field, value) => {
-  const currentValue = getValue.value
-  const nextValue = {
-    ...currentValue,
-    [field]: value,
-  }
-  handleValueChange(nextValue)
-  return nextValue
-}
-
-const validatePhoneField = (value) => {
-  if (!props.component.id) return
-
-  const error = validatePhone(value)
-  emit('update:error', props.component.id, error ? {
-    message: error,
-    label: props.component.label,
-    type: props.component.type,
-  } : null)
-}
 
 // 渲染表单控件
 const renderField = () => {
@@ -170,32 +149,14 @@ const renderField = () => {
       });
 
     case FormComponentType.PHONE: {
-      const phoneValue = getValue.value
-      console.log('渲染手机号组件，当前值：', phoneValue)
-
-      return h(ElInput, {
-        modelValue: phoneValue.number,
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        style: { width: '100%' },
-        'onUpdate:modelValue': (value) => {
-          updatePhoneValue('number', value)
+      return h(PhoneField, {
+        component: props.component,
+        modelValue: getValue.value,
+        'onUpdate:modelValue': handleValueChange,
+        'onUpdate:error': (error) => {
+          if (!props.component.id) return
+          emit('update:error', props.component.id, error)
         },
-        onBlur: () => {
-          validatePhoneField(getValue.value)
-        }
-      }, {
-        prepend: () => h(ElSelect, {
-          modelValue: phoneValue.areaCode,
-          style: { width: '100px' },
-          'onUpdate:modelValue': (value) => {
-            const nextValue = updatePhoneValue('areaCode', value)
-            validatePhoneField(nextValue)
-          }
-        }, {
-          default: () => PHONE_AREA_CODES.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          )
-        })
       })
     }
 
