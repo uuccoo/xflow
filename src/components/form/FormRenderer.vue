@@ -33,7 +33,7 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
-import { validateIdCard } from '@/utils/validators'
+import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 
@@ -56,8 +56,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:value', 'update:error']);
-
-// 使用公共校验函数 validateIdCard
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
@@ -84,6 +82,11 @@ const handleValueChange = (value) => {
   if (props.component.id) {
     emit('update:value', props.component.id, value);
   }
+};
+
+const handleFieldErrorChange = (error) => {
+  if (!props.component.id) return
+  emit('update:error', props.component.id, error)
 };
 
 // 渲染表单控件
@@ -132,31 +135,19 @@ const renderField = () => {
       }
 
     case FormComponentType.IDCARD:
-      return h(ElInput, {
+      return h(IdCardField, {
+        component: props.component,
         modelValue: getValue.value,
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        style: { width: '100%' },
         'onUpdate:modelValue': handleValueChange,
-        onBlur: () => {
-          if (props.component.id) {
-            const error = validateIdCard(getValue.value)
-            emit('update:error', props.component.id, error ? {
-              message: error,
-              label: props.component.label,
-            } : null)
-          }
-        }
-      });
+        'onUpdate:error': handleFieldErrorChange
+      })
 
     case FormComponentType.PHONE: {
       return h(PhoneField, {
         component: props.component,
         modelValue: getValue.value,
         'onUpdate:modelValue': handleValueChange,
-        'onUpdate:error': (error) => {
-          if (!props.component.id) return
-          emit('update:error', props.component.id, error)
-        },
+        'onUpdate:error': handleFieldErrorChange,
       })
     }
 

@@ -63,6 +63,7 @@ import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
+import IdCardField from './fields/IdCardField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -161,12 +162,11 @@ const renderField = () => {
         );
       }
     case FormComponentType.IDCARD:
-      return h(ElInput, {
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        modelValue: props.component.defaultValue,
-        disabled: true,
-        style: { width: '100%' }
-      });
+      return h(IdCardField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || '',
+        readonly: true,
+      })
     case FormComponentType.PHONE:
       return h(PhoneField, {
         component: props.component,
