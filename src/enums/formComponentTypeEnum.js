@@ -48,4 +48,8 @@ export const FormComponentType = {
    * 身份证
    */
   IDCARD: 'idcard',
+  /**
+   * 手机号
+   */
+  PHONE: 'phone',
 }

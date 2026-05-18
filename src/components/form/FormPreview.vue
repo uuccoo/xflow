@@ -98,6 +98,10 @@ const isRequiredValueEmpty = (item, value) => {
         return false;
     }
 
+    if (item?.type === FormComponentType.PHONE) {
+        return !value || typeof value !== 'object' || !value.number || value.number.trim() === '';
+    }
+
     const arrayRequiredTypes = [
         FormComponentType.CHECKBOX,
         FormComponentType.DATERANGE,

@@ -22,8 +22,8 @@
       <div class="form-item-control">
         <!-- 根据组件类型渲染不同的表单控件 -->
         <component :is="renderField()" />
-        <div v-if="component.type === FormComponentType.IDCARD && validationErrors[component.id]" class="validation-error">
-          {{ validationErrors[component.id].message }}
+        <div v-if="validationErrors[component.id]" class="validation-error">
+          {{ validationErrors[component.id]?.message }}
         </div>
       </div>
     </div>
@@ -33,7 +33,8 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
-import { validateIdCard } from '@/utils/validators'
+import { validateIdCard, validatePhone } from '@/utils/validators'
+import { PHONE_AREA_CODES } from '@/constants/phoneAreaCodes'
 import { FormComponentType } from '@/enums';
 
 // 自引用组件（递归组件）
@@ -84,6 +85,27 @@ const handleValueChange = (value) => {
     emit('update:value', props.component.id, value);
   }
 };
+
+const updatePhoneValue = (field, value) => {
+  const currentValue = getValue.value
+  const nextValue = {
+    ...currentValue,
+    [field]: value,
+  }
+  handleValueChange(nextValue)
+  return nextValue
+}
+
+const validatePhoneField = (value) => {
+  if (!props.component.id) return
+
+  const error = validatePhone(value)
+  emit('update:error', props.component.id, error ? {
+    message: error,
+    label: props.component.label,
+    type: props.component.type,
+  } : null)
+}
 
 // 渲染表单控件
 const renderField = () => {
@@ -146,6 +168,36 @@ const renderField = () => {
           }
         }
       });
+
+    case FormComponentType.PHONE: {
+      const phoneValue = getValue.value
+      console.log('渲染手机号组件，当前值：', phoneValue)
+
+      return h(ElInput, {
+        modelValue: phoneValue.number,
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
+        style: { width: '100%' },
+        'onUpdate:modelValue': (value) => {
+          updatePhoneValue('number', value)
+        },
+        onBlur: () => {
+          validatePhoneField(getValue.value)
+        }
+      }, {
+        prepend: () => h(ElSelect, {
+          modelValue: phoneValue.areaCode,
+          style: { width: '100px' },
+          'onUpdate:modelValue': (value) => {
+            const nextValue = updatePhoneValue('areaCode', value)
+            validatePhoneField(nextValue)
+          }
+        }, {
+          default: () => PHONE_AREA_CODES.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          )
+        })
+      })
+    }
 
     case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组

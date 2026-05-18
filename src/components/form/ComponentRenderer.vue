@@ -62,6 +62,7 @@ import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
+import { PHONE_AREA_CODES } from '@/constants/phoneAreaCodes'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -165,6 +166,23 @@ const renderField = () => {
         modelValue: props.component.defaultValue,
         disabled: true,
         style: { width: '100%' }
+      });
+    case FormComponentType.PHONE:
+      return h(ElInput, {
+        placeholder: props.component.placeholder || '请输入' + props.component.label,
+        modelValue: props.component.defaultValue?.number || '',
+        disabled: true,
+        style: { width: '100%' }
+      }, {
+        prepend: () => h(ElSelect, {
+          modelValue: props.component.defaultValue?.areaCode || '+86',
+          disabled: true,
+          style: { width: '100px' }
+        }, {
+          default: () => PHONE_AREA_CODES.map(option =>
+            h(ElOption, { label: option.label, value: option.value, key: option.value })
+          )
+        })
       });
     case FormComponentType.CHECKBOX:
       // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组

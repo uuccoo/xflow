@@ -146,6 +146,19 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           required: false,
           defaultValue: '',
         },
+        {
+          id: '',
+          type: FormComponentType.PHONE,
+          icon: 'Iphone',
+          name: '手机号',
+          label: '手机号',
+          placeholder: '请输入',
+          required: false,
+          defaultValue: {
+            areaCode: '+86',
+            number: '',
+          },
+        },
       ],
     },
     {
