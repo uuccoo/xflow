@@ -68,8 +68,12 @@ const getGridTemplateColumns = (layoutValue) => {
 
 // 获取当前组件的值
 const getValue = computed(() => {
-  if (props.component.id && props.formValues) {
-    return props.formValues[props.component.id];
+  let componentId = props.component.id;
+  let formValues = props.formValues;
+
+  // 从 formValues 中获取当前组件的值，如果没有则使用组件的默认值
+  if (componentId && formValues && formValues.hasOwnProperty(componentId)) {
+    return formValues[componentId];
   }
   return props.component.defaultValue || '';
 });

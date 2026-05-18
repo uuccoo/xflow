@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, computed } from 'vue';
+import { onBeforeMount, reactive, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
@@ -155,7 +155,7 @@ const submitForm = async () => {
 };
 
 // 组件挂载时初始化表单默认值
-onMounted(() => {
+onBeforeMount(() => {
     initFormValues();
 });
 </script>
