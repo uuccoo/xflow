@@ -38,6 +38,8 @@ import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
+import RadioField from './fields/RadioField.vue'
+import CheckboxField from './fields/CheckboxField.vue'
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -111,30 +113,11 @@ const renderField = () => {
       });
 
     case FormComponentType.RADIO:
-      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect,
-          {
-            modelValue: getValue.value,
-            placeholder: props.component.placeholder || '请选择' + props.component.label,
-            style: { width: '100%' },
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          ) || []
-        );
-      } else {
-        return h(ElRadioGroup,
-          {
-            modelValue: getValue.value,
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElRadio, { label: option.value }, { default: () => option.label })
-          ) || []
-        );
-      }
+      return h(RadioField, {
+        component: props.component,
+        modelValue: getValue.value,
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case FormComponentType.IDCARD:
       return h(IdCardField, {
@@ -154,31 +137,11 @@ const renderField = () => {
     }
 
     case FormComponentType.CHECKBOX:
-      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect,
-          {
-            modelValue: getValue.value,
-            multiple: true,
-            placeholder: props.component.placeholder || '请选择' + props.component.label,
-            style: { width: '100%' },
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          ) || []
-        );
-      } else {
-        return h(ElCheckboxGroup,
-          {
-            modelValue: getValue.value,
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElCheckbox, { label: option.value }, { default: () => option.label })
-          ) || []
-        );
-      }
+      return h(CheckboxField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case 'select':
       return h(ElSelect,

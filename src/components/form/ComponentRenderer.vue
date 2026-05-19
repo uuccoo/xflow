@@ -66,6 +66,8 @@ import PhoneField from './fields/PhoneField.vue'
 import IdCardField from './fields/IdCardField.vue'
 import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
+import RadioField from './fields/RadioField.vue'
+import CheckboxField from './fields/CheckboxField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -144,25 +146,11 @@ const renderField = () => {
         style: { width: '100%', "max-width": '220px' }
       });
     case FormComponentType.RADIO:
-      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect, {
-          modelValue: props.component.defaultValue,
-          placeholder: props.component.placeholder || '请选择' + props.component.label,
-          style: { width: '100%' },
-          disabled: true
-        }, {
-          default: () => props.component.options.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          )
-        });
-      } else {
-        return h(ElRadioGroup, { modelValue: props.component.defaultValue, disabled: true },
-          props.component.options.map(option =>
-            h(ElRadio, { label: option.value, disabled: true }, { default: () => option.label })
-          )
-        );
-      }
+      return h(RadioField, {
+        component: props.component,
+        modelValue: props.component.defaultValue,
+        readonly: true,
+      })
     case FormComponentType.IDCARD:
       return h(IdCardField, {
         component: props.component,
@@ -176,26 +164,11 @@ const renderField = () => {
         readonly: true,
       })
     case FormComponentType.CHECKBOX:
-      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect, {
-          modelValue: props.component.defaultValue,
-          multiple: true,
-          placeholder: props.component.placeholder || '请选择' + props.component.label,
-          style: { width: '100%' },
-          disabled: true
-        }, {
-          default: () => props.component.options.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          )
-        });
-      } else {
-        return h(ElCheckboxGroup, { modelValue: props.component.defaultValue, disabled: true },
-          props.component.options.map(option =>
-            h(ElCheckbox, { label: option.value, disabled: true }, { default: () => option.label })
-          )
-        );
-      }
+      return h(CheckboxField, {
+        component: props.component,
+        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
+        readonly: true,
+      })
     case FormComponentType.DATE:
       return h(ElDatePicker, {
         type: 'date',
