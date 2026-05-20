@@ -142,7 +142,7 @@ const renderField = () => {
         disabled: true,
         min: props.component.min,
         max: props.component.max,
-        step: props.component.step,
+        precision: props.component.precision,
         style: { width: '100%', "max-width": '220px' }
       });
     case FormComponentType.RADIO:

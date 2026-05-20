@@ -69,10 +69,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '数字输入框',
           placeholder: '请输入数字',
           required: false,
-          defaultValue: '',
-          min: 0,
-          max: 100,
-          step: 1,
+          defaultValue: undefined,
+          min: undefined,
+          max: undefined,
+          precision: undefined, // 小数位数限制
         },
         {
           id: '',

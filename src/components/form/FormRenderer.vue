@@ -185,7 +185,7 @@ const renderField = () => {
         placeholder: props.component.placeholder || '请输入数字',
         min: props.component.min,
         max: props.component.max,
-        step: props.component.step,
+        precision: props.component.precision,
         style: { width: '100%', "max-width": '220px' },
         'onUpdate:modelValue': handleValueChange
       });
