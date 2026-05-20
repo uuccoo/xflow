@@ -1,7 +1,7 @@
 <template>
     <div class="property-panel">
         <div class="property-header">
-            <h3>属性设置</h3>
+            <h3>属性设置<span v-if="component" class="component-name">（{{ props.component.name }}）</span></h3>
         </div>
 
         <el-form v-if="component" label-position="top" size="small" class="property-form">
