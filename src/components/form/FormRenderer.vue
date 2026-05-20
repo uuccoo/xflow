@@ -36,6 +36,8 @@ import { computed, defineAsyncComponent, h } from 'vue';
 import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
+import DateField from './fields/DateField.vue'
+import DateRangeField from './fields/DateRangeField.vue'
 import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
@@ -157,11 +159,9 @@ const renderField = () => {
       );
 
     case FormComponentType.DATE:
-      return h(ElDatePicker, {
-        type: 'date',
-        placeholder: props.component.placeholder || '请选择日期',
+      return h(DateField, {
+        component: props.component,
         modelValue: getValue.value,
-        style: { width: '100%' },
         'onUpdate:modelValue': handleValueChange
       });
 
@@ -191,15 +191,9 @@ const renderField = () => {
       });
 
     case FormComponentType.DATERANGE:
-      return h(ElDatePicker, {
-        type: 'datetimerange',
-        placeholder: props.component.placeholder || '请选择日期时间区间',
-        rangeSeparator: props.component.rangeSeparator || '至',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
-        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
-        modelValue: getValue.value,
-        style: { width: '100%' },
+      return h(DateRangeField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
         'onUpdate:modelValue': handleValueChange
       });
 

@@ -64,6 +64,8 @@ import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
 import IdCardField from './fields/IdCardField.vue'
+import DateField from './fields/DateField.vue'
+import DateRangeField from './fields/DateRangeField.vue'
 import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
@@ -170,23 +172,16 @@ const renderField = () => {
         readonly: true,
       })
     case FormComponentType.DATE:
-      return h(ElDatePicker, {
-        type: 'date',
-        placeholder: props.component.placeholder || '请选择日期',
-        modelValue: props.component.defaultValue,
-        disabled: true
+      return h(DateField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || '',
+        readonly: true,
       });
     case FormComponentType.DATERANGE:
-      return h(ElDatePicker, {
-        type: 'datetimerange',
-        placeholder: props.component.placeholder || '请选择日期时间区间',
-        rangeSeparator: props.component.rangeSeparator || '至',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
-        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
-        modelValue: props.component.defaultValue,
-        style: { width: '100%' },
-        disabled: true
+      return h(DateRangeField, {
+        component: props.component,
+        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
+        readonly: true,
       });
     case FormComponentType.UPLOAD:
       return h(UploadField, {
