@@ -21,6 +21,7 @@ import TextEditor from './editors/TextEditor.vue'
 import NumberEditor from './editors/NumberEditor.vue'
 import RadioEditor from './editors/RadioEditor.vue'
 import CheckboxEditor from './editors/CheckboxEditor.vue'
+import DateEditor from './editors/DateEditor.vue'
 import DateRangeEditor from './editors/DateRangeEditor.vue'
 import CommonEditor from './editors/CommonEditor.vue'
 import { FormComponentType } from '@/enums'
@@ -46,6 +47,8 @@ const getEditorComponent = (type) => {
             return RadioEditor
         case FormComponentType.CHECKBOX:
             return CheckboxEditor
+        case FormComponentType.DATE:
+            return DateEditor
         case FormComponentType.DATERANGE:
             return DateRangeEditor
         default:
