@@ -6,11 +6,12 @@
         <el-form-item label="提示文字">
             <el-input v-model="component.placeholder" placeholder="请输入提示文字" maxlength="50" show-word-limit></el-input>
         </el-form-item>
-        <el-form-item label="日期格式">
-            <el-select v-model="component.format" style="width: 100%">
-                <el-option label="年-月-日" value="YYYY-MM-DD"></el-option>
-                <el-option label="年/月/日" value="YYYY/MM/DD"></el-option>
-                <el-option label="年-月-日 时:分:秒" value="YYYY-MM-DD HH:mm:ss"></el-option>
+        <el-form-item label="日期类型">
+            <el-select v-model="component.dateType" style="width: 100%">
+                <el-option label="年-月-日" value="date"></el-option>
+                <el-option label="年-月-日 时:分" value="datetime"></el-option>
+                <el-option label="年-月-日 上午/下午" value="datetimeAmPm"></el-option>
+                <el-option label="年-月" value="month"></el-option>
             </el-select>
         </el-form-item>
         <el-form-item label="是否必填">
@@ -20,10 +21,18 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+
 const props = defineProps({
     component: {
         type: Object,
         required: true
     }
 });
+
+onMounted(() => {
+    if (!props.component.dateType) {
+        props.component.dateType = 'date'
+    }
+})
 </script>

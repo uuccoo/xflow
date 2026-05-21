@@ -90,7 +90,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Check',
           name: '单选框',
           label: '单选框',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
           options: [
             { label: '选项1', value: '1' },
@@ -105,7 +105,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'CircleCheck',
           name: '多选框',
           label: '多选框',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
           options: [
             { label: '选项1', value: '1' },
@@ -120,8 +120,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Calendar',
           name: '日期选择',
           label: '日期选择',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
+          dateType: 'date',
           defaultValue: '',
         },
         {
