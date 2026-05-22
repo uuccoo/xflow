@@ -102,9 +102,24 @@ const isRequiredValueEmpty = (item, value) => {
         return !value || typeof value !== 'object' || !value.number || value.number.trim() === '';
     }
 
+    if (item?.type === FormComponentType.DATE && item?.dateType === 'datetimeAmPm') {
+        return !value || typeof value !== 'object' || !value.date;
+    }
+
+    if (item?.type === FormComponentType.DATERANGE) {
+        if (!value || typeof value !== 'object') {
+            return true;
+        }
+
+        if (item?.dateType === 'datetimeAmPm') {
+            return !value.startDate || typeof value.startDate !== 'object' || !value.startDate.date || !value.endDate || typeof value.endDate !== 'object' || !value.endDate.date;
+        }
+
+        return !value.startDate || !value.endDate;
+    }
+
     const arrayRequiredTypes = [
         FormComponentType.CHECKBOX,
-        FormComponentType.DATERANGE,
         FormComponentType.UPLOAD,
         FormComponentType.IMAGE
     ];

@@ -15,7 +15,7 @@
 
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
-      <div class="form-item-label">
+      <div v-if="component.type !== FormComponentType.DATERANGE" class="form-item-label">
         {{ component.label }}
         <span v-if="component.required" class="required">*</span>
       </div>
@@ -193,7 +193,7 @@ const renderField = () => {
     case FormComponentType.DATERANGE:
       return h(DateRangeField, {
         component: props.component,
-        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        modelValue: getValue.value || { startDate: '', endDate: '' },
         'onUpdate:modelValue': handleValueChange
       });
 
