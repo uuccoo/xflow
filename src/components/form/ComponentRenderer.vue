@@ -35,7 +35,7 @@
 
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
-      <div v-if="component.type !== FormComponentType.DATERANGE" class="form-item-label">
+      <div v-if="component.type !== FormComponentType.DATERANGE && component.type !== FormComponentType.TEXT" class="form-item-label">
         {{ component.label }}
         <span v-if="component.required" class="required">*</span>
       </div>
@@ -198,8 +198,8 @@ const renderField = () => {
     case FormComponentType.TEXT:
       return h('div', {
         style: {
-          fontSize: props.component.fontSize || '14px',
-          color: props.component.color || '#606266',
+          fontSize: '14px',
+          color: '#606266',
           padding: '10px',
           backgroundColor: '#f8f8f8',
           borderRadius: '4px',

@@ -81,8 +81,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           name: '说明文字',
           label: '说明文字',
           content: '这里是说明文字内容',
-          fontSize: '14px',
-          color: '#606266',
         },
         {
           id: '',
