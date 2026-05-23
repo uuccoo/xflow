@@ -31,25 +31,17 @@
         </el-button>
       </div>
     </el-form-item>
-    <el-form-item label="显示方式">
-      <el-radio-group v-model="component.asDropdown">
-        <el-radio :label="false">多选框组</el-radio>
-        <el-radio :label="true">下拉多选框</el-radio>
-      </el-radio-group>
+    <el-form-item label="选项平铺">
+      <el-switch v-model="component.optionTile"></el-switch>
     </el-form-item>
     <el-form-item label="是否必填">
       <el-switch v-model="component.required"></el-switch>
     </el-form-item>
     <el-form-item label="默认值">
-      <el-select v-if="component.asDropdown" v-model="component.defaultValue" multiple placeholder="请选择默认值" style="width: 100%">
+      <el-select v-model="component.defaultValue" multiple placeholder="请选择默认值" style="width: 100%">
         <el-option v-for="option in component.options" :key="option.value" :label="option.label"
           :value="option.value"></el-option>
       </el-select>
-      <el-checkbox-group v-else v-model="component.defaultValue">
-        <el-checkbox v-for="option in component.options" :key="option.value" :label="option.value">
-          {{ option.label }}
-        </el-checkbox>
-      </el-checkbox-group>
     </el-form-item>
   </div>
 </template>

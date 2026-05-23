@@ -95,7 +95,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
             { label: '选项2', value: '2' },
           ],
           defaultValue: '',
-          asDropdown: false, // 新增属性：是否以下拉框形式展示
+          optionTile: false, // 选项平铺
         },
         {
           id: '',
@@ -110,7 +110,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
             { label: '选项2', value: '2' },
           ],
           defaultValue: [],
-          asDropdown: false, // 是否以下拉多选框形式展示
+          optionTile: false, // 选项平铺
         },
         {
           id: '',
