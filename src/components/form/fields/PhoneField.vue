@@ -9,7 +9,7 @@
   >
     <template #prepend>
       <el-select
-        :model-value="props.modelValue.areaCode"
+        :model-value="props.modelValue.areaCode || '+86'"
         style="width: 100px"
         @update:model-value="onAreaCodeChange"
         :disabled="props.readonly"
@@ -73,6 +73,7 @@ const updateField = (field, value) => {
     ...props.modelValue,
     [field]: value,
   }
+  nextValue.areaCode = nextValue.areaCode || '+86'
 
   emit('update:modelValue', nextValue)
   return nextValue

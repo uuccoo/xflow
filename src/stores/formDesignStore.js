@@ -147,7 +147,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '身份证',
           placeholder: '请输入',
           required: false,
-          defaultValue: '',
         },
         {
           id: '',
@@ -157,10 +156,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '手机号',
           placeholder: '请输入',
           required: false,
-          defaultValue: {
-            areaCode: '+86',
-            number: '',
-          },
         },
       ],
     },
@@ -173,9 +168,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Upload',
           name: '文件上传',
           label: '文件上传',
-          placeholder: '请输入',
           required: false,
-          defaultValue: [],
         },
         {
           id: '',
@@ -183,9 +176,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Picture',
           name: '图片上传',
           label: '图片上传',
-          placeholder: '请输入',
           required: false,
-          defaultValue: [],
         },
       ],
     },
@@ -235,7 +226,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     return {
       ...component,
       id: generateUniqueId(),
-      placeholder: component.placeholder || '',
     }
   }
 
