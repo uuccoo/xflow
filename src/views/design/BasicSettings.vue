@@ -12,6 +12,15 @@ const basicStore = useBasicSettingsStore()
 // 直接使用 basicSettings 引用，简化访问（不要解构字段，避免丢失响应式）
 const basicSettings = basicStore.basicSettings
 
+// 预设的图标背景色，用户直接点击选择
+const iconColorOptions = [
+  '#FF8800',
+  '#409EFF',
+  '#67C23A',
+  '#E6A23C',
+  '#F56C6C',
+]
+
 // 从ElementPlusIconsVue中获取所有图标
 const iconList = computed(() =>
   Object.entries(ElementPlusIconsVue).map(([name, component]) => ({ name, component }))
@@ -19,21 +28,19 @@ const iconList = computed(() =>
 
 // 图标选择器相关
 const popoverVisible = ref(false) // 控制弹出框可见性
-const colorPickerVisible = ref(false) // 控制颜色选择器可见性
 
 // 切换弹出框可见性
 const togglePopover = () => {
   popoverVisible.value = !popoverVisible.value
 }
 
-// 切换颜色选择器可见性
-const toggleColorPicker = () => {
-  colorPickerVisible.value = !colorPickerVisible.value
-}
-
 const selectIcon = (iconName) => {
   basicSettings.selectedIcon = iconName
   popoverVisible.value = false // 选择后关闭弹窗
+}
+
+const selectIconColor = (color) => {
+  basicSettings.iconColor = color
 }
 
 // 分组相关
@@ -84,11 +91,6 @@ onMounted(() => {
               </el-icon>
             </div>
             <div class="option-item">
-              <span class="clickable-text" @click="toggleColorPicker">选择背景色</span>
-              <el-color-picker v-model="basicSettings.iconColor" size="small" v-model:visible="colorPickerVisible"
-                :predefine="['#FF8800', '#409EFF', '#67C23A', '#E6A23C', '#F56C6C']" />
-            </div>
-            <div class="option-item">
               <span class="clickable-text" @click="togglePopover">选择图标</span>
               <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
                 <template #reference>
@@ -107,6 +109,20 @@ onMounted(() => {
                   </div>
                 </div>
               </el-popover>
+            </div>
+            <div class="option-item">
+              <span class="clickable-text">选择颜色</span>
+              <div class="color-options">
+                <button
+                  v-for="color in iconColorOptions"
+                  :key="color"
+                  type="button"
+                  class="color-option"
+                  :class="{ active: basicSettings.iconColor === color }"
+                  :style="{ '--swatch-color': color }"
+                  @click="selectIconColor(color)"
+                ></button>
+              </div>
             </div>
           </div>
         </el-form-item>
@@ -239,13 +255,40 @@ onMounted(() => {
       }
     }
 
-    .el-color-picker,
     .el-icon {
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
         transform: scale(1.1);
+      }
+    }
+
+    .color-options {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-option {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      box-sizing: border-box;
+      background-color: var(--swatch-color);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: scale(1.08);
+      }
+
+      &.active {
+        box-shadow:
+          0 0 0 2px #ffffff,
+          0 0 0 4px var(--swatch-color);
       }
     }
   }
