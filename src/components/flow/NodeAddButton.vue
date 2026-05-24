@@ -1,5 +1,8 @@
 <template>
-    <div class="node-add-btn">
+    <div class="node-add-btn" :class="{
+        'has-next-node': hasNextNode,
+        'has-end-node': hasEndNode
+    }">
         <el-popover placement="right-start" :width="280" trigger="click" :hide-after="0" :show-arrow="true" :offset="12"
             popper-class="node-popover" v-model:visible="popoverVisible">
             <template #reference>
@@ -49,6 +52,14 @@ const props = defineProps({
     position: {
         type: Number,
         required: true
+    },
+    hasNextNode: {
+        type: Boolean,
+        default: false
+    },
+    hasEndNode: {
+        type: Boolean,
+        default: false
     },
     // 当前操作的分支对象（可选）
     branch: {
@@ -188,6 +199,10 @@ const handleNodeAdd = (type) => {
     justify-content: center;
     z-index: 1;
 
+    &.has-end-node {
+        padding-bottom: 40px;
+    }
+
     &::before {
         content: '';
         position: absolute;
@@ -199,6 +214,39 @@ const handleNodeAdd = (type) => {
         width: 2px;
         background-color: #c0c4cc;
         z-index: -1;
+    }
+
+    &.has-next-node::before {
+        height: calc(100% - 5px);
+    }
+
+    &.has-next-node::after {
+        content: '';
+        position: absolute;
+        left: calc(50% - 6px);
+        bottom: 3px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #c0c4cc;
+        z-index: 0;
+    }
+
+    &.has-end-node::before {
+        height: calc(100% - 8px);
+    }
+
+    &.has-end-node::after {
+        content: '';
+        position: absolute;
+        left: calc(50% - 5px);
+        bottom: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #c0c4cc;
+        z-index: 0;
     }
 
     .add-btn {

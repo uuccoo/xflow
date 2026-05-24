@@ -57,7 +57,7 @@
                     <div class="branch-nodes">
                         <template v-for="(branchNode, nodeIdx) in (branch.nodes || [])" :key="branchNode.id">
                             <!-- 每个节点前面都有一个添加按钮 -->
-                            <node-add-button :position="nodeIdx" :branch="branch" />
+                            <node-add-button :position="nodeIdx" :branch="branch" has-next-node />
 
                             <!-- 渲染节点 -->
                             <flow-node-renderer :node="branchNode" :index="nodeIdx" :showDeleteBtn="true" :branch="branch">

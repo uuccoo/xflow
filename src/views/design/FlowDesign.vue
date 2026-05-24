@@ -30,14 +30,14 @@
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in flowStore.flowData.nodes" :key="node.id">
           <!-- 每个节点前面都有一个添加按钮 -->
-          <node-add-button :position="index" />
+          <node-add-button :position="index" has-next-node />
 
           <!-- 使用通用节点组件渲染所有节点类型 -->
           <flow-node-renderer :node="node" :index="index" />
         </template>
 
         <!-- 最后一个节点后的添加按钮（无节点时 position=0） -->
-        <node-add-button :position="flowStore.flowData.nodes.length" />
+        <node-add-button :position="flowStore.flowData.nodes.length" has-end-node />
 
         <!-- 结束节点 -->
         <flow-node-renderer :node="{ type: 'end' }" :index="-2" />
