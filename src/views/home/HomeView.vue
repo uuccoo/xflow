@@ -8,7 +8,10 @@
       <ul class="menu-list regular-menu">
         <li v-for="(item, index) in menuItems" :key="index" :class="{ active: activeMenu === item.route }"
           @click="navigateTo(item.route)">
-          {{ item.name }}
+          <el-icon class="menu-icon" :size="18">
+            <component :is="item.icon" />
+          </el-icon>
+          <span>{{ item.name }}</span>
         </li>
       </ul>
 
@@ -16,7 +19,10 @@
       <ul class="menu-list admin-menu">
         <li v-for="(item, index) in adminMenuItems" :key="index" :class="{ active: activeMenu === item.route }"
           @click="navigateTo(item.route)">
-          {{ item.name }}
+          <el-icon class="menu-icon" :size="18">
+            <component :is="item.icon" />
+          </el-icon>
+          <span>{{ item.name }}</span>
         </li>
       </ul>
 
@@ -37,6 +43,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { Stamp, Tickets } from '@element-plus/icons-vue';
 import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
 
 const router = useRouter();
@@ -44,12 +51,12 @@ const route = useRoute();
 const activeMenu = ref('');
 
 const menuItems = [
-  { name: '发起审批', route: '/home/initiate' },
+  { name: '发起审批', route: '/home/initiate', icon: Stamp },
 ];
 
 // 管理相关的菜单项
 const adminMenuItems = [
-  { name: '表单管理', route: '/home/manage-forms' }
+  { name: '表单管理', route: '/home/manage-forms', icon: Tickets }
 ];
 
 onMounted(() => {
@@ -115,6 +122,11 @@ const navigateTo = (route) => {
   transition: all 0.3s;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.menu-list li .menu-icon {
+  flex-shrink: 0;
 }
 
 .menu-list li:hover {
