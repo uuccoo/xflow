@@ -33,6 +33,7 @@ import { ArrowRight, Delete } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { FlowNodeType } from '@/enums'
+import { getFlowNodeOption } from '@/constants/flowNodeOptions'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -54,19 +55,19 @@ const props = defineProps({
 
 // 节点图标
 const nodeIcon = computed(() => {
-    const option = flowStore.getNodeOption(props.node.type)
+    const option = getFlowNodeOption(props.node.type)
     return option ? option.icon : null
 })
 
 // 节点样式
 const nodeStyle = computed(() => {
-    const option = flowStore.getNodeOption(props.node.type)
+    const option = getFlowNodeOption(props.node.type)
     return option ? { borderLeft: `3px solid ${option.color}` } : {}
 })
 
 // 节点头部样式
 const nodeHeaderStyle = computed(() => {
-    const option = flowStore.getNodeOption(props.node.type)
+    const option = getFlowNodeOption(props.node.type)
     return option ? { backgroundColor: option.headerBg } : {}
 })
 

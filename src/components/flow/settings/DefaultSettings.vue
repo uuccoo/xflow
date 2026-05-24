@@ -18,6 +18,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
+import { getFlowNodeOption } from '@/constants/flowNodeOptions'
 
 // 接收节点数据
 const props = defineProps({
@@ -40,7 +41,7 @@ const hasAdvancedSettings = ref(false)
 const nodeTypeLabel = computed(() => {
     if (!props.node) return '节点';
 
-    const option = flowStore.getNodeOption(props.node.type);
+    const option = getFlowNodeOption(props.node.type);
     return option ? option.label : '节点';
 });
 

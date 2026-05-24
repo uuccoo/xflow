@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { Connection, Document, Edit, Money, Setting, Sort, TurnOff, User, Plus, Minus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Minus, Refresh } from '@element-plus/icons-vue'
 import NodeAddButton from '@/components/flow/NodeAddButton.vue'
 import FlowNodeRenderer from '@/components/flow/node/FlowNodeRenderer.vue'
 import NodeSettingsDrawer from '@/components/flow/NodeSettingsDrawer.vue'
@@ -60,23 +60,6 @@ import { computed, ref } from 'vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
-
-// 将图标对象注入到 nodeOptions 中
-// 注意：Pinia store 中我们保存的是图标名称字符串
-// 这里进行转换，将图标组件对象赋值给 nodeOptions
-flowStore.nodeOptions.forEach(option => {
-  const iconMap = {
-    'User': User,
-    'Document': Document,
-    'Edit': Edit,
-    'TurnOff': TurnOff,
-    'Setting': Setting,
-    'Connection': Connection,
-    'Sort': Sort,
-    'Money': Money
-  }
-  option.icon = iconMap[option.icon] || null
-})
 
 // 计算缩放样式 - 使用CSS的zoom属性而非transform
 const zoomStyle = computed(() => ({
