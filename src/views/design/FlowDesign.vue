@@ -27,17 +27,17 @@
         <!-- 发起人节点 -->
         <flow-node-renderer :node="{ type: FlowNodeType.INITIATE }" :index="-1" />
 
-        <!-- 发起人节点后的添加按钮 - 始终显示 -->
-        <node-add-button :position="0" />
-
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in flowStore.flowData.nodes" :key="node.id">
+          <!-- 每个节点前面都有一个添加按钮 -->
+          <node-add-button :position="index" />
+
           <!-- 使用通用节点组件渲染所有节点类型 -->
           <flow-node-renderer :node="node" :index="index" />
-
-          <!-- 每个节点后面都有一个添加按钮 -->
-          <node-add-button :position="index + 1" />
         </template>
+
+        <!-- 最后一个节点后的添加按钮（无节点时 position=0） -->
+        <node-add-button :position="flowStore.flowData.nodes.length" />
 
         <!-- 结束节点 -->
         <flow-node-renderer :node="{ type: 'end' }" :index="-2" />

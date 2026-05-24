@@ -52,21 +52,20 @@
                     </div>
                 </div>
 
-                <!-- 条件框下方紧跟的添加按钮 -->
-                <node-add-button class="first-add-btn" :position="0" :branch="branch" />
-
                 <!-- 分支内的节点列表 -->
-                <div class="branch-nodes-container" v-if="branch.nodes && branch.nodes.length > 0">
+                <div class="branch-nodes-container">
                     <div class="branch-nodes">
-                        <template v-for="(branchNode, nodeIdx) in branch.nodes" :key="branchNode.id">
-                            <!-- 渲染节点 -->
-                            <flow-node-renderer :node="branchNode" :index="nodeIdx" :showDeleteBtn="true"
-                                :branch="branch">
-                            </flow-node-renderer>
+                        <template v-for="(branchNode, nodeIdx) in (branch.nodes || [])" :key="branchNode.id">
+                            <!-- 每个节点前面都有一个添加按钮 -->
+                            <node-add-button :position="nodeIdx" :branch="branch" />
 
-                            <!-- 每个节点后的添加按钮 -->
-                            <node-add-button :position="nodeIdx + 1" :branch="branch" />
+                            <!-- 渲染节点 -->
+                            <flow-node-renderer :node="branchNode" :index="nodeIdx" :showDeleteBtn="true" :branch="branch">
+                            </flow-node-renderer>
                         </template>
+
+                        <!-- 最后一个节点后的添加按钮（无节点时 position=0） -->
+                        <node-add-button :position="branch.nodes?.length || 0" :branch="branch" />
                     </div>
                 </div>
 
