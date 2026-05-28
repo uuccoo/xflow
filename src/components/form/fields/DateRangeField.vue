@@ -206,9 +206,7 @@ const onEndAmPmMeridiemChange = (value) => {
 }
 
 .date-range-label {
-  font-size: 14px;
   color: #606266;
-  font-weight: 500;
 }
 
 .required {

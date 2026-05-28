@@ -317,10 +317,8 @@ const dragEnd = () => { }
 }
 
 .form-item-label {
-  font-size: 14px;
   color: #606266;
   margin-bottom: 8px;
-  font-weight: 500;
   display: flex;
   align-items: center;
 

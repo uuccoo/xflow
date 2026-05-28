@@ -198,7 +198,6 @@ const renderField = () => {
     case FormComponentType.TEXT:
       return h('div', {
         style: {
-          fontSize: '14px',
           color: '#606266',
           padding: '10px',
           backgroundColor: '#f8f8f8',
@@ -224,10 +223,8 @@ const renderField = () => {
 }
 
 .form-item-label {
-  font-size: 14px;
   color: #606266;
   margin-bottom: 8px;
-  font-weight: 500;
   display: flex;
   align-items: center;
 

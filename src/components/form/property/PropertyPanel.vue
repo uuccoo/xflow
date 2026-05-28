@@ -4,7 +4,7 @@
             属性设置<span v-if="component" class="component-name">（{{ props.component.name }}）</span>
         </div>
 
-        <el-form v-if="component" label-position="top" size="small" class="property-form">
+        <el-form v-if="component" label-position="top" class="property-form">
             <!-- 根据组件类型动态选择编辑器组件 -->
             <component :is="getEditorComponent(component.type)" :component="component" />
         </el-form>
