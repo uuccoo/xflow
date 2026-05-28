@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { formGroupApi } from '@/api'
+import { Plus } from '@element-plus/icons-vue'
 
 // 组件接收的props
 const props = defineProps({
@@ -67,8 +68,7 @@ const saveNewGroup = async () => {
 
 <template>
   <!-- 如果是内联模式，只展示按钮，对话框由父组件控制 -->
-  <el-button v-if="inline" type="primary" @click="openGroupCreator" size="large">
-    <el-icon><Plus /></el-icon>
+  <el-button v-if="inline" type="primary" @click="openGroupCreator" size="large" :icon="Plus">
     {{ buttonText }}
   </el-button>
   

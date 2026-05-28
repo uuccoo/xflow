@@ -228,16 +228,13 @@ onMounted(() => {
       <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
     </el-menu>
     <div class="publish">
-      <el-button size="small" @click="preview">预览</el-button>
-      <el-button size="small" type="primary" :loading="publishing" @click="publish">
+      <el-button @click="preview">预览</el-button>
+      <el-button type="primary" :loading="publishing" @click="publish">
         {{ publishing ? '发布中...' : '发布' }}
       </el-button>
     </div>
     <div class="back">
-      <div class="back-btn" @click="handleBack">
-        <el-icon><arrow-left /></el-icon>
-        <span>返回</span>
-      </div>
+      <el-button class="back-btn" @click="handleBack" text :icon="ArrowLeft">返回</el-button>
       <div class="form-info">
         <div class="icon-box" :style="{ backgroundColor: basicSettings.iconColor }">
           <el-icon size="20" color="#ffffff">
@@ -279,17 +276,7 @@ header {
   right: 30px;
   height: 60px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-
-  .el-button {
-    border-radius: 8px;
-
-    .el-icon {
-      margin-right: 7px;
-    }
-  }
 }
 
 .back {
@@ -302,26 +289,7 @@ header {
   align-items: center;
 
   .back-btn {
-    display: flex;
-    align-items: center;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: #606266;
-
-    &:hover {
-      color: #409eff;
-    }
-
-    .el-icon {
-      margin-right: 4px;
-      font-size: 14px;
-    }
-
-    span {
-      font-size: 14px;
-    }
+    font-size: 14px;
   }
 
   .form-info {

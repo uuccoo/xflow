@@ -10,11 +10,9 @@
           clearable
           class="search-input"
         />
-        <el-button type="primary" @click="goToCreateForm">
-          <span class="plus-icon">+</span> 创建表单
-        </el-button>
+        <el-button type="primary" @click="goToCreateForm" :icon="Plus">创建表单</el-button>
         <el-dropdown trigger="hover" placement="bottom-end" @command="handleSettingsCommand">
-          <el-button type="primary">更多</el-button>
+          <el-button icon="More">更多</el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="newGroup">
