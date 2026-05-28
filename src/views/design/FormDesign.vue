@@ -33,18 +33,22 @@
         <h3>表单设计</h3>
         <div class="view-controls">
           <el-tooltip content="手机视图" placement="top">
-            <span class="view-icon" :class="{ active: viewMode === 'mobile' }" @click="switchView('mobile')">
-              <el-icon>
-                <Iphone />
-              </el-icon>
-            </span>
+            <el-button
+              class="view-button"
+              :type="viewMode === 'mobile' ? 'primary' : 'default'"
+              circle
+              :icon="Iphone"
+              @click="switchView('mobile')"
+            />
           </el-tooltip>
           <el-tooltip content="电脑视图" placement="top">
-            <span class="view-icon" :class="{ active: viewMode === 'pc' }" @click="switchView('pc')">
-              <el-icon>
-                <Monitor />
-              </el-icon>
-            </span>
+            <el-button
+              class="view-button"
+              :type="viewMode === 'pc' ? 'primary' : 'default'"
+              circle
+              :icon="Monitor"
+              @click="switchView('pc')"
+            />
           </el-tooltip>
         </div>
       </div>
@@ -202,32 +206,15 @@ const dragEnd = () => { }
     }
 
     .view-controls {
+      position: absolute;
+      right: 20px;
       display: flex;
       align-items: center;
-      margin-right: 20px;
 
-      .view-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: background-color 0.3s;
-
-        &.active {
-          background-color: #409eff;
-          color: #fff;
-        }
-
-        &:hover {
-          background-color: #e6f7ff;
-        }
-
-        .el-icon {
-          font-size: 18px;
-        }
+      .view-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
       }
     }
   }
