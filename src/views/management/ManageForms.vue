@@ -35,8 +35,8 @@
       <span class="selected-count">已选择 {{ selectedForms.length }} 项</span>
       <div class="action-buttons">
         <el-button text type="danger" @click="selectedForms = []">取消</el-button>
-        <el-button @click="showBatchMove = true">移动分组</el-button>
-        <el-button @click="confirmBatchDisable">批量停用</el-button>
+        <el-button text type="primary" @click="showBatchMove = true">移动分组</el-button>
+        <el-button text type="primary" @click="confirmBatchDisable">批量停用</el-button>
       </div>
     </div>
 
@@ -650,7 +650,7 @@ onMounted(() => {
 
 /* 批量操作栏 */
 .batch-actions-bar {
-  background-color: #f5f5f5;
+  background-color: #d9ecff;
   padding: 10px 20px;
   display: flex;
   justify-content: space-between;
@@ -660,7 +660,8 @@ onMounted(() => {
 
 .selected-count {
   font-size: 14px;
-  color: #595959;
+  color: #409eff;
+  font-weight: 500;
 }
 
 .action-buttons {
