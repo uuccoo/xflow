@@ -58,7 +58,7 @@
             <el-dropdown v-if="group.id !== 'disabled'" trigger="hover" placement="bottom-end" 
               @command="(command) => handleGroupCommand(command, group)">
               <el-button text @click.stop>
-                <el-icon>
+                <el-icon size="16">
                   <setting />
                 </el-icon>
               </el-button>

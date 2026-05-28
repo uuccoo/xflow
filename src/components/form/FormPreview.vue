@@ -2,9 +2,7 @@
     <div class="approval-form-bg">
         <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
         <el-tooltip content="返回" placement="top">
-            <div class="floating-back-button" @click="goBack">
-                <el-icon><arrow-left /></el-icon>
-            </div>
+            <el-button :icon="ArrowLeft" class="floating-back-button" size="large" circle @click="goBack" />
         </el-tooltip>
 
         <div class="approval-sections">
@@ -197,23 +195,8 @@ onBeforeMount(() => {
     top: 25px;
     /* 计算位置：(页面宽度 - 表单宽度) / 2 - 按钮宽度 - 间距 */
     left: calc(50% - 400px - 80px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #fff;
-    border-radius: 50%; /* 圆形按钮 */
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    cursor: pointer;
     z-index: 999; /* 确保按钮在最上层 */
-    color: #606266;
-    transition: all 0.3s ease;
-}
-
-.floating-back-button:hover {
-    color: #409EFF;
-    background-color: #f5f7fa;
 }
 
 .approval-sections {
