@@ -1,7 +1,7 @@
 <template>
     <div class="property-panel">
         <div class="property-header">
-            <h3>属性设置<span v-if="component" class="component-name">（{{ props.component.name }}）</span></h3>
+            属性设置<span v-if="component" class="component-name">（{{ props.component.name }}）</span>
         </div>
 
         <el-form v-if="component" label-position="top" size="small" class="property-form">
@@ -68,13 +68,10 @@ const getEditorComponent = (type) => {
     .property-header {
         display: flex;
         align-items: center;
-        height: 50px;
+        justify-content: center;
+        min-height: 48px;
+        padding: 10px 16px;
         border-bottom: 1px solid #ebeef5;
-
-        h3 {
-            margin-left: 15px;
-            color: #606266;
-        }
     }
 
     .property-form {

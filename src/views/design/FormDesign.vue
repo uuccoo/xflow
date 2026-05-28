@@ -3,13 +3,13 @@
     <!-- 左侧组件面板 -->
     <el-aside width="280px" class="component-panel">
       <div class="component-header">
-        <h3>表单组件</h3>
+        表单组件
       </div>
 
       <!-- 动态渲染组件类别和内容 -->
       <div class="component-list">
         <div class="component-category" v-for="category in formStore.components" :key="category.category">
-          <h4>{{ category.category }}</h4>
+          <div class="category-title">{{ category.category }}</div>
           <div class="component-grid">
             <draggable :list="category.items" :group="{ name: 'components', pull: 'clone', put: false }"
               :clone="formStore.cloneComponent" item-key="type" :sort="false" class="drag-area">
@@ -30,7 +30,7 @@
     <!-- 中间设计区域 -->
     <el-main class="design-area">
       <div class="design-header">
-        <h3>表单设计</h3>
+        表单设计
         <div class="view-controls">
           <el-tooltip content="手机视图" placement="top">
             <el-button
@@ -121,13 +121,10 @@ const dragEnd = () => { }
   .component-header {
     display: flex;
     align-items: center;
-    height: 50px;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 16px;
     border-bottom: 1px solid #ebeef5;
-
-    h3 {
-      margin-left: 20px;
-      color: #606266;
-    }
   }
 
   .component-list {
@@ -136,11 +133,9 @@ const dragEnd = () => { }
     .component-category {
       margin-bottom: 15px;
 
-      h4 {
+      .category-title {
         margin: 10px 0;
         color: #909399;
-        font-size: 14px;
-        font-weight: normal;
       }
 
       .component-grid {
@@ -176,9 +171,8 @@ const dragEnd = () => { }
           }
 
           span {
-            font-size: 12px;
+            font-size: 13px;
             color: #606266;
-            font-weight: 500;
           }
         }
       }
@@ -193,17 +187,14 @@ const dragEnd = () => { }
   padding: 0px;
 
   .design-header {
+    position: relative;
     background-color: #fff;
-    height: 50px;
+    min-height: 48px;
+    padding: 10px 16px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     border-bottom: 1px solid #ebeef5;
-
-    h3 {
-      margin-left: 20px;
-      color: #606266;
-    }
 
     .view-controls {
       position: absolute;
