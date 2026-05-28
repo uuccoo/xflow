@@ -90,28 +90,23 @@ onMounted(() => {
                 <component :is="basicSettings.selectedIcon" />
               </el-icon>
             </div>
-            <div class="option-item">
-              <span class="clickable-text" @click="togglePopover">选择图标</span>
-              <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
-                <template #reference>
-                  <el-icon size="20">
-                    <component :is="basicSettings.selectedIcon" />
-                  </el-icon>
-                </template>
-                <div class="icon-picker-container">
-                  <div class="icon-picker">
-                    <div class="icon-picker-item" v-for="icon in iconList" :key="icon.name"
-                      @click="selectIcon(icon.name)">
-                      <el-icon>
-                        <component :is="icon.name" />
-                      </el-icon>
-                    </div>
-                  </div>
+            <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
+              <template #reference>
+                  <el-button>更换图标</el-button>
+              </template>
+              <div class="icon-picker-container">
+                <div class="icon-picker">
+                  <div class="icon-picker-item" v-for="icon in iconList" :key="icon.name"
+                    @click="selectIcon(icon.name)">
+                    <el-icon>
+                      <component :is="icon.name" />
+                    </el-icon>
                 </div>
-              </el-popover>
-            </div>
-            <div class="option-item">
-              <span class="clickable-text">选择颜色</span>
+              </div>
+              </div>
+            </el-popover>
+            <div class="color-option-item">
+              <span>颜色</span>
               <div class="color-options">
                 <button
                   v-for="color in iconColorOptions"
@@ -226,8 +221,8 @@ onMounted(() => {
 
 .icon-selection {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-end;
+  gap: 8px;
 
   .icon-box {
     width: 50px;
@@ -239,30 +234,12 @@ onMounted(() => {
     flex-shrink: 0;
   }
 
-  .option-item {
+  .color-option-item {
     display: flex;
     align-items: center;
     gap: 10px;
     align-self: flex-end;
-
-    span {
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        color: #409EFF;
-      }
-    }
-
-    .el-icon {
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: scale(1.1);
-      }
-    }
+    margin-left: 16px;
 
     .color-options {
       display: flex;
@@ -324,10 +301,6 @@ onMounted(() => {
       color: #409EFF;
     }
   }
-}
-
-.icon-select-btn {
-  padding: 5px 10px;
 }
 
 .new-group-dialog {
