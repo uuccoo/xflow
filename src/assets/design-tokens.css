@@ -1,0 +1,75 @@
+:root {
+  /* ==========================================================================
+     Design Tokens (基于 Element Plus 规范)
+     在项目中优先使用以下 CSS 变量以保持设计规范一致性
+     ========================================================================== */
+
+  /* 1. 品牌/语义颜色 (Brand & Semantic Colors) */
+  --x-color-primary: var(--el-color-primary, #409eff);
+  --x-color-success: var(--el-color-success, #67c23a);
+  --x-color-warning: var(--el-color-warning, #e6a23c);
+  --x-color-danger: var(--el-color-danger, #f56c6c);
+  --x-color-info: var(--el-color-info, #909399);
+
+  /* 2. 文本颜色 (Text Colors) */
+  --x-text-color-primary: var(--el-text-color-primary, #303133); /* 主要文字 */
+  --x-text-color-regular: var(--el-text-color-regular, #606266); /* 常规文字 */
+  --x-text-color-secondary: var(--el-text-color-secondary, #909399); /* 次要文字 */
+  --x-text-color-placeholder: var(--el-text-color-placeholder, #a8abb2); /* 占位文字 */
+  --x-text-color-disabled: var(--el-text-color-disabled, #c0c4cc); /* 禁用文字 */
+
+  /* 3. 边框颜色 (Border Colors) */
+  --x-border-color-darker: var(--el-border-color-darker, #cdd0d6);
+  --x-border-color-dark: var(--el-border-color-dark, #d4d7de);
+  --x-border-color: var(--el-border-color, #dcdfe6);
+  --x-border-color-light: var(--el-border-color-light, #e4e7ed);
+  --x-border-color-lighter: var(--el-border-color-lighter, #ebeef5);
+  --x-border-color-extra-light: var(--el-border-color-extra-light, #f2f6fc);
+
+  /* 3.1 边框样式 (Border Styles) */
+  --x-border-width: 1px;
+  --x-border-style: solid;
+  --x-border-base: var(--x-border-width) var(--x-border-style) var(--x-border-color);
+
+  /* 4. 背景与填充颜色 (Background & Fill Colors) */
+  --x-bg-color-page: var(--el-bg-color-page, #f2f3f5); /* 页面背景色 */
+  --x-bg-color-overlay: var(--el-bg-color-overlay, #ffffff); /* 弹窗、卡片等浮层背景色 */
+  --x-bg-color: var(--el-bg-color, #ffffff); /* 基础背景色 */
+
+  --x-fill-color-darker: var(--el-fill-color-darker, #e6e8eb);
+  --x-fill-color-dark: var(--el-fill-color-dark, #ebedf0);
+  --x-fill-color: var(--el-fill-color, #f0f2f5);
+  --x-fill-color-light: var(--el-fill-color-light, #f5f7fa);
+  --x-fill-color-lighter: var(--el-fill-color-lighter, #fafafa);
+  --x-fill-color-blank: var(--el-fill-color-blank, #ffffff);
+
+  /* 5. 字体大小 (Typography - Font Size) */
+  --x-font-size-extra-large: var(--el-font-size-extra-large, 20px);
+  --x-font-size-large: var(--el-font-size-large, 18px);
+  --x-font-size-medium: var(--el-font-size-medium, 16px);
+  --x-font-size-base: var(--el-font-size-base, 14px);
+  --x-font-size-small: var(--el-font-size-small, 13px);
+  --x-font-size-extra-small: var(--el-font-size-extra-small, 12px);
+
+  /* 6. 圆角 (Border Radius) */
+  --x-radius-base: var(--el-border-radius-base, 4px);
+  --x-radius-small: var(--el-border-radius-small, 2px);
+  --x-radius-round: var(--el-border-radius-round, 20px);
+  --x-radius-circle: var(--el-border-radius-circle, 100%);
+
+  /* 7. 阴影 (Box Shadow) */
+  --x-shadow-base: var(--el-box-shadow, 0px 12px 32px 4px rgba(0, 0, 0, .04), 0px 8px 20px rgba(0, 0, 0, .08));
+  --x-shadow-light: var(--el-box-shadow-light, 0px 0px 12px rgba(0, 0, 0, .12));
+  --x-shadow-lighter: var(--el-box-shadow-lighter, 0px 0px 6px rgba(0, 0, 0, .12));
+  --x-shadow-dark: var(--el-box-shadow-dark, 0px 16px 48px 16px rgba(0, 0, 0, .08), 0px 12px 32px rgba(0, 0, 0, .12), 0px 8px 16px -8px rgba(0, 0, 0, .16));
+
+  /* 8. 透明度 (Opacity) */
+  --x-opacity-disabled: 0.5;
+
+  /* 9. 间距 (Spacing) - 项目自定扩展 */
+  --x-spacing-xs: 4px;
+  --x-spacing-sm: 8px;
+  --x-spacing-md: 16px;
+  --x-spacing-lg: 24px;
+  --x-spacing-xl: 32px;
+}
