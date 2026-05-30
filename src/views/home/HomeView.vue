@@ -83,7 +83,7 @@ const navigateTo = (route) => {
 .sidebar {
   width: 200px;
   background-color: #f5f5f5;
-  border-right: 1px solid #e0e0e0;
+  border-right: var(--x-border-base);
   display: flex;
   flex-direction: column;
   height: 100%;

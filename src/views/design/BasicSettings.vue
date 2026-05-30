@@ -187,6 +187,7 @@ onMounted(() => {
     min-height: 100%;
     margin: 0 auto;
     width: 660px; // 固定宽度
+    border: var(--x-border-base);
     background-color: rgb(255, 255, 255);
   }
 

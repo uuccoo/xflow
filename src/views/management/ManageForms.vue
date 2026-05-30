@@ -619,7 +619,7 @@ onMounted(() => {
   height: 60px;
   padding: 0 20px;
   background-color: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: var(--x-border-base);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -676,10 +676,7 @@ onMounted(() => {
 
 /* 表单组 */
 .form-group {
-  margin: 16px 20px;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  background-color: #ffffff;
+  border: var(--x-border-base);
   overflow: hidden;
 }
 

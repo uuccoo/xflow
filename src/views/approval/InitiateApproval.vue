@@ -120,7 +120,7 @@ onMounted(() => {
   height: 60px;
   padding: 0 20px;
   background-color: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: var(--x-border-base);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -143,7 +143,7 @@ onMounted(() => {
 }
 
 .approval-group {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: var(--x-border-base);
 }
 
 .group-header {
@@ -195,6 +195,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
   padding: 16px;
+  border-top: var(--x-border-base);
 }
 
 .form-item {

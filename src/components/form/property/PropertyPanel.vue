@@ -71,7 +71,7 @@ const getEditorComponent = (type) => {
         justify-content: center;
         min-height: 48px;
         padding: 10px 16px;
-        border-bottom: 1px solid #ebeef5;
+        border-bottom: var(--x-border-base);
     }
 
     .property-form {

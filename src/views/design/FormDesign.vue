@@ -116,7 +116,6 @@ const dragEnd = () => { }
 
 .component-panel {
   background-color: #ffffff;
-  border-right: 1px solid #ebeef5;
 
   .component-header {
     display: flex;
@@ -124,7 +123,7 @@ const dragEnd = () => { }
     justify-content: center;
     min-height: 48px;
     padding: 10px 16px;
-    border-bottom: 1px solid #ebeef5;
+    border-bottom: var(--x-border-base);
   }
 
   .component-list {
@@ -152,7 +151,7 @@ const dragEnd = () => { }
           flex-direction: row;
           align-items: center;
           justify-content: flex-start;
-          border: 1px solid #dcdfe6;
+          border: var(--x-border-base);
           border-radius: 6px;
           padding: 6px 10px;
           background-color: #fff;
@@ -185,6 +184,8 @@ const dragEnd = () => { }
   display: flex;
   flex-direction: column;
   padding: 0px;
+  border-right: var(--x-border-base);
+  border-left: var(--x-border-base);
 
   .design-header {
     position: relative;
@@ -194,7 +195,7 @@ const dragEnd = () => { }
     display: flex;
     justify-content: center;
     align-items: center;
-    border-bottom: 1px solid #ebeef5;
+    border-bottom: var(--x-border-base);
 
     .view-controls {
       position: absolute;
@@ -241,7 +242,6 @@ const dragEnd = () => { }
         height: 100%;
         max-width: 900px;
         border-radius: 6px;
-        border-width: 1px;
       }
     }
   }
@@ -257,7 +257,6 @@ const dragEnd = () => { }
 // 移除 .property-panel 相关样式，只保留容器样式
 .property-panel-container {
   background-color: #ffffff;
-  border-left: 1px solid #ebeef5;
 }
 
 .form-container {
@@ -272,7 +271,7 @@ const dragEnd = () => { }
 .form-item-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #dcdfe6;
+  border: var(--x-border-base);
   border-radius: 6px;
   padding: 10px;
   background-color: #fff;
