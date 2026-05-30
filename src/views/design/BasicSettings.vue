@@ -180,7 +180,6 @@ onMounted(() => {
   padding: 10px 0;
   width: 100%;
   height: calc(100vh - 60px);
-  background-color: rgb(245, 246, 246);
   overflow: auto;
 
   .content-wrapper {
@@ -188,7 +187,7 @@ onMounted(() => {
     margin: 0 auto;
     width: 660px; // 固定宽度
     border: var(--x-border-base);
-    background-color: rgb(255, 255, 255);
+    background-color: var(--x-bg-color);
   }
 
   .form-container {

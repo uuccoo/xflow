@@ -151,7 +151,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   cursor: pointer;
-  background-color: #fafafa;
+  background-color: var(--x-bg-color-page);
 }
 
 .group-header-left {
@@ -184,10 +184,6 @@ onMounted(() => {
 
 .group-toggle-icon.collapsed svg {
   transform: rotate(-90deg);
-}
-
-.form-list {
-  background-color: white;
 }
 
 .form-items {

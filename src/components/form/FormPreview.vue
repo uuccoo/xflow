@@ -182,7 +182,7 @@ onBeforeMount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f5f6f6;
+    background-color: var(--x-bg-color-page);
     width: 100%;
     min-height: 100vh;
     padding: 20px 0;

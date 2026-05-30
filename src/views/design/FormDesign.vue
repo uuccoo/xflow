@@ -180,7 +180,6 @@ const dragEnd = () => { }
 }
 
 .design-area {
-  background-color: #f7f7f7;
   display: flex;
   flex-direction: column;
   padding: 0px;
@@ -214,7 +213,6 @@ const dragEnd = () => { }
   .design-canvas {
     flex: 1;
     padding: 20px;
-    background-color: #fafafa;
     display: flex;
     flex-direction: column;
     align-items: center;

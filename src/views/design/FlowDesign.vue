@@ -96,7 +96,6 @@ const resetZoom = () => {
 
 .flow-canvas {
   flex: 1;
-  background-color: #f5f7fa;
   padding: 20px;
   overflow: auto;
   position: relative;
