@@ -671,12 +671,15 @@ onMounted(() => {
 /* 表单容器 */
 .forms-container {
   flex: 1;
+  padding: 20px;
   overflow-y: auto;
 }
 
 /* 表单组 */
 .form-group {
+  margin-bottom: 16px;
   border: var(--x-border-base);
+  border-radius: 8px;
   overflow: hidden;
 }
 

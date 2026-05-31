@@ -154,14 +154,6 @@ const navigateTo = (route) => {
   margin-top: 20px;
 }
 
-/* 用户信息区域样式 */
-.user-info-container {
-  padding: 10px;
-  border-top: 1px solid #e0e0e0;
-  margin-top: auto; /* 确保用户信息区域在侧边栏的底部 */
-  flex-shrink: 0; /* 防止用户区域被压缩 */
-}
-
 /* 自定义Element UI的下拉菜单样式 */
 :deep(.el-dropdown-menu__item) {
   display: flex;

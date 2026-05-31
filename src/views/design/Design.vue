@@ -270,6 +270,10 @@ header {
   }
 }
 
+main {
+  height: calc(100vh - 60px);
+}
+
 .publish {
   position: absolute;
   top: 0px;

@@ -90,7 +90,7 @@ const resetZoom = () => {
 <style scoped lang="scss">
 .flow-design-container {
   display: flex;
-  height: calc(100vh - 60px);
+  height: 100%;
   overflow: hidden;
 }
 

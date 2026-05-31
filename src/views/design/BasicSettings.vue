@@ -179,7 +179,7 @@ onMounted(() => {
   box-sizing: border-box;
   padding: 10px 0;
   width: 100%;
-  height: calc(100vh - 60px);
+  height: 100%;
   overflow: auto;
 
   .content-wrapper {
@@ -187,6 +187,7 @@ onMounted(() => {
     margin: 0 auto;
     width: 660px; // 固定宽度
     border: var(--x-border-base);
+    border-radius: var(--x-radius-base);
     background-color: var(--x-bg-color);
   }
 

@@ -110,7 +110,7 @@ const dragEnd = () => { }
 
 <style scoped lang="scss">
 .form-design-container {
-  height: calc(100vh - 60px);
+  height: 100%;
   overflow: hidden;
 }
 
