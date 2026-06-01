@@ -86,7 +86,7 @@ const handleUserSelectConfirm = (data) => {
 <style scoped>
 /* 用户信息区域样式 */
 .user-info-container {
-  border-top: 1px solid #e0e0e0;
+  border-top: var(--x-border-base);
   position: relative;
   /* 确保菜单可以溢出 */
   overflow: visible;

@@ -10,11 +10,9 @@
           clearable
           class="search-input"
         />
-        <el-button type="primary" @click="goToCreateForm">
-          <span class="plus-icon">+</span> 创建表单
-        </el-button>
+        <el-button type="primary" @click="goToCreateForm" :icon="Plus">创建表单</el-button>
         <el-dropdown trigger="hover" placement="bottom-end" @command="handleSettingsCommand">
-          <el-button type="primary">更多</el-button>
+          <el-button icon="More">更多</el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="newGroup">
@@ -37,8 +35,8 @@
       <span class="selected-count">已选择 {{ selectedForms.length }} 项</span>
       <div class="action-buttons">
         <el-button text type="danger" @click="selectedForms = []">取消</el-button>
-        <el-button @click="showBatchMove = true">移动分组</el-button>
-        <el-button @click="confirmBatchDisable">批量停用</el-button>
+        <el-button text type="primary" @click="showBatchMove = true">移动分组</el-button>
+        <el-button text type="primary" @click="confirmBatchDisable">批量停用</el-button>
       </div>
     </div>
 
@@ -60,7 +58,7 @@
             <el-dropdown v-if="group.id !== 'disabled'" trigger="hover" placement="bottom-end" 
               @command="(command) => handleGroupCommand(command, group)">
               <el-button text @click.stop>
-                <el-icon>
+                <el-icon size="16">
                   <setting />
                 </el-icon>
               </el-button>
@@ -621,7 +619,7 @@ onMounted(() => {
   height: 60px;
   padding: 0 20px;
   background-color: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: var(--x-border-base);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -652,7 +650,7 @@ onMounted(() => {
 
 /* 批量操作栏 */
 .batch-actions-bar {
-  background-color: #f5f5f5;
+  background-color: #d9ecff;
   padding: 10px 20px;
   display: flex;
   justify-content: space-between;
@@ -662,7 +660,8 @@ onMounted(() => {
 
 .selected-count {
   font-size: 14px;
-  color: #595959;
+  color: #409eff;
+  font-weight: 500;
 }
 
 .action-buttons {
@@ -672,15 +671,15 @@ onMounted(() => {
 /* 表单容器 */
 .forms-container {
   flex: 1;
+  padding: 20px;
   overflow-y: auto;
 }
 
 /* 表单组 */
 .form-group {
-  margin: 16px 20px;
-  border: 1px solid #e8e8e8;
+  margin-bottom: 16px;
+  border: var(--x-border-base);
   border-radius: 8px;
-  background-color: #ffffff;
   overflow: hidden;
 }
 
@@ -732,7 +731,7 @@ onMounted(() => {
   display: flex;
   padding: 12px 15px;
   border-top: 1px solid #e0e0e0;
-  background-color: #f5f5f5;
+  background-color: var(--x-bg-color-page);
   font-weight: bold;
   font-size: 14px;
   color: #606266;

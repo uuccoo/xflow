@@ -1,10 +1,10 @@
 <template>
     <div class="property-panel">
         <div class="property-header">
-            <h3>属性设置</h3>
+            属性设置<span v-if="component" class="component-name">（{{ props.component.name }}）</span>
         </div>
 
-        <el-form v-if="component" label-position="top" size="small" class="property-form">
+        <el-form v-if="component" label-position="top" class="property-form">
             <!-- 根据组件类型动态选择编辑器组件 -->
             <component :is="getEditorComponent(component.type)" :component="component" />
         </el-form>
@@ -21,6 +21,7 @@ import TextEditor from './editors/TextEditor.vue'
 import NumberEditor from './editors/NumberEditor.vue'
 import RadioEditor from './editors/RadioEditor.vue'
 import CheckboxEditor from './editors/CheckboxEditor.vue'
+import DateEditor from './editors/DateEditor.vue'
 import DateRangeEditor from './editors/DateRangeEditor.vue'
 import CommonEditor from './editors/CommonEditor.vue'
 import { FormComponentType } from '@/enums'
@@ -46,6 +47,8 @@ const getEditorComponent = (type) => {
             return RadioEditor
         case FormComponentType.CHECKBOX:
             return CheckboxEditor
+        case FormComponentType.DATE:
+            return DateEditor
         case FormComponentType.DATERANGE:
             return DateRangeEditor
         default:
@@ -65,13 +68,10 @@ const getEditorComponent = (type) => {
     .property-header {
         display: flex;
         align-items: center;
-        height: 50px;
-        border-bottom: 1px solid #ebeef5;
-
-        h3 {
-            margin-left: 15px;
-            color: #606266;
-        }
+        justify-content: center;
+        min-height: 48px;
+        padding: 10px 16px;
+        border-bottom: var(--x-border-base);
     }
 
     .property-form {

@@ -49,7 +49,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '单行文本',
           placeholder: '请输入',
           required: false,
-          validator: '',
           defaultValue: '',
         },
         {
@@ -60,7 +59,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '多行文本',
           placeholder: '请输入',
           required: false,
-          validator: '',
           defaultValue: '',
         },
         {
@@ -71,11 +69,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           label: '数字输入框',
           placeholder: '请输入数字',
           required: false,
-          validator: '',
-          defaultValue: '',
-          min: 0,
-          max: 100,
-          step: 1,
+          defaultValue: undefined,
+          min: undefined,
+          max: undefined,
+          precision: undefined, // 小数位数限制
         },
         {
           id: '',
@@ -84,8 +81,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           name: '说明文字',
           label: '说明文字',
           content: '这里是说明文字内容',
-          fontSize: '14px',
-          color: '#606266',
         },
         {
           id: '',
@@ -93,14 +88,14 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Check',
           name: '单选框',
           label: '单选框',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
           options: [
             { label: '选项1', value: '1' },
             { label: '选项2', value: '2' },
           ],
           defaultValue: '',
-          asDropdown: false, // 新增属性：是否以下拉框形式展示
+          optionTile: false, // 选项平铺
         },
         {
           id: '',
@@ -108,14 +103,14 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'CircleCheck',
           name: '多选框',
           label: '多选框',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
           options: [
             { label: '选项1', value: '1' },
             { label: '选项2', value: '2' },
           ],
           defaultValue: [],
-          asDropdown: false, // 是否以下拉多选框形式展示
+          optionTile: false, // 选项平铺
         },
         {
           id: '',
@@ -123,8 +118,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Calendar',
           name: '日期选择',
           label: '日期选择',
-          placeholder: '请输入',
+          placeholder: '请选择',
           required: false,
+          dateType: 'date',
           defaultValue: '',
         },
         {
@@ -133,21 +129,46 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Calendar',
           name: '日期区间',
           label: '日期区间',
-          placeholder: '请选择日期时间区间',
+          startLabel: '开始时间',
+          endLabel: '结束时间',
+          placeholder: '请选择',
+          dateType: 'date',
           required: false,
-          defaultValue: [],
-          format: 'YYYY-MM-DD HH:mm:ss',
-          rangeSeparator: '至',
+          defaultValue: {
+            startDate: '',
+            endDate: '',
+          },
         },
+        {
+          id: '',
+          type: FormComponentType.IDCARD,
+          icon: 'User',
+          name: '身份证',
+          label: '身份证',
+          placeholder: '请输入',
+          required: false,
+        },
+        {
+          id: '',
+          type: FormComponentType.PHONE,
+          icon: 'Iphone',
+          name: '手机号',
+          label: '手机号',
+          placeholder: '请输入',
+          required: false,
+        },
+      ],
+    },
+    {
+      category: '高级组件',
+      items: [
         {
           id: '',
           type: FormComponentType.UPLOAD,
           icon: 'Upload',
           name: '文件上传',
           label: '文件上传',
-          placeholder: '请输入',
           required: false,
-          defaultValue: [],
         },
         {
           id: '',
@@ -155,15 +176,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           icon: 'Picture',
           name: '图片上传',
           label: '图片上传',
-          placeholder: '请输入',
           required: false,
-          defaultValue: [],
         },
       ],
-    },
-    {
-      category: '高级组件',
-      items: [],
     },
   ])
 
@@ -211,7 +226,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     return {
       ...component,
       id: generateUniqueId(),
-      placeholder: component.placeholder || '',
     }
   }
 

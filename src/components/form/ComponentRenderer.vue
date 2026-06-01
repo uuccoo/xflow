@@ -35,7 +35,7 @@
 
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
-      <div class="form-item-label">
+      <div v-if="component.type !== FormComponentType.DATERANGE && component.type !== FormComponentType.TEXT" class="form-item-label">
         {{ component.label }}
         <span v-if="component.required" class="required">*</span>
       </div>
@@ -62,6 +62,14 @@ import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
+import PhoneField from './fields/PhoneField.vue'
+import IdCardField from './fields/IdCardField.vue'
+import DateField from './fields/DateField.vue'
+import DateRangeField from './fields/DateRangeField.vue'
+import ImageField from './fields/ImageField.vue'
+import UploadField from './fields/UploadField.vue'
+import RadioField from './fields/RadioField.vue'
+import CheckboxField from './fields/CheckboxField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -136,94 +144,61 @@ const renderField = () => {
         disabled: true,
         min: props.component.min,
         max: props.component.max,
-        step: props.component.step,
+        precision: props.component.precision,
         style: { width: '100%', "max-width": '220px' }
       });
     case FormComponentType.RADIO:
-      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect, {
-          modelValue: props.component.defaultValue,
-          placeholder: props.component.placeholder || '请选择' + props.component.label,
-          style: { width: '100%' },
-          disabled: true
-        }, {
-          default: () => props.component.options.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          )
-        });
-      } else {
-        return h(ElRadioGroup, { modelValue: props.component.defaultValue, disabled: true },
-          props.component.options.map(option =>
-            h(ElRadio, { label: option.value, disabled: true }, { default: () => option.label })
-          )
-        );
-      }
-    case FormComponentType.CHECKBOX:
-      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect, {
-          modelValue: props.component.defaultValue,
-          multiple: true,
-          placeholder: props.component.placeholder || '请选择' + props.component.label,
-          style: { width: '100%' },
-          disabled: true
-        }, {
-          default: () => props.component.options.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          )
-        });
-      } else {
-        return h(ElCheckboxGroup, { modelValue: props.component.defaultValue, disabled: true },
-          props.component.options.map(option =>
-            h(ElCheckbox, { label: option.value, disabled: true }, { default: () => option.label })
-          )
-        );
-      }
-    case FormComponentType.DATE:
-      return h(ElDatePicker, {
-        type: 'date',
-        placeholder: props.component.placeholder || '请选择日期',
+      return h(RadioField, {
+        component: props.component,
         modelValue: props.component.defaultValue,
-        disabled: true
+        readonly: true,
+      })
+    case FormComponentType.IDCARD:
+      return h(IdCardField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || '',
+        readonly: true,
+      })
+    case FormComponentType.PHONE:
+      return h(PhoneField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || {},
+        readonly: true,
+      })
+    case FormComponentType.CHECKBOX:
+      return h(CheckboxField, {
+        component: props.component,
+        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
+        readonly: true,
+      })
+    case FormComponentType.DATE:
+      return h(DateField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || '',
+        readonly: true,
       });
     case FormComponentType.DATERANGE:
-      return h(ElDatePicker, {
-        type: 'datetimerange',
-        placeholder: props.component.placeholder || '请选择日期时间区间',
-        rangeSeparator: props.component.rangeSeparator || '至',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
-        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
-        modelValue: props.component.defaultValue,
-        style: { width: '100%' },
-        disabled: true
+      return h(DateRangeField, {
+        component: props.component,
+        modelValue: props.component.defaultValue || { startDate: '', endDate: '' },
+        readonly: true,
       });
     case FormComponentType.UPLOAD:
-      return h(ElUpload, {
-        action: '#',
-        disabled: true,
-        autoUpload: false,
-        accept: 'image/*'
-      }, {
-        default: () => h(ElButton, { disabled: true }, { default: () => '点击上传' })
-      });
+      return h(UploadField, {
+        component: props.component,
+        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
+        readonly: true,
+      })
     case FormComponentType.IMAGE:
-      return h(ElUpload, {
-        class: 'avatar-uploader',
-        action: '#',
-        disabled: true,
-        listType: 'picture-card',
-        autoUpload: false,
-        accept: 'image/*'
-      }, {
-        default: () => h(ElIcon, {}, { default: () => h(Plus) })
-      });
+        return h(ImageField, {
+          component: props.component,
+          modelValue: props.component.defaultValue || [],
+          readonly: true,
+        })
     case FormComponentType.TEXT:
       return h('div', {
         style: {
-          fontSize: props.component.fontSize || '14px',
-          color: props.component.color || '#606266',
+          color: '#606266',
           padding: '10px',
           backgroundColor: '#f8f8f8',
           borderRadius: '4px',
@@ -248,10 +223,8 @@ const renderField = () => {
 }
 
 .form-item-label {
-  font-size: 14px;
   color: #606266;
   margin-bottom: 8px;
-  font-weight: 500;
   display: flex;
   align-items: center;
 

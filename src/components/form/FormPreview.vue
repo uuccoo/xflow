@@ -2,9 +2,7 @@
     <div class="approval-form-bg">
         <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
         <el-tooltip content="返回" placement="top">
-            <div class="floating-back-button" @click="goBack">
-                <el-icon><arrow-left /></el-icon>
-            </div>
+            <el-button :icon="ArrowLeft" class="floating-back-button" size="large" circle @click="goBack" />
         </el-tooltip>
 
         <div class="approval-sections">
@@ -20,7 +18,8 @@
                 <div class="form-content">
                     <el-form :model="formValues" label-position="top" class="custom-form">
                         <div v-for="item in formItems" :key="item.id" class="form-item-container">
-                            <form-renderer :component="item" :form-values="formValues" @update:value="updateValue" />
+                            <form-renderer :component="item" :form-values="formValues" :validation-errors="validationErrors"
+                                @update:value="updateValue" @update:error="updateError" />
                         </div>
                     </el-form>
                 </div>
@@ -36,7 +35,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, computed } from 'vue';
+import { onBeforeMount, reactive, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
@@ -56,6 +55,7 @@ const { formItems } = storeToRefs(formDesignStore);
 
 // 表单相关状态
 const formValues = reactive({});
+const validationErrors = reactive({});
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
@@ -78,15 +78,46 @@ const updateValue = (id, value) => {
     }
 };
 
+// 更新校验错误
+const updateError = (id, error) => {
+    if (!id) return;
+    if (error) {
+        validationErrors[id] = error;
+    } else {
+        if (validationErrors[id] !== undefined) {
+            delete validationErrors[id]
+        }
+    }
+};
+
 // 判断必填字段是否为空
 const isRequiredValueEmpty = (item, value) => {
     if (item?.type === FormComponentType.TEXT) {
         return false;
     }
 
+    if (item?.type === FormComponentType.PHONE) {
+        return !value || typeof value !== 'object' || !value.number || value.number.trim() === '';
+    }
+
+    if (item?.type === FormComponentType.DATE && item?.dateType === 'datetimeAmPm') {
+        return !value || typeof value !== 'object' || !value.date;
+    }
+
+    if (item?.type === FormComponentType.DATERANGE) {
+        if (!value || typeof value !== 'object') {
+            return true;
+        }
+
+        if (item?.dateType === 'datetimeAmPm') {
+            return !value.startDate || typeof value.startDate !== 'object' || !value.startDate.date || !value.endDate || typeof value.endDate !== 'object' || !value.endDate.date;
+        }
+
+        return !value.startDate || !value.endDate;
+    }
+
     const arrayRequiredTypes = [
         FormComponentType.CHECKBOX,
-        FormComponentType.DATERANGE,
         FormComponentType.UPLOAD,
         FormComponentType.IMAGE
     ];
@@ -105,6 +136,8 @@ const isRequiredValueEmpty = (item, value) => {
 // 验证表单
 const validateForm = () => {
     const requiredItems = collectRequiredFormItems(formItems.value);
+
+    // 1. 必填项校验
     for (const item of requiredItems) {
         if (!item.id) continue;
 
@@ -112,6 +145,14 @@ const validateForm = () => {
         if (isRequiredValueEmpty(item, value)) {
             ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
             return false;
+        }
+    }
+
+    // 2. 检查父组件维护的 validationErrors 是否存在错误
+    for (const [id, err] of Object.entries(validationErrors)) {
+        if (err?.message) {
+            ElMessage.error(`${err.label || '字段'}: ${err.message}`)
+            return false
         }
     }
 
@@ -131,7 +172,7 @@ const submitForm = async () => {
 };
 
 // 组件挂载时初始化表单默认值
-onMounted(() => {
+onBeforeMount(() => {
     initFormValues();
 });
 </script>
@@ -141,7 +182,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f5f6f6;
+    background-color: var(--x-bg-color-page);
     width: 100%;
     min-height: 100vh;
     padding: 20px 0;
@@ -154,23 +195,8 @@ onMounted(() => {
     top: 25px;
     /* 计算位置：(页面宽度 - 表单宽度) / 2 - 按钮宽度 - 间距 */
     left: calc(50% - 400px - 80px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #fff;
-    border-radius: 50%; /* 圆形按钮 */
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    cursor: pointer;
     z-index: 999; /* 确保按钮在最上层 */
-    color: #606266;
-    transition: all 0.3s ease;
-}
-
-.floating-back-button:hover {
-    color: #409EFF;
-    background-color: #f5f7fa;
 }
 
 .approval-sections {
@@ -182,6 +208,7 @@ onMounted(() => {
 
 .form-section {
     background-color: #fff;
+    border: var(--x-border-base);
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     padding: 0 20px;

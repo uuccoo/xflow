@@ -27,17 +27,17 @@
         <!-- 发起人节点 -->
         <flow-node-renderer :node="{ type: FlowNodeType.INITIATE }" :index="-1" />
 
-        <!-- 发起人节点后的添加按钮 - 始终显示 -->
-        <node-add-button :position="0" />
-
         <!-- 动态渲染主流程中的节点 -->
         <template v-for="(node, index) in flowStore.flowData.nodes" :key="node.id">
+          <!-- 每个节点前面都有一个添加按钮 -->
+          <node-add-button :position="index" has-next-node />
+
           <!-- 使用通用节点组件渲染所有节点类型 -->
           <flow-node-renderer :node="node" :index="index" />
-
-          <!-- 每个节点后面都有一个添加按钮 -->
-          <node-add-button :position="index + 1" />
         </template>
+
+        <!-- 最后一个节点后的添加按钮（无节点时 position=0） -->
+        <node-add-button :position="flowStore.flowData.nodes.length" has-end-node />
 
         <!-- 结束节点 -->
         <flow-node-renderer :node="{ type: 'end' }" :index="-2" />
@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { Connection, Document, Edit, Money, Setting, Sort, TurnOff, User, Plus, Minus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Minus, Refresh } from '@element-plus/icons-vue'
 import NodeAddButton from '@/components/flow/NodeAddButton.vue'
 import FlowNodeRenderer from '@/components/flow/node/FlowNodeRenderer.vue'
 import NodeSettingsDrawer from '@/components/flow/NodeSettingsDrawer.vue'
@@ -60,23 +60,6 @@ import { computed, ref } from 'vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
-
-// 将图标对象注入到 nodeOptions 中
-// 注意：Pinia store 中我们保存的是图标名称字符串
-// 这里进行转换，将图标组件对象赋值给 nodeOptions
-flowStore.nodeOptions.forEach(option => {
-  const iconMap = {
-    'User': User,
-    'Document': Document,
-    'Edit': Edit,
-    'TurnOff': TurnOff,
-    'Setting': Setting,
-    'Connection': Connection,
-    'Sort': Sort,
-    'Money': Money
-  }
-  option.icon = iconMap[option.icon] || null
-})
 
 // 计算缩放样式 - 使用CSS的zoom属性而非transform
 const zoomStyle = computed(() => ({
@@ -107,13 +90,12 @@ const resetZoom = () => {
 <style scoped lang="scss">
 .flow-design-container {
   display: flex;
-  height: calc(100vh - 60px);
+  height: 100%;
   overflow: hidden;
 }
 
 .flow-canvas {
   flex: 1;
-  background-color: #f5f7fa;
   padding: 20px;
   overflow: auto;
   position: relative;

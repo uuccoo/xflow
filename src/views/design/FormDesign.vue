@@ -3,13 +3,13 @@
     <!-- 左侧组件面板 -->
     <el-aside width="280px" class="component-panel">
       <div class="component-header">
-        <h3>表单组件</h3>
+        表单组件
       </div>
 
       <!-- 动态渲染组件类别和内容 -->
       <div class="component-list">
         <div class="component-category" v-for="category in formStore.components" :key="category.category">
-          <h4>{{ category.category }}</h4>
+          <div class="category-title">{{ category.category }}</div>
           <div class="component-grid">
             <draggable :list="category.items" :group="{ name: 'components', pull: 'clone', put: false }"
               :clone="formStore.cloneComponent" item-key="type" :sort="false" class="drag-area">
@@ -30,21 +30,25 @@
     <!-- 中间设计区域 -->
     <el-main class="design-area">
       <div class="design-header">
-        <h3>表单设计</h3>
+        表单设计
         <div class="view-controls">
           <el-tooltip content="手机视图" placement="top">
-            <span class="view-icon" :class="{ active: viewMode === 'mobile' }" @click="switchView('mobile')">
-              <el-icon>
-                <Iphone />
-              </el-icon>
-            </span>
+            <el-button
+              class="view-button"
+              :type="viewMode === 'mobile' ? 'primary' : 'default'"
+              circle
+              :icon="Iphone"
+              @click="switchView('mobile')"
+            />
           </el-tooltip>
           <el-tooltip content="电脑视图" placement="top">
-            <span class="view-icon" :class="{ active: viewMode === 'pc' }" @click="switchView('pc')">
-              <el-icon>
-                <Monitor />
-              </el-icon>
-            </span>
+            <el-button
+              class="view-button"
+              :type="viewMode === 'pc' ? 'primary' : 'default'"
+              circle
+              :icon="Monitor"
+              @click="switchView('pc')"
+            />
           </el-tooltip>
         </div>
       </div>
@@ -106,24 +110,20 @@ const dragEnd = () => { }
 
 <style scoped lang="scss">
 .form-design-container {
-  height: calc(100vh - 60px);
+  height: 100%;
   overflow: hidden;
 }
 
 .component-panel {
   background-color: #ffffff;
-  border-right: 1px solid #ebeef5;
 
   .component-header {
     display: flex;
     align-items: center;
-    height: 50px;
-    border-bottom: 1px solid #ebeef5;
-
-    h3 {
-      margin-left: 20px;
-      color: #606266;
-    }
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 16px;
+    border-bottom: var(--x-border-base);
   }
 
   .component-list {
@@ -132,11 +132,9 @@ const dragEnd = () => { }
     .component-category {
       margin-bottom: 15px;
 
-      h4 {
+      .category-title {
         margin: 10px 0;
         color: #909399;
-        font-size: 14px;
-        font-weight: normal;
       }
 
       .component-grid {
@@ -153,7 +151,7 @@ const dragEnd = () => { }
           flex-direction: row;
           align-items: center;
           justify-content: flex-start;
-          border: 1px solid #dcdfe6;
+          border: var(--x-border-base);
           border-radius: 6px;
           padding: 6px 10px;
           background-color: #fff;
@@ -172,9 +170,8 @@ const dragEnd = () => { }
           }
 
           span {
-            font-size: 12px;
+            font-size: 13px;
             color: #606266;
-            font-weight: 500;
           }
         }
       }
@@ -183,51 +180,32 @@ const dragEnd = () => { }
 }
 
 .design-area {
-  background-color: #f7f7f7;
   display: flex;
   flex-direction: column;
   padding: 0px;
+  border-right: var(--x-border-base);
+  border-left: var(--x-border-base);
 
   .design-header {
+    position: relative;
     background-color: #fff;
-    height: 50px;
+    min-height: 48px;
+    padding: 10px 16px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    border-bottom: 1px solid #ebeef5;
-
-    h3 {
-      margin-left: 20px;
-      color: #606266;
-    }
+    border-bottom: var(--x-border-base);
 
     .view-controls {
+      position: absolute;
+      right: 20px;
       display: flex;
       align-items: center;
-      margin-right: 20px;
 
-      .view-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: background-color 0.3s;
-
-        &.active {
-          background-color: #409eff;
-          color: #fff;
-        }
-
-        &:hover {
-          background-color: #e6f7ff;
-        }
-
-        .el-icon {
-          font-size: 18px;
-        }
+      .view-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
       }
     }
   }
@@ -235,7 +213,6 @@ const dragEnd = () => { }
   .design-canvas {
     flex: 1;
     padding: 20px;
-    background-color: #fafafa;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -263,7 +240,6 @@ const dragEnd = () => { }
         height: 100%;
         max-width: 900px;
         border-radius: 6px;
-        border-width: 1px;
       }
     }
   }
@@ -279,7 +255,6 @@ const dragEnd = () => { }
 // 移除 .property-panel 相关样式，只保留容器样式
 .property-panel-container {
   background-color: #ffffff;
-  border-left: 1px solid #ebeef5;
 }
 
 .form-container {
@@ -294,7 +269,7 @@ const dragEnd = () => { }
 .form-item-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #dcdfe6;
+  border: var(--x-border-base);
   border-radius: 6px;
   padding: 10px;
   background-color: #fff;
@@ -339,10 +314,8 @@ const dragEnd = () => { }
 }
 
 .form-item-label {
-  font-size: 14px;
   color: #606266;
   margin-bottom: 8px;
-  font-weight: 500;
   display: flex;
   align-items: center;
 

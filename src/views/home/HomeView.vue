@@ -8,7 +8,10 @@
       <ul class="menu-list regular-menu">
         <li v-for="(item, index) in menuItems" :key="index" :class="{ active: activeMenu === item.route }"
           @click="navigateTo(item.route)">
-          {{ item.name }}
+          <el-icon class="menu-icon" :size="18">
+            <component :is="item.icon" />
+          </el-icon>
+          <span>{{ item.name }}</span>
         </li>
       </ul>
 
@@ -16,7 +19,10 @@
       <ul class="menu-list admin-menu">
         <li v-for="(item, index) in adminMenuItems" :key="index" :class="{ active: activeMenu === item.route }"
           @click="navigateTo(item.route)">
-          {{ item.name }}
+          <el-icon class="menu-icon" :size="18">
+            <component :is="item.icon" />
+          </el-icon>
+          <span>{{ item.name }}</span>
         </li>
       </ul>
 
@@ -37,6 +43,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { Stamp, Tickets } from '@element-plus/icons-vue';
 import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
 
 const router = useRouter();
@@ -44,12 +51,12 @@ const route = useRoute();
 const activeMenu = ref('');
 
 const menuItems = [
-  { name: '发起审批', route: '/home/initiate' },
+  { name: '发起审批', route: '/home/initiate', icon: Stamp },
 ];
 
 // 管理相关的菜单项
 const adminMenuItems = [
-  { name: '表单管理', route: '/home/manage-forms' }
+  { name: '表单管理', route: '/home/manage-forms', icon: Tickets }
 ];
 
 onMounted(() => {
@@ -75,8 +82,8 @@ const navigateTo = (route) => {
 
 .sidebar {
   width: 200px;
-  background-color: #f5f5f5;
-  border-right: 1px solid #e0e0e0;
+  background-color: var(--x-bg-color-page);
+  border-right: var(--x-border-base);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -115,6 +122,11 @@ const navigateTo = (route) => {
   transition: all 0.3s;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.menu-list li .menu-icon {
+  flex-shrink: 0;
 }
 
 .menu-list li:hover {
@@ -129,6 +141,7 @@ const navigateTo = (route) => {
 
 .content {
   flex: 1;
+  background-color: var(--x-bg-color);
   overflow-y: auto;
 }
 
@@ -139,14 +152,6 @@ const navigateTo = (route) => {
   max-height: 60vh;
   /* 限制最大高度 */
   margin-top: 20px;
-}
-
-/* 用户信息区域样式 */
-.user-info-container {
-  padding: 10px;
-  border-top: 1px solid #e0e0e0;
-  margin-top: auto; /* 确保用户信息区域在侧边栏的底部 */
-  flex-shrink: 0; /* 防止用户区域被压缩 */
 }
 
 /* 自定义Element UI的下拉菜单样式 */

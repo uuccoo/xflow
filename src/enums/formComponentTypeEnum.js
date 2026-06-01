@@ -44,4 +44,12 @@ export const FormComponentType = {
    * 图片
    */
   IMAGE: 'image',
+  /**
+   * 身份证
+   */
+  IDCARD: 'idcard',
+  /**
+   * 手机号
+   */
+  PHONE: 'phone',
 }

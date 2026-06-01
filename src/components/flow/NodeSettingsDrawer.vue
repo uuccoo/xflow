@@ -11,8 +11,8 @@
                         </el-input>
                         <div v-else class="current-node-name" @click="startEditName">
                             {{ localNodeName }}
-                            <el-icon>
-                                <Edit />
+                            <el-icon size="16">
+                                <EditPen />
                             </el-icon>
                         </div>
                     </div>
@@ -243,8 +243,6 @@ const handleSave = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 15px;
-    border-bottom: 1px solid #e4e7ed;
 
     .drawer-title-container {
         display: flex;
@@ -262,8 +260,7 @@ const handleSave = () => {
                 gap: 5px;
                 cursor: pointer;
                 color: #303133;
-                padding: 4px 8px;
-                border-radius: 4px;
+                font-size: 16px;
                 transition: color 0.3s;
 
                 &:hover {

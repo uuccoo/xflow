@@ -3,9 +3,6 @@
     <el-form-item label="标题">
       <el-input v-model="component.label" placeholder="请输入标题" maxlength="50" show-word-limit></el-input>
     </el-form-item>
-    <el-form-item label="编码">
-      <el-input v-model="component.id" placeholder="组件标识符" disabled></el-input>
-    </el-form-item>
     <el-form-item label="提示文字">
       <el-input v-model="component.placeholder" placeholder="请输入提示文字" maxlength="50" show-word-limit></el-input>
     </el-form-item>
@@ -34,25 +31,17 @@
         </el-button>
       </div>
     </el-form-item>
-    <el-form-item label="显示方式">
-      <el-radio-group v-model="component.asDropdown">
-        <el-radio :label="false">单选框组</el-radio>
-        <el-radio :label="true">下拉选择器</el-radio>
-      </el-radio-group>
+    <el-form-item label="选项平铺">
+      <el-switch v-model="component.optionTile"></el-switch>
     </el-form-item>
     <el-form-item label="是否必填">
       <el-switch v-model="component.required"></el-switch>
     </el-form-item>
     <el-form-item label="默认值">
-      <el-select v-if="component.asDropdown" v-model="component.defaultValue" placeholder="请选择默认值" style="width: 100%">
+      <el-select v-model="component.defaultValue" placeholder="请选择默认值" style="width: 100%">
         <el-option v-for="option in component.options" :key="option.value" :label="option.label"
           :value="option.value"></el-option>
       </el-select>
-      <el-radio-group v-else v-model="component.defaultValue">
-        <el-radio v-for="option in component.options" :key="option.value" :label="option.value">
-          {{ option.label }}
-        </el-radio>
-      </el-radio-group>
     </el-form-item>
   </div>
 </template>

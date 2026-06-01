@@ -1,4 +1,5 @@
 @import './base.css';
+@import './design-tokens.css';
 
 /* 去除 el-tooltip 聚焦时的轮廓线 */
 .el-tooltip__trigger:focus-visible {

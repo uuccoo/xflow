@@ -1,5 +1,8 @@
 <template>
-    <div class="node-add-btn">
+    <div class="node-add-btn" :class="{
+        'has-next-node': hasNextNode,
+        'has-end-node': hasEndNode
+    }">
         <el-popover placement="right-start" :width="280" trigger="click" :hide-after="0" :show-arrow="true" :offset="12"
             popper-class="node-popover" v-model:visible="popoverVisible">
             <template #reference>
@@ -34,12 +37,13 @@ import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { useFlowDesignStore } from '@/stores/flowDesignStore';
 import { FlowNodeType } from '@/enums'
+import { flowNodeOptions, getFlowNodeOption } from '@/constants/flowNodeOptions'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
 
-// 直接使用 store 中的 nodeOptions
-const nodeOptions = computed(() => flowStore.nodeOptions);
+// 直接使用常量中的节点选项
+const nodeOptions = computed(() => flowNodeOptions);
 const flowData = computed(() => flowStore.flowData);
 
 // 简单的 popover 可见状态，由 el-popover 组件自动管理
@@ -49,6 +53,14 @@ const props = defineProps({
     position: {
         type: Number,
         required: true
+    },
+    hasNextNode: {
+        type: Boolean,
+        default: false
+    },
+    hasEndNode: {
+        type: Boolean,
+        default: false
     },
     // 当前操作的分支对象（可选）
     branch: {
@@ -128,7 +140,7 @@ const createNodeByType = (type, nodeId) => {
 
     // 获取节点配置
     const config = nodeConfigs[type] || {};
-    const option = flowStore.getNodeOption(type);
+    const option = getFlowNodeOption(type);
     const label = option?.label || '未知节点';
 
     // 创建并返回节点
@@ -188,6 +200,10 @@ const handleNodeAdd = (type) => {
     justify-content: center;
     z-index: 1;
 
+    &.has-end-node {
+        padding-bottom: 40px;
+    }
+
     &::before {
         content: '';
         position: absolute;
@@ -199,6 +215,39 @@ const handleNodeAdd = (type) => {
         width: 2px;
         background-color: #c0c4cc;
         z-index: -1;
+    }
+
+    &.has-next-node::before {
+        height: calc(100% - 5px);
+    }
+
+    &.has-next-node::after {
+        content: '';
+        position: absolute;
+        left: calc(50% - 6px);
+        bottom: 3px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #c0c4cc;
+        z-index: 0;
+    }
+
+    &.has-end-node::before {
+        height: calc(100% - 8px);
+    }
+
+    &.has-end-node::after {
+        content: '';
+        position: absolute;
+        left: calc(50% - 5px);
+        bottom: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #c0c4cc;
+        z-index: 0;
     }
 
     .add-btn {

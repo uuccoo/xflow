@@ -6,21 +6,25 @@
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
         <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
-          <form-renderer :component="element" :form-values="formValues"
-            @update:value="(id, value) => $emit('update:value', id, value)" />
+          <form-renderer :component="element" :form-values="formValues" :validation-errors="validationErrors"
+            @update:value="(id, value) => $emit('update:value', id, value)"
+            @update:error="(id, error) => $emit('update:error', id, error)" />
         </div>
       </div>
     </div>
 
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
-      <div class="form-item-label">
+      <div v-if="component.type !== FormComponentType.DATERANGE && component.type !== FormComponentType.TEXT" class="form-item-label">
         {{ component.label }}
         <span v-if="component.required" class="required">*</span>
       </div>
       <div class="form-item-control">
         <!-- 根据组件类型渲染不同的表单控件 -->
         <component :is="renderField()" />
+        <div v-if="validationErrors[component.id]" class="validation-error">
+          {{ validationErrors[component.id]?.message }}
+        </div>
       </div>
     </div>
   </div>
@@ -29,7 +33,15 @@
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
 import { computed, defineAsyncComponent, h } from 'vue';
+import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
+import PhoneField from './fields/PhoneField.vue'
+import DateField from './fields/DateField.vue'
+import DateRangeField from './fields/DateRangeField.vue'
+import ImageField from './fields/ImageField.vue'
+import UploadField from './fields/UploadField.vue'
+import RadioField from './fields/RadioField.vue'
+import CheckboxField from './fields/CheckboxField.vue'
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
@@ -42,10 +54,14 @@ const props = defineProps({
   formValues: {
     type: Object,
     default: () => ({})
+  },
+  validationErrors: {
+    type: Object,
+    default: () => ({})
   }
 });
 
-const emit = defineEmits(['update:value']);
+const emit = defineEmits(['update:value', 'update:error']);
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
@@ -57,8 +73,12 @@ const getGridTemplateColumns = (layoutValue) => {
 
 // 获取当前组件的值
 const getValue = computed(() => {
-  if (props.component.id && props.formValues) {
-    return props.formValues[props.component.id];
+  let componentId = props.component.id;
+  let formValues = props.formValues;
+
+  // 从 formValues 中获取当前组件的值，如果没有则使用组件的默认值
+  if (componentId && formValues && formValues.hasOwnProperty(componentId)) {
+    return formValues[componentId];
   }
   return props.component.defaultValue || '';
 });
@@ -68,6 +88,11 @@ const handleValueChange = (value) => {
   if (props.component.id) {
     emit('update:value', props.component.id, value);
   }
+};
+
+const handleFieldErrorChange = (error) => {
+  if (!props.component.id) return
+  emit('update:error', props.component.id, error)
 };
 
 // 渲染表单控件
@@ -90,57 +115,35 @@ const renderField = () => {
       });
 
     case FormComponentType.RADIO:
-      // 根据 asDropdown 属性决定渲染下拉框还是单选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect,
-          {
-            modelValue: getValue.value,
-            placeholder: props.component.placeholder || '请选择' + props.component.label,
-            style: { width: '100%' },
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          ) || []
-        );
-      } else {
-        return h(ElRadioGroup,
-          {
-            modelValue: getValue.value,
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElRadio, { label: option.value }, { default: () => option.label })
-          ) || []
-        );
-      }
+      return h(RadioField, {
+        component: props.component,
+        modelValue: getValue.value,
+        'onUpdate:modelValue': handleValueChange,
+      })
+
+    case FormComponentType.IDCARD:
+      return h(IdCardField, {
+        component: props.component,
+        modelValue: getValue.value,
+        'onUpdate:modelValue': handleValueChange,
+        'onUpdate:error': handleFieldErrorChange
+      })
+
+    case FormComponentType.PHONE: {
+      return h(PhoneField, {
+        component: props.component,
+        modelValue: getValue.value,
+        'onUpdate:modelValue': handleValueChange,
+        'onUpdate:error': handleFieldErrorChange,
+      })
+    }
 
     case FormComponentType.CHECKBOX:
-      // 根据 asDropdown 属性决定渲染下拉多选框还是多选框组
-      if (props.component.asDropdown) {
-        return h(ElSelect,
-          {
-            modelValue: getValue.value,
-            multiple: true,
-            placeholder: props.component.placeholder || '请选择' + props.component.label,
-            style: { width: '100%' },
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElOption, { label: option.label, value: option.value, key: option.value })
-          ) || []
-        );
-      } else {
-        return h(ElCheckboxGroup,
-          {
-            modelValue: getValue.value,
-            'onUpdate:modelValue': handleValueChange
-          },
-          () => props.component.options?.map(option =>
-            h(ElCheckbox, { label: option.value }, { default: () => option.label })
-          ) || []
-        );
-      }
+      return h(CheckboxField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case 'select':
       return h(ElSelect,
@@ -156,37 +159,25 @@ const renderField = () => {
       );
 
     case FormComponentType.DATE:
-      return h(ElDatePicker, {
-        type: 'date',
-        placeholder: props.component.placeholder || '请选择日期',
+      return h(DateField, {
+        component: props.component,
         modelValue: getValue.value,
-        style: { width: '100%' },
         'onUpdate:modelValue': handleValueChange
       });
 
     case FormComponentType.UPLOAD:
-      return h(ElUpload, {
-        action: '#',
-        autoUpload: false,
-        accept: 'image/*',
-        fileList: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:fileList': (files) => handleValueChange(files)
-      }, {
-        default: () => h(ElButton, {}, { default: () => '点击上传' })
-      });
+      return h(UploadField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case FormComponentType.IMAGE:
-      return h(ElUpload, {
-        class: 'avatar-uploader',
-        action: '#',
-        listType: 'picture-card',
-        autoUpload: false,
-        accept: 'image/*',
-        fileList: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:fileList': (files) => handleValueChange(files)
-      }, {
-        default: () => h(ElIcon, {}, { default: () => h(Plus) })
-      });
+      return h(ImageField, {
+        component: props.component,
+        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
+        'onUpdate:modelValue': handleValueChange,
+      })
 
     case FormComponentType.NUMBER:
       return h(ElInputNumber, {
@@ -194,29 +185,23 @@ const renderField = () => {
         placeholder: props.component.placeholder || '请输入数字',
         min: props.component.min,
         max: props.component.max,
-        step: props.component.step,
+        precision: props.component.precision,
         style: { width: '100%', "max-width": '220px' },
         'onUpdate:modelValue': handleValueChange
       });
 
     case FormComponentType.DATERANGE:
-      return h(ElDatePicker, {
-        type: 'datetimerange',
-        placeholder: props.component.placeholder || '请选择日期时间区间',
-        rangeSeparator: props.component.rangeSeparator || '至',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
-        valueFormat: props.component.format || 'YYYY-MM-DD HH:mm:ss',
-        modelValue: getValue.value,
-        style: { width: '100%' },
+      return h(DateRangeField, {
+        component: props.component,
+        modelValue: getValue.value || { startDate: '', endDate: '' },
         'onUpdate:modelValue': handleValueChange
       });
 
     case FormComponentType.TEXT:
       return h('div', {
         style: {
-          fontSize: props.component.fontSize || '14px',
-          color: props.component.color || '#606266',
+          fontSize: '14px',
+          color: '#606266',
           padding: '10px',
           backgroundColor: '#f8f8f8',
           borderRadius: '4px',
@@ -241,10 +226,8 @@ const renderField = () => {
 }
 
 .form-item-label {
-  font-size: 14px;
   color: #606266;
   margin-bottom: 8px;
-  font-weight: 500;
   display: flex;
   align-items: center;
 
@@ -256,6 +239,12 @@ const renderField = () => {
 
 .form-item-control {
   width: 100%;
+}
+
+.validation-error {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-top: 6px;
 }
 
 .column-container {
