@@ -2,9 +2,7 @@
     <div class="approval-form-bg">
         <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
         <el-tooltip content="返回" placement="top">
-            <div class="floating-back-button" @click="goToInitiateApproval">
-                <el-icon><arrow-left /></el-icon>
-            </div>
+            <el-button :icon="ArrowLeft" class="floating-back-button" size="large" circle @click="goToInitiateApproval" />
         </el-tooltip>
 
         <div v-if="loading" class="loading-container">
@@ -212,7 +210,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f5f6f6;
+    background-color: var(--x-bg-color-page);
     width: 100%;
     min-height: 100vh;
     padding: 20px 0;
@@ -225,23 +223,8 @@ onMounted(() => {
     top: 25px;
     /* 计算位置：(页面宽度 - 表单宽度) / 2 - 按钮宽度 - 间距 */
     left: calc(50% - 400px - 80px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #fff;
-    border-radius: 50%; /* 圆形按钮 */
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    cursor: pointer;
     z-index: 999; /* 确保按钮在最上层 */
-    color: #606266;
-    transition: all 0.3s ease;
-}
-
-.floating-back-button:hover {
-    color: #409EFF;
-    background-color: #f5f7fa;
 }
 
 .approval-sections {
@@ -253,6 +236,7 @@ onMounted(() => {
 
 .form-section {
     background-color: #fff;
+    border: var(--x-border-base);
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     padding: 0 20px;
