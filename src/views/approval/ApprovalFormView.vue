@@ -319,8 +319,8 @@ onBeforeMount(() => {
 .loading-container,
 .error-container {
     width: 800px;
-    margin-top: 20px;
     background-color: #fff;
+    border: var(--x-border-base);
     border-radius: 8px;
     padding: 40px 20px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
