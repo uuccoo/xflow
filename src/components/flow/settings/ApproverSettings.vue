@@ -31,7 +31,7 @@
                     title="选择审批人"
                     button-text="添加"
                     :required="true"
-                    :only-select-users="true"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 
@@ -66,7 +66,7 @@
                     button-text="添加"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
-                    :only-select-users="true"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 

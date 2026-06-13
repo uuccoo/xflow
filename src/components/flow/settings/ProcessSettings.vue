@@ -31,7 +31,6 @@
                     title="选择办理人"
                     button-text="添加"
                     :required="true"
-                    :only-select-users="true"
                 />
             </el-form-item>
 
@@ -66,7 +65,6 @@
                     button-text="添加"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
-                    :only-select-users="true"
                 />
             </el-form-item>
 
