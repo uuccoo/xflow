@@ -70,6 +70,17 @@
                 />
             </el-form-item>
 
+            <!-- 角色设置 -->
+            <el-form-item v-if="handlerType === 'role'" label-position="left" required>
+                <designated-person-selector
+                    v-model="roles"
+                    title="选择角色"
+                    button-text="添加"
+                    :required="true"
+                    :selectable-types="['role']"
+                />
+            </el-form-item>
+
             <!-- 部门主管设置 -->
             <el-form-item v-if="handlerType === 'department_manager'" label="部门主管">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -237,6 +248,7 @@ const specificLevel = ref(1) // 具体级别
 // 人员列表
 const handlers = ref([]) // 审批人列表
 const initiatorSelectRange = ref([]) // 发起人自选人员范围
+const roles = ref([]) // 角色列表
 
 // 初始化表单数据
 const initFormData = () => {
@@ -273,6 +285,7 @@ const initFormData = () => {
     // 初始化人员列表
     handlers.value = props.node.props.handlers || []
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
+    roles.value = props.node.props.roles || []
 }
 
 // 监听节点变化
@@ -298,45 +311,53 @@ const saveSettings = () => {
         return false
     }
 
-    // 确保节点有 props 属性
-    if (!props.node.props) {
-        props.node.props = {}
+    if (handlerType.value === 'role' && roles.value.length === 0) {
+        ElMessage.warning('请至少选择一个角色')
+        return false
     }
 
-    // 保存审批人类型
-    props.node.props.handlerType = handlerType.value
-
-    // 保存审批方式
-    props.node.props.mode = approvalMode.value
-
-    // 保存发起人自选相关
-    if (handlerType.value === 'initiator_select') {
-        props.node.props.initiatorSelectMode = initiatorSelectMode.value
-    props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
+    // 构建新的 props 对象
+    const newProps = {
+        // 基础字段
+        handlerType: handlerType.value,
+        mode: approvalMode.value,
+        
+        // 高级设置（通用）
+        emptyApproverAction: emptyApproverAction.value,
+        requireSignature: requireSignature.value,
+        approvalTimeLimit: approvalTimeLimit.value,
+        approvalTimeUnit: approvalTimeUnit.value,
+        rejectAction: rejectAction.value,
     }
 
-    // 保存部门主管相关
-    if (handlerType.value === 'department_manager') {
-        props.node.props.managerType = managerType.value
-        props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
+    // 根据处理人类型添加特定配置
+    switch (handlerType.value) {
+        case 'designated':
+            newProps.handlers = handlers.value
+            break
+        case 'role':
+            newProps.roles = roles.value
+            break
+        case 'initiator_select':
+            newProps.initiatorSelectMode = initiatorSelectMode.value
+            newProps.initiatorSelectRangeType = initiatorSelectRangeType.value
+            newProps.initiatorSelectRange = initiatorSelectRange.value
+            break
+        case 'department_manager':
+            newProps.managerType = managerType.value
+            newProps.fallbackToHigherManager = fallbackToHigherManager.value
+            break
+        case 'multi_level_manager':
+            newProps.approvalEndPoint = approvalEndPoint.value
+            newProps.specificLevel = specificLevel.value
+            break
+        case 'position_manager':
+            newProps.position = position.value
+            break
     }
 
-    // 保存连续多级主管相关
-    if (handlerType.value === 'multi_level_manager') {
-        props.node.props.approvalEndPoint = approvalEndPoint.value
-        props.node.props.specificLevel = specificLevel.value
-    }
-
-    // 保存高级设置
-    props.node.props.emptyApproverAction = emptyApproverAction.value
-    props.node.props.requireSignature = requireSignature.value
-    props.node.props.approvalTimeLimit = approvalTimeLimit.value
-    props.node.props.approvalTimeUnit = approvalTimeUnit.value
-    props.node.props.rejectAction = rejectAction.value
-
-    // 保存人员列表
-    props.node.props.handlers = handlers.value
-    props.node.props.initiatorSelectRange = initiatorSelectRange.value
+    // 直接替换 props
+    props.node.props = newProps
 
     return true
 }
