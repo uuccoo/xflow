@@ -162,9 +162,12 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     }
   }
 
-  // 格式化用户名称
-  const formatUserNames = (users) => {
-    return users.map((user) => user.name).join(', ')
+  // 格式化名称列表（通用方法）
+  const formatNames = (items) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      return ''
+    }
+    return items.map((item) => item.name).join('、')
   }
 
   return {
@@ -180,7 +183,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     resetFlowDesign,
     deleteNode,
     editCondition,
-    formatUserNames,
+    formatNames,
     copyConditionBranch,
     updateBranchesPriority,
   }

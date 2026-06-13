@@ -38,11 +38,7 @@ const initiatorContentText = computed(() => {
 
     // 根据发起人类型处理不同内容
     if (initiatorProps.initiatorScope === 'specified') {
-        if (Array.isArray(initiatorProps.initiators) && initiatorProps.initiators.length > 0) {
-            return formatUserNames(initiatorProps.initiators);
-        } else {
-            return '未指定人员';
-        }
+        return flowStore.formatNames(initiatorProps.initiators) || '未指定人员';
     }
     else {
         return '所有人';
@@ -55,12 +51,6 @@ const handleNodeClick = () => {
     flowStore.selectNode(initiator.value, -1)
 }
 
-const formatUserNames = (users = []) => {
-    if (!Array.isArray(users) || users.length === 0) {
-        return '未设置';
-    }
-    return flowStore.formatUserNames(users);
-};
 </script>
 
 <style scoped lang="scss">

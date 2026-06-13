@@ -80,7 +80,7 @@ const nodeContentText = computed(() => {
         case FlowNodeType.APPROVE:
             return getApproverContent(nodeProps);
         case FlowNodeType.CC:
-            return nodeProps.handlers?.length > 0 ? formatUserNames(nodeProps.handlers) : '请选择抄送人';
+            return flowStore.formatNames(nodeProps.handlers) || '请选择抄送人';
         case FlowNodeType.HANDLE:
             return getProcessorContent(nodeProps);
         default:
@@ -93,7 +93,7 @@ const getApproverContent = (nodeProps) => {
     // 根据审批人类型返回不同内容
     switch (nodeProps.handlerType) {
         case 'designated':
-            return nodeProps.handlers?.length > 0 ? formatUserNames(nodeProps.handlers) : '未指定人员';
+            return flowStore.formatNames(nodeProps.handlers) || '未指定人员';
         case 'initiator_select':
             return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
         case 'multi_level_manager':
@@ -107,7 +107,7 @@ const getApproverContent = (nodeProps) => {
         case 'department_manager':
             return nodeProps.managerType === 1 ? '直接主管' : `第${nodeProps.managerType}级主管`;
         case 'role':
-            return '角色审批';
+            return flowStore.formatNames(nodeProps.roles) || '请选择角色';
         case 'initiator_self':
             return '发起人自己';
         default:
@@ -120,7 +120,7 @@ const getProcessorContent = (nodeProps) => {
     // 根据办理人类型返回不同内容
     switch (nodeProps.processorType) {
         case 'designated':
-            return nodeProps.processors?.length > 0 ? formatUserNames(nodeProps.processors) : '未指定人员';
+            return flowStore.formatNames(nodeProps.processors) || '未指定人员';
         case 'initiator_select':
             return `发起人自选${nodeProps.initiatorSelectMode === 'single' ? '一个人' : '多人'}`;
         case 'multi_level_manager':
@@ -134,7 +134,7 @@ const getProcessorContent = (nodeProps) => {
         case 'department_manager':
             return nodeProps.managerType === 1 ? '直接主管' : `第${nodeProps.managerType}级主管`;
         case 'role':
-            return '角色办理';
+            return flowStore.formatNames(nodeProps.roles) || '请选择角色';
         case 'initiator_self':
             return '发起人自己';
         default:
@@ -153,14 +153,6 @@ const deleteNode = () => {
     console.log('删除节点', props.node);
     // 使用分支对象进行节点删除
     flowStore.deleteNode(props.node, props.index, props.branch);
-};
-
-// 格式化人员名称列表显示
-const formatUserNames = (users = []) => {
-    if (!Array.isArray(users) || users.length === 0) {
-        return '未设置';
-    }
-    return flowStore.formatUserNames(users);
 };
 </script>
 
