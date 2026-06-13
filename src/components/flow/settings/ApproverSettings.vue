@@ -163,6 +163,18 @@
                         </el-radio-group>
                     </div>
                 </div>
+                
+                <!-- 转交到指定人员的选择器 -->
+                <el-form-item v-if="emptyApproverAction === 'transfer_specific'" label-position="left" required style="margin-top: 15px;">
+                    <designated-person-selector
+                        v-model="emptyApproverTransferUser"
+                        title="选择转交人员"
+                        button-text="添加人员"
+                        :required="true"
+                        :single-mode="true"
+                        :selectable-types="['user']"
+                    />
+                </el-form-item>
                 <el-divider></el-divider>
 
                 <!-- 如果审批被驳回 -->
@@ -249,6 +261,7 @@ const specificLevel = ref(1) // 具体级别
 const handlers = ref([]) // 审批人列表
 const initiatorSelectRange = ref([]) // 发起人自选人员范围
 const roles = ref([]) // 角色列表
+const emptyApproverTransferUser = ref([]) // 审批人为空时转交的指定人员
 
 // 初始化表单数据
 const initFormData = () => {
@@ -286,6 +299,7 @@ const initFormData = () => {
     handlers.value = props.node.props.handlers || []
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
     roles.value = props.node.props.roles || []
+    emptyApproverTransferUser.value = props.node.props.emptyApproverTransferUser || []
 }
 
 // 监听节点变化
@@ -315,6 +329,12 @@ const saveSettings = () => {
         ElMessage.warning('请至少选择一个角色')
         return false
     }
+    
+    // 验证转交到指定人员时必须选择人员
+    if (emptyApproverAction.value === 'transfer_specific' && emptyApproverTransferUser.value.length === 0) {
+        ElMessage.warning('请选择转交的指定人员')
+        return false
+    }
 
     // 构建新的 props 对象
     const newProps = {
@@ -328,6 +348,12 @@ const saveSettings = () => {
         approvalTimeLimit: approvalTimeLimit.value,
         approvalTimeUnit: approvalTimeUnit.value,
         rejectAction: rejectAction.value,
+    }
+    
+    // 如果选择了转交到指定人员，保存转交人员信息
+    if (emptyApproverAction.value === 'transfer_specific') {
+        // 保存完整的用户对象数组
+        newProps.emptyApproverTransferUser = emptyApproverTransferUser.value
     }
 
     // 根据处理人类型添加特定配置
