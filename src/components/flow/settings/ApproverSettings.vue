@@ -175,50 +175,6 @@
                         :selectable-types="['user']"
                     />
                 </el-form-item>
-                <el-divider></el-divider>
-
-                <!-- 如果审批被驳回 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>如果审批被驳回</span>
-                    </div>
-                    <div class="setting-options">
-                        <el-radio-group v-model="rejectAction">
-                            <el-radio label="end_flow">直接结束流程</el-radio>
-                            <el-radio label="back_previous">驳回到上一级审批节点</el-radio>
-                            <el-radio label="back_specific">驳回到指定节点</el-radio>
-                        </el-radio-group>
-                    </div>
-                </div>
-                <el-divider></el-divider>
-
-                <!-- 审批同意时是否需要签字 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>审批同意时是否需要签字</span>
-                    </div>
-                    <div class="setting-options">
-                        <el-switch v-model="requireSignature" active-text="需要" inactive-text="不用" :active-value="true"
-                            :inactive-value="false">
-                        </el-switch>
-                    </div>
-                </div>
-                <el-divider></el-divider>
-
-                <!-- 审批期限 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>审批期限（为 0 则不生效）</span>
-                    </div>
-                    <div class="setting-options time-limit-input">
-                        <el-input-number v-model="approvalTimeLimit" :min="0"
-                            controls-position="right"></el-input-number>
-                        <el-select v-model="approvalTimeUnit" style="width: 80px;">
-                            <el-option label="小时" value="hour"></el-option>
-                            <el-option label="天" value="day"></el-option>
-                        </el-select>
-                    </div>
-                </div>
             </div>
         </el-form>
     </div>
@@ -250,10 +206,6 @@ const initiatorSelectRangeType = ref('all') // 自选范围类型
 const managerType = ref(1) // 主管级别
 const fallbackToHigherManager = ref(false) // 找不到主管时上级代审批
 const emptyApproverAction = ref('auto_pass') // 审批人为空处理方式
-const requireSignature = ref(false) // 是否需要签字
-const approvalTimeLimit = ref(0) // 审批期限
-const approvalTimeUnit = ref('hour') // 时间单位
-const rejectAction = ref('end_flow') // 驳回处理方式
 const approvalEndPoint = ref('top_manager') // 审批终点
 const specificLevel = ref(1) // 具体级别
 
@@ -286,10 +238,6 @@ const initFormData = () => {
 
     // 初始化高级设置
     emptyApproverAction.value = props.node.props.emptyApproverAction || 'auto_pass'
-    requireSignature.value = props.node.props.requireSignature || false
-    approvalTimeLimit.value = props.node.props.approvalTimeLimit || 0
-    approvalTimeUnit.value = props.node.props.approvalTimeUnit || 'hour'
-    rejectAction.value = props.node.props.rejectAction || 'end_flow'
 
     // 初始化审批终点
     approvalEndPoint.value = props.node.props.approvalEndPoint || 'top_manager'
@@ -344,10 +292,6 @@ const saveSettings = () => {
         
         // 高级设置（通用）
         emptyApproverAction: emptyApproverAction.value,
-        requireSignature: requireSignature.value,
-        approvalTimeLimit: approvalTimeLimit.value,
-        approvalTimeUnit: approvalTimeUnit.value,
-        rejectAction: rejectAction.value,
     }
     
     // 如果选择了转交到指定人员，保存转交人员信息
