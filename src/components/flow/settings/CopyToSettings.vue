@@ -28,6 +28,7 @@
                     title="选择抄送人"
                     button-text="添加"
                     :required="true"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 
@@ -62,6 +63,7 @@
                     button-text="添加"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 
@@ -84,6 +86,17 @@
                 </el-checkbox>
             </el-form-item>
 
+            <!-- 角色设置 -->
+            <el-form-item v-if="handlerType === 'role'" label-position="left" required>
+                <designated-person-selector
+                    v-model="roles"
+                    title="选择角色"
+                    button-text="添加"
+                    :required="true"
+                    :selectable-types="['role']"
+                />
+            </el-form-item>
+
             <!-- 发起人自己 -->
             <el-form-item v-if="handlerType === 'initiator_self'" label="发起人自己">
                 <span style="color: #909399;">发起人自己作为抄送人</span>
@@ -95,7 +108,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 
@@ -107,19 +119,19 @@ const props = defineProps({
     }
 })
 
-// 使用 store
-const flowStore = useFlowDesignStore()
-
 // 表单数据
 const handlerType = ref('designated') // 抄送人类型
 const initiatorSelectMode = ref('single') // 发起人自选模式
 const initiatorSelectRangeType = ref('all') // 自选范围类型
 const managerType = ref(1) // 主管级别
 const fallbackToHigherManager = ref(false) // 找不到主管时上级接收
+const approvalEndPoint = ref('top_manager') // 审批终点
+const specificLevel = ref(1) // 具体级别
 
 // 人员列表
 const handlers = ref([]) // 抄送人列表
 const initiatorSelectRange = ref([]) // 发起人自选人员范围
+const roles = ref([]) // 角色列表
 
 // 初始化表单数据
 const initFormData = () => {
@@ -139,9 +151,14 @@ const initFormData = () => {
     managerType.value = props.node.props.managerType || 1
     fallbackToHigherManager.value = props.node.props.fallbackToHigherManager || false
 
+    // 初始化审批终点
+    approvalEndPoint.value = props.node.props.approvalEndPoint || 'top_manager'
+    specificLevel.value = props.node.props.specificLevel || 1
+
     // 初始化人员列表
     handlers.value = props.node.props.handlers || []
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
+    roles.value = props.node.props.roles || []
 }
 
 // 监听节点变化
@@ -167,29 +184,41 @@ const saveSettings = () => {
         return false
     }
 
-    // 确保节点有 props 属性
-    if (!props.node.props) {
-        props.node.props = {}
+    if (handlerType.value === 'role' && roles.value.length === 0) {
+        ElMessage.warning('请至少选择一个角色')
+        return false
     }
 
-    // 保存抄送人类型
-    props.node.props.handlerType = handlerType.value
-
-    // 保存发起人自选相关
-    if (handlerType.value === 'initiator_select') {
-        props.node.props.initiatorSelectMode = initiatorSelectMode.value
-        props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
+    // 构建新的 props 对象
+    const newProps = {
+        handlerType: handlerType.value
     }
 
-    // 保存部门主管相关
-    if (handlerType.value === 'department_manager') {
-        props.node.props.managerType = managerType.value
-        props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
+    // 根据处理人类型添加特定配置
+    switch (handlerType.value) {
+        case 'designated':
+            newProps.handlers = handlers.value
+            break
+        case 'role':
+            newProps.roles = roles.value
+            break
+        case 'initiator_select':
+            newProps.initiatorSelectMode = initiatorSelectMode.value
+            newProps.initiatorSelectRangeType = initiatorSelectRangeType.value
+            newProps.initiatorSelectRange = initiatorSelectRange.value
+            break
+        case 'department_manager':
+            newProps.managerType = managerType.value
+            newProps.fallbackToHigherManager = fallbackToHigherManager.value
+            break
+        case 'multi_level_manager':
+            newProps.approvalEndPoint = approvalEndPoint.value
+            newProps.specificLevel = specificLevel.value
+            break
     }
 
-    // 保存人员列表
-    props.node.props.handlers = handlers.value
-    props.node.props.initiatorSelectRange = initiatorSelectRange.value
+    // 直接替换 props
+    props.node.props = newProps
 
     return true
 }

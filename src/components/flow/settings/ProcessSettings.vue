@@ -2,7 +2,7 @@
     <div class="node-setting-form">
         <el-form label-position="top">
             <el-form-item label="请选择办理人">
-                <el-radio-group v-model="processorType" class="processor-type-selector">
+                <el-radio-group v-model="handlerType" class="approver-type-selector">
                     <el-radio label="designated">
                         <div class="option-content">指定人员</div>
                     </el-radio>
@@ -25,17 +25,18 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="processorType === 'designated'" label-position="left" required>
+            <el-form-item v-if="handlerType === 'designated'" label-position="left" required>
                 <designated-person-selector
-                    v-model="processors"
+                    v-model="handlers"
                     title="选择办理人"
                     button-text="添加"
                     :required="true"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 
             <!-- 发起人自选的子选项 -->
-            <el-form-item v-if="processorType === 'initiator_select'" label="选择方式">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="选择方式">
                 <div class="initiator-select-options">
                     <el-button :class="{ 'active': initiatorSelectMode === 'single' }"
                         @click="initiatorSelectMode = 'single'">
@@ -49,7 +50,7 @@
             </el-form-item>
 
             <!-- 发起人自选范围类型选择 -->
-            <el-form-item v-if="processorType === 'initiator_select'" label="用户可选范围">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="用户可选范围">
                 <el-select v-model="initiatorSelectRangeType" placeholder="请选择范围" style="width: 100%">
                     <el-option label="所有人" value="all"></el-option>
                     <el-option label="指定人员" value="specified"></el-option>
@@ -57,7 +58,7 @@
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="processorType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
+            <el-form-item v-if="handlerType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
                 label-position="left" required>
                 <designated-person-selector
                     v-model="initiatorSelectRange"
@@ -65,11 +66,23 @@
                     button-text="添加"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
+                    :selectable-types="['user']"
+                />
+            </el-form-item>
+
+            <!-- 角色设置 -->
+            <el-form-item v-if="handlerType === 'role'" label-position="left" required>
+                <designated-person-selector
+                    v-model="roles"
+                    title="选择角色"
+                    button-text="添加"
+                    :required="true"
+                    :selectable-types="['role']"
                 />
             </el-form-item>
 
             <!-- 部门主管设置 -->
-            <el-form-item v-if="processorType === 'department_manager'" label="部门主管">
+            <el-form-item v-if="handlerType === 'department_manager'" label="部门主管">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span>发起人的</span>
                     <el-select v-model="managerType" placeholder="请选择主管类型" style="width: 200px;">
@@ -88,7 +101,7 @@
             </el-form-item>
 
             <!-- 连续多级主管设置 -->
-            <el-form-item v-if="processorType === 'multi_level_manager'" label="审批终点">
+            <el-form-item v-if="handlerType === 'multi_level_manager'" label="审批终点">
                 <el-radio-group v-model="approvalEndPoint" class="approval-endpoint-group">
                     <div class="radio-item">
                         <el-radio label="top_manager">
@@ -109,14 +122,14 @@
             </el-form-item>
 
             <!-- 发起人自己 -->
-            <el-form-item v-if="processorType === 'initiator_self'" label="发起人自己">
+            <el-form-item v-if="handlerType === 'initiator_self'" label="发起人自己">
                 <span style="color: #909399;">发起人自己作为办理人进行办理</span>
             </el-form-item>
 
             <el-divider></el-divider>
             <!-- 处理方式 -->
             <el-form-item label="多人办理时的办理方式">
-                <el-radio-group v-model="processMode" class="process-mode-radio-group">
+                <el-radio-group v-model="approvalMode" class="approval-mode-radio-group">
                     <div class="radio-item">
                         <el-radio label="sequential">顺序会签 (按顺序依次办理)</el-radio>
                     </div>
@@ -135,7 +148,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 
@@ -147,21 +159,20 @@ const props = defineProps({
     }
 })
 
-// 使用 store
-const flowStore = useFlowDesignStore()
-
 // 办理人类型
-const processorType = ref('designated')
+const handlerType = ref('designated')
 // 办理人列表
-const processors = ref([])
+const handlers = ref([])
 // 处理方式
-const processMode = ref('sequential')
+const approvalMode = ref('sequential')
 // 发起人自选模式
 const initiatorSelectMode = ref('single')
 // 自选范围类型
 const initiatorSelectRangeType = ref('all')
 // 自选人员范围
 const initiatorSelectRange = ref([])
+// 角色列表
+const roles = ref([])
 // 主管级别
 const managerType = ref(1)
 // 找不到主管时上级代办理
@@ -179,13 +190,13 @@ const initFormData = () => {
     }
 
     // 初始化办理人类型
-    processorType.value = props.node.props.processorType || 'designated'
+    handlerType.value = props.node.props.handlerType || 'designated'
 
     // 初始化办理人列表
-    processors.value = props.node.props.processors || []
+    handlers.value = props.node.props.handlers || []
 
     // 初始化处理方式
-    processMode.value = props.node.props.mode || 'sequential'
+    approvalMode.value = props.node.props.mode || 'sequential'
 
     // 初始化发起人自选相关
     initiatorSelectMode.value = props.node.props.initiatorSelectMode || 'single'
@@ -199,6 +210,9 @@ const initFormData = () => {
     // 初始化审批终点
     approvalEndPoint.value = props.node.props.approvalEndPoint || 'top_manager'
     specificLevel.value = props.node.props.specificLevel || 1
+
+    // 初始化角色列表
+    roles.value = props.node.props.roles || []
 }
 
 // 监听节点变化
@@ -214,41 +228,52 @@ onMounted(() => {
 // 向父组件暴露保存方法
 const saveSettings = () => {
     // 验证必填项
-    if (processorType.value === 'designated' && processors.value.length === 0) {
+    if (handlerType.value === 'designated' && handlers.value.length === 0) {
         ElMessage.warning('请至少选择一名办理人')
         return false
     }
 
-    if (processorType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
+    if (handlerType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
         ElMessage.warning('请至少选择一名发起人自选范围人员')
         return false
     }
 
-    // 保存办理人类型
-    props.node.props.processorType = processorType.value
-
-    // 保存办理人列表和处理方式
-    props.node.props.processors = processors.value
-    props.node.props.mode = processMode.value
-
-    // 保存发起人自选相关
-    if (processorType.value === 'initiator_select') {
-    props.node.props.initiatorSelectMode = initiatorSelectMode.value
-    props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
-    props.node.props.initiatorSelectRange = initiatorSelectRange.value
+    if (handlerType.value === 'role' && roles.value.length === 0) {
+        ElMessage.warning('请至少选择一个角色')
+        return false
     }
 
-    // 保存部门主管相关
-    if (processorType.value === 'department_manager') {
-        props.node.props.managerType = managerType.value
-        props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
+    // 构建新的 props 对象
+    const newProps = {
+        handlerType: handlerType.value,
+        mode: approvalMode.value
     }
 
-    // 保存连续多级主管相关
-    if (processorType.value === 'multi_level_manager') {
-        props.node.props.approvalEndPoint = approvalEndPoint.value
-        props.node.props.specificLevel = specificLevel.value
+    // 根据处理人类型添加特定配置
+    switch (handlerType.value) {
+        case 'designated':
+            newProps.handlers = handlers.value
+            break
+        case 'role':
+            newProps.roles = roles.value
+            break
+        case 'initiator_select':
+            newProps.initiatorSelectMode = initiatorSelectMode.value
+            newProps.initiatorSelectRangeType = initiatorSelectRangeType.value
+            newProps.initiatorSelectRange = initiatorSelectRange.value
+            break
+        case 'department_manager':
+            newProps.managerType = managerType.value
+            newProps.fallbackToHigherManager = fallbackToHigherManager.value
+            break
+        case 'multi_level_manager':
+            newProps.approvalEndPoint = approvalEndPoint.value
+            newProps.specificLevel = specificLevel.value
+            break
     }
+
+    // 直接替换 props
+    props.node.props = newProps
 
     return true
 }
@@ -264,22 +289,7 @@ defineExpose({
     margin-bottom: 40px;
 }
 
-.setting-section-title {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 16px;
-    font-weight: 500;
-    color: #303133;
-}
-
-.selected-users {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.processor-type-selector {
+.approver-type-selector {
     display: flex;
     flex-wrap: wrap;
     padding: 10px 0px;
@@ -301,15 +311,6 @@ defineExpose({
     }
 }
 
-.select-personnel.el-button {
-    margin-right: 10px;
-
-    .el-icon {
-        margin-right: 4px;
-        vertical-align: middle;
-    }
-}
-
 .initiator-select-options {
     display: flex;
     gap: 10px;
@@ -323,6 +324,14 @@ defineExpose({
             background-color: #409EFF;
             color: #fff;
         }
+    }
+}
+
+.approval-mode-radio-group {
+    display: block;
+
+    .radio-item {
+        margin-bottom: 10px;
     }
 }
 
@@ -342,14 +351,6 @@ defineExpose({
             display: flex;
             align-items: center;
         }
-    }
-}
-
-.process-mode-radio-group {
-    display: block;
-
-    .radio-item {
-        margin-bottom: 10px;
     }
 }
 </style>
