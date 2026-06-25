@@ -20,23 +20,23 @@ freund99@126.com
 
 #### **表单基础设置**
 
-![](http://public.uuccoo.top/photo/xflow/basic_setting.jpeg)
+![](https://flow-1309034310.cos.ap-guangzhou.myqcloud.com/basic_setting.jpeg)
 
 #### **表单设计**
 
-![](http://public.uuccoo.top/photo/xflow/form_design.jpeg)
+![](https://flow-1309034310.cos.ap-guangzhou.myqcloud.com/form_design.jpeg)
 
 #### **审批流程设计**
 
-![](http://public.uuccoo.top/photo/xflow/flow_design.jpeg)
+![](https://flow-1309034310.cos.ap-guangzhou.myqcloud.com/flow_design.jpeg)
 
 #### **发起审批**
 
-![](http://public.uuccoo.top/photo/xflow/approval.jpeg)
+![](https://flow-1309034310.cos.ap-guangzhou.myqcloud.com/approval.jpeg)
 
 #### **表单管理**
 
-![](http://public.uuccoo.top/photo/xflow/manage_form.jpeg)
+![](https://flow-1309034310.cos.ap-guangzhou.myqcloud.com/manage_form.jpeg)
 
 <!-- ### 项目结构
 
