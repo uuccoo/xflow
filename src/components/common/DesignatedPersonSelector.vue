@@ -21,7 +21,7 @@
             :title="title"
             :selected-ids="selectedIds"
             :single-mode="singleMode"
-            :only-select-users="onlySelectUsers"
+            :selectable-types="selectableTypes"
             @confirm="handleConfirm"
             @cancel="handleCancel"
             ref="personSelectorRef"
@@ -71,10 +71,14 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    // 透传给 PersonSelector 的仅可选用户
-    onlySelectUsers: {
-        type: Boolean,
-        default: false
+    // 透传给 PersonSelector 的可选类型列表
+    selectableTypes: {
+        type: Array,
+        default: () => ['user', 'department'],
+        validator: (value) => {
+            const validTypes = ['user', 'department', 'role']
+            return value.every(type => validTypes.includes(type))
+        }
     }
 })
 

@@ -24,7 +24,7 @@
     title="选择登录用户"
     :selectedIds="selectedUserIds"
     :singleMode="true"
-    :onlySelectUsers="true"
+    :selectableTypes="['user']"
     @confirm="handleUserSelectConfirm"
   />
 </template>

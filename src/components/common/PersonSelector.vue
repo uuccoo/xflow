@@ -13,43 +13,52 @@
                 style="margin-bottom: 10px;"
             />
             <div class="selector-main">
-                <!-- 左侧部门列表 -->
-                <div class="department-list">
-                    <!-- 搜索框 - 已移动到此处 -->
-                    <div class="search-box">
-                        <el-input v-model="searchText" placeholder="搜索人员，支持拼音、姓名" :prefix-icon="Search" clearable
-                            @input="watchSearchText" @clear="filteredNodesFlat = []" />
+                <!-- 左侧区域 -->
+                <div class="left-panel">
+                    <!-- tabs 切换（只有多个 tab 时显示） -->
+                    <div v-if="showTabs" class="type-tabs">
+                        <div v-if="hasDepartmentTab" class="tab-item"
+                            :class="{ active: activeTab === 'department' }"
+                            @click="activeTab = 'department'">
+                            部门
+                        </div>
+                        <div v-if="hasRoleTab" class="tab-item"
+                            :class="{ active: activeTab === 'role' }"
+                            @click="activeTab = 'role'">
+                            角色
+                        </div>
                     </div>
 
-                    <div class="department-list-content">
-                        <!-- 替换公司名称为面包屑导航 -->
-                        <div class="breadcrumb-navigation">
-                            <el-breadcrumb :separator-icon="ArrowRight">
-                                <el-breadcrumb-item v-for="(item, index) in currentPath" :key="item.id"
-                                    @click="navigateToDepartment(index)"
-                                    :class="{ 'is-link': index < currentPath.length - 1 }">
-                                    {{ item.name }}
-                                </el-breadcrumb-item>
-                            </el-breadcrumb>
-                        </div>
-
-                        <!-- 上一级按钮和全选按钮放在同一行，全选在左边，上一级在右边 -->
-                        <div class="navigation-controls">
-                            <div class="department-select-all">
-                                <el-checkbox v-model="currentDepartment.checked"
-                                    :disabled="props.onlySelectUsers"
-                                    :indeterminate="currentDepartment.indeterminate" @change="(val) => {
-                                        updateChildrenStatus(currentDepartment, val);
-                                        updateParentStatus(currentDepartment);
-                                        updateSelectedList();
-                                    }">全选</el-checkbox>
+                    <!-- 内容区域 -->
+                    <div class="content-area">
+                        <!-- 部门内容 -->
+                        <div v-if="activeTab === 'department'" class="department-content">
+                            <!-- 部门搜索框 -->
+                            <div class="search-box">
+                                <el-input v-model="departmentSearchText" placeholder="搜索" :prefix-icon="Search" clearable
+                                    @input="watchDepartmentSearch" />
                             </div>
 
-                            <div class="level-nav">
-                                <div class="level-nav-item" v-if="currentPath.length > 1" @click="() => {
-                                    currentPath.pop();
-                                    updateSelectedList();
-                                }">
+                            <!-- 面包屑导航 -->
+                            <div class="breadcrumb-navigation">
+                                <el-breadcrumb :separator-icon="ArrowRight">
+                                    <el-breadcrumb-item v-for="(item, index) in currentPath" :key="item.id"
+                                        @click="navigateToDepartment(index)"
+                                        :class="{ 'is-link': index < currentPath.length - 1 }">
+                                        {{ item.name }}
+                                    </el-breadcrumb-item>
+                                </el-breadcrumb>
+                            </div>
+
+                            <!-- 上一级按钮和全选按钮放在同一行，全选在左边，上一级在右边 -->
+                            <div class="navigation-controls">
+                                <div class="department-select-all">
+                                    <el-checkbox :model-value="isAllChildrenChecked(currentDepartment)"
+                                        :indeterminate="isIndeterminate(currentDepartment) && !isAllChildrenChecked(currentDepartment)"
+                                        @change="handleSelectAllChildren">全选</el-checkbox>
+                                </div>
+
+                                <div class="level-nav" v-if="currentPath.length > 1" @click="handleGoToParent">
                                     <div class="icon-text-container">
                                         <el-icon class="chevron-icon">
                                             <ArrowLeft />
@@ -61,40 +70,53 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div v-for="item in displayNodes" :key="item.id" class="department-item">
-                            <el-checkbox v-model="item.checked"
-                                :disabled="item.type === 'department' && props.onlySelectUsers"
-                                :indeterminate="item.type === 'department' && item.indeterminate" 
-                                @change="(val) => {
-                                    if (props.singleMode && val) {
-                                        // 单选模式下，清除之前选中的所有项
-                                        handleSingleSelection(item);
-                                    } else if (item.children && item.children.length > 0) {
-                                        updateChildrenStatus(item, val);
-                                    }
-                                    updateParentStatus(currentDepartment);
-                                    updateSelectedList();
-                                }">
-                                <span class="department-name">{{ item.name }}</span>
-                            </el-checkbox>
-                            <div v-if="item.type === 'department' && item.children && item.children.length > 0"
-                                class="department-next" @click="() => {
-                                    currentPath.push(item);
-                                    updateSelectedList();
-                                }">
-                                <div class="icon-text-container">
-                                    <el-icon style="visibility: hidden;" class="chevron-icon">
-                                        <ArrowLeft />
-                                    </el-icon>
-                                    <span>下级</span>
-                                    <el-icon class="chevron-icon">
-                                        <ArrowRight />
-                                    </el-icon>
+                            <!-- 部门节点列表 -->
+                            <div class="department-list">
+                                <div v-for="item in displayNodes" :key="item.id" class="department-item">
+                                    <el-checkbox v-model="item.checked"
+                                        :disabled="!hasSelectableType(item.type)"
+                                        :indeterminate="item.type === 'department' && isIndeterminate(item)" 
+                                        @change="handleNodeCheckChange(item, $event)">
+                                        <span class="department-name">{{ item.name }}</span>
+                                    </el-checkbox>
+                                    <div v-if="item.type === 'department' && item.children && item.children.length > 0"
+                                        class="department-next" :class="{ disabled: item.checked }" @click="handleNavigateToChild(item)">
+                                        <div class="icon-text-container">
+                                            <el-icon style="visibility: hidden;" class="chevron-icon">
+                                                <ArrowLeft />
+                                            </el-icon>
+                                            <span>下级</span>
+                                            <el-icon class="chevron-icon">
+                                                <ArrowRight />
+                                            </el-icon>
+                                        </div>
+                                    </div>
+                                    <span v-if="isDepartmentSearchMode" class="node-path">{{ getNodePathText(item.id) }}</span>
                                 </div>
                             </div>
-                            <span v-if="isSearchMode" class="node-path">{{ getNodePathText(item.id) }}</span>
+                        </div>
+
+                        <!-- 角色内容 -->
+                        <div v-if="activeTab === 'role'" class="role-content">
+                            <!-- 角色搜索框 -->
+                            <div class="search-box">
+                                <el-input v-model="roleSearchText" placeholder="搜索" :prefix-icon="Search" clearable
+                                    @input="watchRoleSearch" />
+                            </div>
+
+                            <!-- 角色列表 -->
+                            <div class="role-list">
+                                <div v-for="role in displayRoleList" :key="role.id" class="role-item">
+                                    <el-checkbox v-model="role.checked"
+                                        @change="handleNodeCheckChange(role, $event)">
+                                        <el-icon class="role-icon">
+                                            <Key />
+                                        </el-icon>
+                                        <span class="role-name">{{ role.name }}</span>
+                                    </el-checkbox>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -109,7 +131,7 @@
                     <div class="selected-list-content">
                         <div v-for="item in selectedUsers" :key="item.id" class="selected-item">
                             <el-icon>
-                                <component :is="item.type === 'user' ? User : Folder" />
+                                <component :is="getItemIcon(item.type)" />
                             </el-icon>
                             <span>{{ item.name }}</span>
                             <el-icon class="remove-icon" @click="removeSelected(item)">
@@ -131,9 +153,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { ArrowRight, Close, Search, User, Folder, ArrowLeft } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, watch } from 'vue'
+import { ArrowRight, Close, Search, User, Folder, ArrowLeft, Key } from '@element-plus/icons-vue'
 import { userApi } from '@/api'
 
 const props = defineProps({
@@ -157,10 +178,14 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    // 只能选择人员，部门不可勾选
-    onlySelectUsers: {
-        type: Boolean,
-        default: false
+    // 可选类型列表：支持组合选择，默认['user', 'department']
+    selectableTypes: {
+        type: Array,
+        default: () => ['user', 'department'],
+        validator: (value) => {
+            const validTypes = ['user', 'department', 'role']
+            return value.every(type => validTypes.includes(type))
+        }
     },
     // 筛选条件，仅返回指定的部门和用户
     filter: {
@@ -177,17 +202,50 @@ const visible = computed({
     set: (val) => emit('update:modelValue', val)
 })
 
-// 搜索相关
-const searchText = ref('')
+// 部门搜索相关
+const departmentSearchText = ref('')
 const filteredNodesFlat = ref([])
-const isSearchMode = computed(() => searchText.value.trim().length > 0)
+const isDepartmentSearchMode = computed(() => departmentSearchText.value.trim().length > 0)
+
+// 角色搜索相关
+const roleSearchText = ref('')
 
 // 加载状态
 const loading = ref(false)
 const loadingError = ref(false)
 
+// tabs 相关
+const activeTab = ref('department')
+// 是否有部门tab（user或department类型都显示部门tab）
+const hasDepartmentTab = computed(() => {
+    return hasSelectableType('user', 'department')
+})
+// 是否有角色tab
+const hasRoleTab = computed(() => {
+    return hasSelectableType('role')
+})
+const showTabs = computed(() => {
+    // 当有多个 tab 时显示
+    return hasDepartmentTab.value + hasRoleTab.value > 1
+})
+
 // 组织机构数据
 const companyDepartments = ref(null)
+
+// 角色列表数据（当 selectableTypes 只包含 'role' 时使用）
+const roleList = ref([])
+
+// 显示的角色列表（根据搜索过滤）
+const displayRoleList = computed(() => {
+    if (!roleSearchText.value.trim()) {
+        return roleList.value
+    }
+    const keyword = roleSearchText.value.toLowerCase()
+    return roleList.value.filter(role => 
+        role.name.toLowerCase().includes(keyword) ||
+        (role.roleCode && role.roleCode.toLowerCase().includes(keyword))
+    )
+})
 
 // 转换API返回的数据格式为组件需要的格式
 const transformApiData = (apiData) => {
@@ -254,14 +312,57 @@ const fetchOrganizationData = async () => {
     }
 }
 
-// 初始化组织架构数据
-const initOrganizationData = async () => {
-    // 从API获取数据
-    companyDepartments.value = await fetchOrganizationData()
+// 从API获取角色列表
+const fetchRoleList = async () => {
+    loading.value = true
+    loadingError.value = false
     
-    // 初始化当前路径
-    if (companyDepartments.value) {
-        currentPath.value = [companyDepartments.value]
+    try {
+        const roleData = await userApi.getRoleList()
+        // request.js已经将响应处理为res.data，所以直接使用roleData
+        if (roleData && Array.isArray(roleData)) {
+            // 将角色列表转换为树形结构
+            roleList.value = roleData.map(role => ({
+                id: role.id,
+                name: role.roleName,
+                roleCode: role.roleCode,
+                checked: false,
+                type: 'role'
+            }))
+        }
+    } catch (error) {
+        console.error('获取角色列表失败:', error)
+        loadingError.value = true
+        roleList.value = []
+    } finally {
+        loading.value = false
+    }
+}
+
+// 获取默认激活的 tab
+const getDefaultActiveTab = () => {
+    if (hasDepartmentTab.value) {
+        return 'department'
+    } else if (hasRoleTab.value) {
+        return 'role'
+    }
+}
+
+// 初始化数据
+const initOrganizationData = async () => {
+    // 默认选中部门 tab（如果可用）
+    activeTab.value = getDefaultActiveTab()
+    
+    // 根据可选类型加载数据
+    if (hasDepartmentTab.value) {
+        companyDepartments.value = await fetchOrganizationData()
+        // 初始化部门路径
+        if (companyDepartments.value) {
+            currentPath.value = [companyDepartments.value]
+        }
+    }
+    if (hasRoleTab.value) {
+        await fetchRoleList()
     }
 }
 
@@ -272,9 +373,6 @@ const currentPath = ref([])
 const currentDepartment = computed(() => {
     return currentPath.value[currentPath.value.length - 1] || {}
 })
-
-// 已选择的用户和部门列表
-const selectedUsers = ref([])
 
 // 扁平化处理所有树形数据，找出所有节点
 const getAllNodesFlat = (node) => {
@@ -287,228 +385,190 @@ const getAllNodesFlat = (node) => {
     return result
 }
 
-// 更新已选列表
-const updateSelectedList = () => {
-    // 从树形结构中找出所有直接勾选的节点（不包括因父节点勾选而自动勾选的子节点）
-    const allNodes = getAllNodesFlat(companyDepartments.value)
+// 已选择的用户和部门列表（通过计算属性从勾选状态得出）
+const selectedUsers = computed(() => {
+    const selected = []
     
-    // 收集所有父节点，用于判断哪些节点是因为父节点的勾选而自动勾选的
-    const checkedParentIds = new Set()
-    
-    // 找到所有被勾选的父节点
-    allNodes.forEach(node => {
-        if (node.checked && node.children && node.children.length > 0) {
-            // 判断是否所有子节点都被选中
-            const allChildrenChecked = node.children.every(child => child.checked)
-            if (allChildrenChecked) {
-                // 如果所有子节点都被选中，我们认为这是一个勾选的父节点
-                checkedParentIds.add(node.id)
+    // 使用 getAllNodesFlat 扁平化后筛选
+    if (companyDepartments.value) {
+        const allNodes = getAllNodesFlat(companyDepartments.value)
+        allNodes.forEach(node => {
+            if (node.checked && hasSelectableType(node.type)) {
+                selected.push({
+                    id: node.id,
+                    name: node.name,
+                    type: node.type
+                })
             }
-        }
-    })
-    
-    // 过滤出用户直接勾选的节点（不包括因父节点勾选而自动勾选的子节点）
-    const filteredNodes = allNodes
-        .filter(item => {
-            // 排除根公司节点
-            if (item.id === 'company-1' || !item.checked) {
-                return false
-            }
-            
-            // 获取当前节点的所有父节点
-            const nodePath = getNodePath(item.id)
-            if (!nodePath || nodePath.length <= 1) {
-                // 节点没有父节点或只有根节点作为父节点
-                return item.checked
-            }
-            
-            // 检查是否有父节点被勾选。如果有，则说明当前节点是因父节点勾选而自动勾选的
-            for (let i = 0; i < nodePath.length - 1; i++) {
-                if (checkedParentIds.has(nodePath[i].id)) {
-                    return false
-                }
-            }
-            
-            // 通过上述检查，说明该节点是用户直接勾选的
-            return true
         })
-        .map(item => ({
-            id: item.id,
-            name: item.name,
-            type: item.type
-        }))
-    
-    // 使用 Map 确保没有重复项（根据 id 去重）
-    const uniqueNodesMap = new Map()
-    filteredNodes.forEach(node => {
-        uniqueNodesMap.set(node.id, node)
-    })
-    
-    // 转换回数组
-    selectedUsers.value = Array.from(uniqueNodesMap.values())
-}
-
-// 更新父节点的状态
-const updateParentStatus = (node) => {
-    if (!node.children || node.children.length === 0) return
-
-    // 检查是否有被选中的子节点（用户或部门）
-    const someChecked = node.children.some(child => {
-        return child.checked || child.indeterminate
-    })
-    
-    // 不再自动勾选部门，即使所有子节点都被勾选
-    // 只设置 indeterminate 状态
-    node.indeterminate = someChecked && !node.checked
-
-    // 递归向上更新所有父节点的状态
-    if (currentPath.value.length > 1) {
-        for (let i = currentPath.value.length - 2; i >= 0; i--) {
-            const parent = currentPath.value[i]
-            const childrenStatus = parent.children.map(child => ({
-                checked: child.checked,
-                indeterminate: child.indeterminate
-            }))
-
-            // 同样，不自动勾选父部门
-            const someChildrenChecked = childrenStatus.some(s => s.checked || s.indeterminate)
-            parent.indeterminate = someChildrenChecked && !parent.checked
-        }
     }
-}
-
-// 更新子节点的状态
-const updateChildrenStatus = (node, checked) => {
-    if (!node.children) return
-
-    node.children.forEach(child => {
-        // 在只选择用户模式下，部门节点不可选
-        if (props.onlySelectUsers && child.type === 'department') {
-            child.checked = false;
-        } else {
-            child.checked = checked;
-        }
-        child.indeterminate = false
-
-        if (child.children && child.children.length > 0) {
-            updateChildrenStatus(child, checked)
+    
+    // 从角色列表中收集已勾选的角色
+    roleList.value.forEach(role => {
+        if (role.checked) {
+            selected.push({
+                id: role.id,
+                name: role.name,
+                type: 'role'
+            })
         }
     })
-}
+    
+    return selected
+})
 
-// 从已选列表中移除
-const removeSelected = (itemToRemove) => {
-    // 在整个树结构中查找并取消勾选对应节点
-    const findAndUncheck = (node) => {
-        if (node.id === itemToRemove.id) {
-            node.checked = false
-            if (node.type === 'department') {
-                node.indeterminate = false
-                // 如果是部门，则取消其下所有子节点的勾选
-                updateChildrenStatus(node, false)
-            }
-            return true
-        }
-
-        if (node.children && node.children.length > 0) {
-            for (const child of node.children) {
-                if (findAndUncheck(child)) {
-                    // 更新父节点的状态
-                    updateParentStatus(node)
-                    return true
-                }
-            }
-        }
-
+// 计算部门节点的 indeterminate 状态
+const isIndeterminate = (node) => {
+    if (!node.children || node.children.length === 0) {
         return false
     }
+    const someChecked = node.children.some(child => child.checked || isIndeterminate(child))
+    return someChecked && !node.checked
+}
 
-    findAndUncheck(companyDepartments.value)
+// 判断部门节点的所有可选类型子节点是否都已勾选
+const isAllChildrenChecked = (node) => {
+    if (!node.children || node.children.length === 0) {
+        return false
+    }
+    const selectableChildren = node.children.filter(child => hasSelectableType(child.type))
+    if (selectableChildren.length === 0) {
+        return false
+    }
+    return selectableChildren.every(child => child.checked)
+}
 
-    // 更新已选人员列表
-    updateSelectedList()
+// 处理全选/取消全选
+const handleSelectAllChildren = (checked) => {
+    currentDepartment.value.children.forEach(child => {
+        if (hasSelectableType(child.type)) {
+            child.checked = checked
+        }
+    })
+}
+
+// 处理部门/用户节点勾选
+const handleNodeCheckChange = (item, checked) => {
+    if (props.singleMode && checked) {
+        // 单选模式下，清除之前选中的所有项
+        handleSingleSelection(item)
+    }
+}
+
+// 进入下级部门
+const handleNavigateToChild = (item) => {
+    if (!item.checked) {
+        currentPath.value.push(item)
+    }
+}
+
+// 返回上级
+const handleGoToParent = () => {
+    currentPath.value.pop()
+}
+
+// 根据类型获取图标组件
+const getItemIcon = (type) => {
+    switch (type) {
+        case 'user':
+            return User
+        case 'role':
+            return Key
+        case 'department':
+        default:
+            return Folder
+    }
+}
+
+// 判断某类型是否可选，支持传入多个类型，只要包含其中一个则为true
+const hasSelectableType = (...types) => {
+    return types.some(type => props.selectableTypes.includes(type))
+}
+
+// 从已选列表中移除（通过取消勾选实现）
+const removeSelected = (itemToRemove) => {
+    // 如果是角色，在角色列表中查找并取消勾选
+    if (itemToRemove.type === 'role') {
+        const role = roleList.value.find(r => r.id === itemToRemove.id)
+        if (role) {
+            role.checked = false
+        }
+    } else if (itemToRemove.type === 'department' || itemToRemove.type === 'user') {
+        // 使用 getAllNodesFlat 将部门树扁平化后查找
+        if (companyDepartments.value) {
+            const allNodes = getAllNodesFlat(companyDepartments.value)
+            const nodeToUncheck = allNodes.find(node => node.id === itemToRemove.id)
+            if (nodeToUncheck) {
+                nodeToUncheck.checked = false
+            }
+        }
+    }
 }
 
 // 单选模式下处理选择逻辑
 const handleSingleSelection = (selectedItem) => {
-    // 先清除所有选中状态
-    const clearAllSelections = (node) => {
-        node.checked = false
-        node.indeterminate = false
-
-        if (node.children && node.children.length > 0) {
-            node.children.forEach(clearAllSelections)
-        }
+    // 使用 getAllNodesFlat 将部门树扁平化后清除所有选中状态
+    if (companyDepartments.value) {
+        const allNodes = getAllNodesFlat(companyDepartments.value)
+        allNodes.forEach(node => {
+            node.checked = false
+            node.indeterminate = false
+        })
     }
-
-    clearAllSelections(companyDepartments.value)
     
     // 只选中当前项
     selectedItem.checked = true
-    
-    // 更新父节点状态
-    const nodePath = getNodePath(selectedItem.id)
-    if (nodePath && nodePath.length > 1) {
-        // 更新路径上所有父节点的状态
-        for (let i = nodePath.length - 2; i >= 0; i--) {
-            const parent = nodePath[i]
-            // 只设置 indeterminate 状态，不自动勾选父部门
-            parent.indeterminate = true
-            parent.checked = false
-        }
-    }
 }
 
-// 清空所有已选
+// 清空所有已选（通过取消所有勾选实现）
 const clearSelected = () => {
-    // 递归清空所有选中状态
-    const clearCheckedStatus = (node) => {
-        node.checked = false
-        node.indeterminate = false
-
-        if (node.children && node.children.length > 0) {
-            node.children.forEach(clearCheckedStatus)
-        }
+    // 使用 getAllNodesFlat 将部门树扁平化后清空所有选中状态
+    if (companyDepartments.value) {
+        const allNodes = getAllNodesFlat(companyDepartments.value)
+        allNodes.forEach(node => {
+            node.checked = false
+            node.indeterminate = false
+        })
     }
 
-    clearCheckedStatus(companyDepartments.value)
-
-    // 更新已选人员列表
-    updateSelectedList()
+    // 清空角色列表中的选中状态
+    roleList.value.forEach(role => {
+        role.checked = false
+    })
 }
 
-// 搜索过滤函数
-const handleSearch = () => {
-    if (!searchText.value.trim()) {
+// 部门搜索过滤函数
+const handleDepartmentSearch = () => {
+    if (!departmentSearchText.value.trim()) {
         filteredNodesFlat.value = []
         return
     }
 
     // 在整个树中搜索匹配的节点
-    const keyword = searchText.value.toLowerCase().trim()
+    const keyword = departmentSearchText.value.toLowerCase().trim()
     const allNodes = getAllNodesFlat(companyDepartments.value)
 
-    // 过滤匹配的节点，不包括根节点
+    // 过滤匹配的节点，只显示用户和部门类型
     filteredNodesFlat.value = allNodes.filter(node =>
-        node.id !== 'company-1' &&
+        (node.type === 'user' || node.type === 'department') &&
         node.name.toLowerCase().includes(keyword)
     )
 }
 
-// 监听搜索文本变化
-const debouncedSearch = ref(null)
-const watchSearchText = () => {
-    if (debouncedSearch.value) {
-        clearTimeout(debouncedSearch.value)
+// 监听部门搜索文本变化
+const debouncedDepartmentSearch = ref(null)
+const watchDepartmentSearch = () => {
+    if (debouncedDepartmentSearch.value) {
+        clearTimeout(debouncedDepartmentSearch.value)
     }
-    debouncedSearch.value = setTimeout(() => {
-        handleSearch()
+    debouncedDepartmentSearch.value = setTimeout(() => {
+        handleDepartmentSearch()
     }, 300)
 }
 
 // 当前显示的节点列表（根据是否在搜索模式切换）
 const displayNodes = computed(() => {
-    if (isSearchMode.value) {
+    if (isDepartmentSearchMode.value) {
         return filteredNodesFlat.value
     } else {
         return currentDepartment.value.children || []
@@ -553,39 +613,27 @@ const initSelector = () => {
     // 根据selectedIds的值初始化选中状态
     const selectedIds = props.selectedIds || []
 
-    // 递归设置所有节点的选中状态
-    const setNodeCheckedState = (node) => {
-        if (selectedIds.includes(node.id)) {
-            node.checked = true
-        } else {
-            node.checked = false
+    // 使用 getAllNodesFlat 将树扁平化后设置选中状态
+    if (companyDepartments.value) {
+        const allNodes = getAllNodesFlat(companyDepartments.value)
+        allNodes.forEach(node => {
+            node.checked = selectedIds.includes(node.id)
             node.indeterminate = false
-        }
-
-        if (node.children && node.children.length > 0) {
-            node.children.forEach(setNodeCheckedState)
-
-            // 更新父节点状态
-            const someChecked = node.children.some(child => child.checked || child.indeterminate)
-
-            // 不自动勾选部门，即使所有子节点都被勾选
-            if (someChecked && !node.checked) {
-                node.indeterminate = true
-            }
-        }
+        })
     }
 
-    setNodeCheckedState(companyDepartments.value)
+    // 初始化角色列表的选中状态
+    roleList.value.forEach(role => {
+        role.checked = selectedIds.includes(role.id)
+    })
 
     // 重置路径到根节点
     currentPath.value = [companyDepartments.value]
 
     // 清空搜索
-    searchText.value = ''
+    departmentSearchText.value = ''
+    roleSearchText.value = ''
     filteredNodesFlat.value = []
-
-    // 更新已选列表
-    updateSelectedList()
 }
 
 // 导航到指定的部门层级
@@ -593,7 +641,6 @@ const navigateToDepartment = (index) => {
     if (index < currentPath.value.length - 1) {
         // 截取到指定层级
         currentPath.value = currentPath.value.slice(0, index + 1);
-        updateSelectedList();
     }
 }
 
@@ -611,13 +658,6 @@ const handleConfirm = () => {
 const handleCancel = () => {
     emit('cancel')
     visible.value = false
-}
-
-// 处理弹窗关闭事件
-const handleDialogClosed = () => {
-    // 弹窗关闭时重置状态
-    searchText.value = ''
-    filteredNodesFlat.value = []
 }
 
 // 监听visible变化，当打开弹窗时初始化
@@ -656,7 +696,46 @@ defineExpose({
         gap: 20px;
         min-height: 380px;
 
-        .department-list,
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            .type-tabs {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 8px;
+                
+                .tab-item {
+                    padding: 8px 20px;
+                    cursor: pointer;
+                    color: #606266;
+                    font-size: 14px;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.3s;
+                    
+                    &:hover {
+                        color: #409EFF;
+                    }
+                    
+                    &.active {
+                        color: #409EFF;
+                        border-bottom-color: #409EFF;
+                    }
+                }
+            }
+
+            .content-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid #e4e7ed;
+                border-radius: 4px;
+            }
+        }
+
         .selected-list {
             flex: 1;
             border: 1px solid #e4e7ed;
@@ -670,26 +749,6 @@ defineExpose({
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-
-                .level-nav {
-                    font-size: 14px;
-
-                    .level-nav-item {
-                        color: #909399;
-                        text-decoration: none;
-                        display: flex;
-                        align-items: center;
-
-                        .back-icon {
-                            margin-right: 4px;
-                            font-size: 12px;
-                        }
-
-                        &:hover {
-                            color: #409EFF;
-                        }
-                    }
-                }
 
                 .clear-btn {
                     color: #F56C6C;
@@ -707,6 +766,53 @@ defineExpose({
                 flex: 1;
                 overflow-y: auto;
                 padding: 8px 0;
+            }
+        }
+
+        // 部门内容样式
+        .department-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            .department-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 8px 0;
+            }
+        }
+
+        // 角色内容样式
+        .role-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            .role-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 8px 0;
+
+                .role-item {
+                    padding: 5px 15px;
+                    display: flex;
+                    align-items: center;
+
+                    &:hover {
+                        background-color: #f5f7fa;
+                    }
+
+                    .role-icon {
+                        margin-right: 8px;
+                        color: #409EFF;
+                    }
+
+                    .role-name {
+                        font-size: 14px;
+                    }
+                }
             }
         }
 
@@ -743,26 +849,10 @@ defineExpose({
             justify-content: space-between;
             align-items: center;
             padding: 5px 15px;
+        }
 
-            .level-nav {
-                font-size: 14px;
-
-                .level-nav-item {
-                    color: #909399;
-                    text-decoration: none;
-                    display: flex;
-                    align-items: center;
-
-                    .back-icon {
-                        margin-right: 4px;
-                        font-size: 12px;
-                    }
-
-                    &:hover {
-                        color: #409EFF;
-                    }
-                }
-            }
+        .level-nav {
+            cursor: pointer;
         }
 
         .department-select-all {
@@ -777,22 +867,9 @@ defineExpose({
             align-items: center;
             justify-content: center;
             gap: 4px;
-            cursor: pointer;
 
             .chevron-icon {
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0;
-                color: #909399;
-            }
-
-            span {
-                font-size: 14px;
-                line-height: 1;
-                display: inline-block;
-                vertical-align: middle;
+                color: var(--x-text-color-secondary);
             }
 
             &:hover {
@@ -823,11 +900,15 @@ defineExpose({
 
             .department-next {
                 cursor: pointer;
-            }
 
-            .chevron-icon {
-                color: #c0c4cc;
-                font-size: 14px;
+                &.disabled {
+                    cursor: not-allowed;
+
+                    .icon-text-container {
+                        opacity: 0.4;
+                        pointer-events: none;
+                    }
+                }
             }
 
             .node-path {

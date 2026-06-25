@@ -2,7 +2,7 @@
     <div class="node-setting-form">
         <el-form label-position="top">
             <el-form-item label="请选择审批人">
-                <el-radio-group v-model="approverType" class="approver-type-selector">
+                <el-radio-group v-model="handlerType" class="approver-type-selector">
                     <el-radio label="designated">
                         <div class="option-content">指定人员</div>
                     </el-radio>
@@ -25,18 +25,18 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="approverType === 'designated'" label-position="left" required>
+            <el-form-item v-if="handlerType === 'designated'" label-position="left" required>
                 <designated-person-selector
-                    v-model="approvers"
+                    v-model="handlers"
                     title="选择审批人"
                     button-text="添加"
                     :required="true"
-                    :only-select-users="true"
+                    :selectable-types="['user']"
                 />
             </el-form-item>
 
             <!-- 发起人自选的子选项 -->
-            <el-form-item v-if="approverType === 'initiator_select'" label="选择方式">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="选择方式">
                 <div class="initiator-select-options">
                     <el-button :class="{ 'active': initiatorSelectMode === 'single' }"
                         @click="initiatorSelectMode = 'single'">
@@ -50,7 +50,7 @@
             </el-form-item>
 
             <!-- 发起人自选范围类型选择 -->
-            <el-form-item v-if="approverType === 'initiator_select'" label="用户可选范围">
+            <el-form-item v-if="handlerType === 'initiator_select'" label="用户可选范围">
                 <el-select v-model="initiatorSelectRangeType" placeholder="请选择范围" style="width: 100%">
                     <el-option label="所有人" value="all"></el-option>
                     <el-option label="指定人员" value="specified"></el-option>
@@ -58,7 +58,7 @@
             </el-form-item>
 
             <!-- 发起人自选需要从哪些人中选择 -->
-            <el-form-item v-if="approverType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
+            <el-form-item v-if="handlerType === 'initiator_select' && initiatorSelectRangeType === 'specified'"
                 label-position="left" required>
                 <designated-person-selector
                     v-model="initiatorSelectRange"
@@ -66,12 +66,23 @@
                     button-text="添加"
                     :required="true"
                     :single-mode="initiatorSelectMode === 'single'"
-                    :only-select-users="true"
+                    :selectable-types="['user']"
+                />
+            </el-form-item>
+
+            <!-- 角色设置 -->
+            <el-form-item v-if="handlerType === 'role'" label-position="left" required>
+                <designated-person-selector
+                    v-model="roles"
+                    title="选择角色"
+                    button-text="添加"
+                    :required="true"
+                    :selectable-types="['role']"
                 />
             </el-form-item>
 
             <!-- 部门主管设置 -->
-            <el-form-item v-if="approverType === 'department_manager'" label="部门主管">
+            <el-form-item v-if="handlerType === 'department_manager'" label="部门主管">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span>发起人的</span>
                     <el-select v-model="managerType" placeholder="请选择主管类型" style="width: 200px;">
@@ -90,7 +101,7 @@
             </el-form-item>
 
             <!-- 连续多级主管设置 -->
-            <el-form-item v-if="approverType === 'multi_level_manager'" label="审批终点">
+            <el-form-item v-if="handlerType === 'multi_level_manager'" label="审批终点">
                 <el-radio-group v-model="approvalEndPoint" class="approval-endpoint-group">
                     <div class="radio-item">
                         <el-radio label="top_manager">
@@ -111,7 +122,7 @@
             </el-form-item>
 
             <!-- 发起人自己 -->
-            <el-form-item v-if="approverType === 'initiator_self'" label="发起人自己">
+            <el-form-item v-if="handlerType === 'initiator_self'" label="发起人自己">
                 <span style="color: #909399;">发起人自己作为审批人进行审批</span>
             </el-form-item>
 
@@ -152,50 +163,18 @@
                         </el-radio-group>
                     </div>
                 </div>
-                <el-divider></el-divider>
-
-                <!-- 如果审批被驳回 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>如果审批被驳回</span>
-                    </div>
-                    <div class="setting-options">
-                        <el-radio-group v-model="rejectAction">
-                            <el-radio label="end_flow">直接结束流程</el-radio>
-                            <el-radio label="back_previous">驳回到上一级审批节点</el-radio>
-                            <el-radio label="back_specific">驳回到指定节点</el-radio>
-                        </el-radio-group>
-                    </div>
-                </div>
-                <el-divider></el-divider>
-
-                <!-- 审批同意时是否需要签字 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>审批同意时是否需要签字</span>
-                    </div>
-                    <div class="setting-options">
-                        <el-switch v-model="requireSignature" active-text="需要" inactive-text="不用" :active-value="true"
-                            :inactive-value="false">
-                        </el-switch>
-                    </div>
-                </div>
-                <el-divider></el-divider>
-
-                <!-- 审批期限 -->
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>审批期限（为 0 则不生效）</span>
-                    </div>
-                    <div class="setting-options time-limit-input">
-                        <el-input-number v-model="approvalTimeLimit" :min="0"
-                            controls-position="right"></el-input-number>
-                        <el-select v-model="approvalTimeUnit" style="width: 80px;">
-                            <el-option label="小时" value="hour"></el-option>
-                            <el-option label="天" value="day"></el-option>
-                        </el-select>
-                    </div>
-                </div>
+                
+                <!-- 转交到指定人员的选择器 -->
+                <el-form-item v-if="emptyApproverAction === 'transfer_specific'" label-position="left" required style="margin-top: 15px;">
+                    <designated-person-selector
+                        v-model="emptyApproverTransferUser"
+                        title="选择转交人员"
+                        button-text="添加人员"
+                        :required="true"
+                        :single-mode="true"
+                        :selectable-types="['user']"
+                    />
+                </el-form-item>
             </div>
         </el-form>
     </div>
@@ -220,23 +199,21 @@ const props = defineProps({
 const flowStore = useFlowDesignStore()
 
 // 表单数据
-const approverType = ref('designated') // 审批人类型
+const handlerType = ref('designated') // 审批人类型
 const approvalMode = ref('anyone') // 多人审批方式
 const initiatorSelectMode = ref('single') // 发起人自选模式
 const initiatorSelectRangeType = ref('all') // 自选范围类型
 const managerType = ref(1) // 主管级别
 const fallbackToHigherManager = ref(false) // 找不到主管时上级代审批
 const emptyApproverAction = ref('auto_pass') // 审批人为空处理方式
-const requireSignature = ref(false) // 是否需要签字
-const approvalTimeLimit = ref(0) // 审批期限
-const approvalTimeUnit = ref('hour') // 时间单位
-const rejectAction = ref('end_flow') // 驳回处理方式
 const approvalEndPoint = ref('top_manager') // 审批终点
 const specificLevel = ref(1) // 具体级别
 
 // 人员列表
-const approvers = ref([]) // 审批人列表
+const handlers = ref([]) // 审批人列表
 const initiatorSelectRange = ref([]) // 发起人自选人员范围
+const roles = ref([]) // 角色列表
+const emptyApproverTransferUser = ref([]) // 审批人为空时转交的指定人员
 
 // 初始化表单数据
 const initFormData = () => {
@@ -246,7 +223,7 @@ const initFormData = () => {
     }
 
     // 初始化审批人类型
-    approverType.value = props.node.props.approverType || 'designated'
+    handlerType.value = props.node.props.handlerType || 'designated'
 
     // 初始化审批方式
     approvalMode.value = props.node.props.mode || 'anyone'
@@ -261,18 +238,16 @@ const initFormData = () => {
 
     // 初始化高级设置
     emptyApproverAction.value = props.node.props.emptyApproverAction || 'auto_pass'
-    requireSignature.value = props.node.props.requireSignature || false
-    approvalTimeLimit.value = props.node.props.approvalTimeLimit || 0
-    approvalTimeUnit.value = props.node.props.approvalTimeUnit || 'hour'
-    rejectAction.value = props.node.props.rejectAction || 'end_flow'
 
     // 初始化审批终点
     approvalEndPoint.value = props.node.props.approvalEndPoint || 'top_manager'
     specificLevel.value = props.node.props.specificLevel || 1
 
     // 初始化人员列表
-    approvers.value = props.node.props.approvers || []
+    handlers.value = props.node.props.handlers || []
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
+    roles.value = props.node.props.roles || []
+    emptyApproverTransferUser.value = props.node.props.emptyApproverTransferUser || []
 }
 
 // 监听节点变化
@@ -288,55 +263,71 @@ onMounted(() => {
 // 向父组件暴露保存方法
 const saveSettings = () => {
     // 验证必填项
-    if (approverType.value === 'designated' && approvers.value.length === 0) {
+    if (handlerType.value === 'designated' && handlers.value.length === 0) {
         ElMessage.warning('请至少选择一名审批人')
         return false
     }
 
-    if (approverType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
+    if (handlerType.value === 'initiator_select' && initiatorSelectRangeType.value === 'specified' && initiatorSelectRange.value.length === 0) {
         ElMessage.warning('请至少选择一名发起人自选范围人员')
         return false
     }
 
-    // 确保节点有 props 属性
-    if (!props.node.props) {
-        props.node.props = {}
+    if (handlerType.value === 'role' && roles.value.length === 0) {
+        ElMessage.warning('请至少选择一个角色')
+        return false
+    }
+    
+    // 验证转交到指定人员时必须选择人员
+    if (emptyApproverAction.value === 'transfer_specific' && emptyApproverTransferUser.value.length === 0) {
+        ElMessage.warning('请选择转交的指定人员')
+        return false
     }
 
-    // 保存审批人类型
-    props.node.props.approverType = approverType.value
-
-    // 保存审批方式
-    props.node.props.mode = approvalMode.value
-
-    // 保存发起人自选相关
-    if (approverType.value === 'initiator_select') {
-        props.node.props.initiatorSelectMode = initiatorSelectMode.value
-    props.node.props.initiatorSelectRangeType = initiatorSelectRangeType.value
+    // 构建新的 props 对象
+    const newProps = {
+        // 基础字段
+        handlerType: handlerType.value,
+        mode: approvalMode.value,
+        
+        // 高级设置（通用）
+        emptyApproverAction: emptyApproverAction.value,
+    }
+    
+    // 如果选择了转交到指定人员，保存转交人员信息
+    if (emptyApproverAction.value === 'transfer_specific') {
+        // 保存完整的用户对象数组
+        newProps.emptyApproverTransferUser = emptyApproverTransferUser.value
     }
 
-    // 保存部门主管相关
-    if (approverType.value === 'department_manager') {
-        props.node.props.managerType = managerType.value
-        props.node.props.fallbackToHigherManager = fallbackToHigherManager.value
+    // 根据处理人类型添加特定配置
+    switch (handlerType.value) {
+        case 'designated':
+            newProps.handlers = handlers.value
+            break
+        case 'role':
+            newProps.roles = roles.value
+            break
+        case 'initiator_select':
+            newProps.initiatorSelectMode = initiatorSelectMode.value
+            newProps.initiatorSelectRangeType = initiatorSelectRangeType.value
+            newProps.initiatorSelectRange = initiatorSelectRange.value
+            break
+        case 'department_manager':
+            newProps.managerType = managerType.value
+            newProps.fallbackToHigherManager = fallbackToHigherManager.value
+            break
+        case 'multi_level_manager':
+            newProps.approvalEndPoint = approvalEndPoint.value
+            newProps.specificLevel = specificLevel.value
+            break
+        case 'position_manager':
+            newProps.position = position.value
+            break
     }
 
-    // 保存连续多级主管相关
-    if (approverType.value === 'multi_level_manager') {
-        props.node.props.approvalEndPoint = approvalEndPoint.value
-        props.node.props.specificLevel = specificLevel.value
-    }
-
-    // 保存高级设置
-    props.node.props.emptyApproverAction = emptyApproverAction.value
-    props.node.props.requireSignature = requireSignature.value
-    props.node.props.approvalTimeLimit = approvalTimeLimit.value
-    props.node.props.approvalTimeUnit = approvalTimeUnit.value
-    props.node.props.rejectAction = rejectAction.value
-
-    // 保存人员列表
-    props.node.props.approvers = approvers.value
-    props.node.props.initiatorSelectRange = initiatorSelectRange.value
+    // 直接替换 props
+    props.node.props = newProps
 
     return true
 }

@@ -76,14 +76,14 @@ const createNodeByType = (type, nodeId) => {
         [FlowNodeType.APPROVE]: {
             name: '审批人',
             props: {
-                approvers: [],
+                handlers: [],
                 mode: 'anyone', // 任意一人通过即可，可选值：anyone, all
             },
         },
         [FlowNodeType.CC]: {
             name: '抄送人',
             props: {
-                users: [],
+                handlers: [],
             },
         },
         [FlowNodeType.HANDLE]: {

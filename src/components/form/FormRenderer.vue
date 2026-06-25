@@ -6,7 +6,7 @@
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
         <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
-          <form-renderer :component="element" :form-values="formValues" :validation-errors="validationErrors"
+          <form-renderer :component="element" :form-values="formValues" :view-mode="viewMode" :validation-errors="validationErrors"
             @update:value="(id, value) => $emit('update:value', id, value)"
             @update:error="(id, error) => $emit('update:error', id, error)" />
         </div>
@@ -55,6 +55,11 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   },
+  viewMode: {
+    type: String,
+    default: 'pc', // 'pc' 或 'mobile'
+    validator: (value) => ['pc', 'mobile'].includes(value)
+  },
   validationErrors: {
     type: Object,
     default: () => ({})
@@ -65,6 +70,11 @@ const emit = defineEmits(['update:value', 'update:error']);
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
+  // 如果是手机视图,则每行只显示一个组件
+  if (props.viewMode === 'mobile') {
+    return "1fr";
+  }
+  
   if (!layoutValue) return "1fr 1fr"; // 默认两等分
 
   const parts = layoutValue.split(':').map(Number);
