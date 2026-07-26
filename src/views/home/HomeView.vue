@@ -2,7 +2,7 @@
   <div class="home-container">
     <!-- 左侧菜单 -->
     <div class="sidebar">
-      <div class="menu-title">审批系统</div>
+      <div class="menu-title">xflow 开源版</div>
 
       <!-- 常规菜单项 -->
       <ul class="menu-list regular-menu">
@@ -26,8 +26,11 @@
         </li>
       </ul>
 
-      <!-- 弹性空间，将管理菜单推到底部 -->
+      <!-- 弹性空间，将底部内容推到底部 -->
       <div class="flex-spacer"></div>
+
+      <!-- 项目信息区域 -->
+      <ProjectInfo />
 
       <!-- 用户信息区域 -->
       <UserInfoPanel />
@@ -43,15 +46,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { Stamp, Tickets } from '@element-plus/icons-vue';
+import { EditPen, Tickets } from '@element-plus/icons-vue';
 import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
+import ProjectInfo from '@/components/common/ProjectInfo.vue';
 
 const router = useRouter();
 const route = useRoute();
 const activeMenu = ref('');
 
 const menuItems = [
-  { name: '发起审批', route: '/home/initiate', icon: Stamp },
+  { name: '发起审批', route: '/home/initiate', icon: EditPen },
 ];
 
 // 管理相关的菜单项
