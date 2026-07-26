@@ -22,11 +22,16 @@
         <span class="link-url">gitee.com/uuccoo/xflow</span>
       </div>
     </a>
+    <div class="support-text">
+      <el-icon :size="12" color="#e6a23c"><StarFilled /></el-icon>
+      感谢您的 Star 支持
+      <el-icon :size="12" color="#e6a23c"><StarFilled /></el-icon>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { Link, Document, FolderOpened } from '@element-plus/icons-vue';
+import { Link, Document, FolderOpened, StarFilled } from '@element-plus/icons-vue';
 </script>
 
 <style scoped>
@@ -76,5 +81,11 @@ import { Link, Document, FolderOpened } from '@element-plus/icons-vue';
 
 .project-link:hover .link-name {
   color: #1890ff;
+}
+
+.support-text {
+  font-size: 12px;
+  color: #909399;
+  padding: 6px 0 0;
 }
 </style>
