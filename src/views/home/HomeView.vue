@@ -46,7 +46,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { EditPen, Tickets } from '@element-plus/icons-vue';
+import { EditPen, Tickets, Plus } from '@element-plus/icons-vue';
 import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
 import ProjectInfo from '@/components/common/ProjectInfo.vue';
 
@@ -60,7 +60,8 @@ const menuItems = [
 
 // 管理相关的菜单项
 const adminMenuItems = [
-  { name: '表单管理', route: '/home/manage-forms', icon: Tickets }
+  { name: '表单管理', route: '/home/manage-forms', icon: Tickets },
+  { name: '创建表单', route: '/design', icon: Plus },
 ];
 
 onMounted(() => {
