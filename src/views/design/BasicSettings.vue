@@ -6,6 +6,7 @@ import GroupCreator from '@/components/common/GroupCreator.vue'
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore'
 import { formGroupApi } from '@/api'
 import { ElMessage } from 'element-plus'
+import { FORM_ICON_WHITELIST } from '@/constants/formIcons'
 
 // 使用 Pinia store
 const basicStore = useBasicSettingsStore()
@@ -21,9 +22,9 @@ const iconColorOptions = [
   '#F56C6C',
 ]
 
-// 从ElementPlusIconsVue中获取所有图标
+// 从白名单中获取可用的表单图标名称
 const iconList = computed(() =>
-  Object.entries(ElementPlusIconsVue).map(([name, component]) => ({ name, component }))
+  FORM_ICON_WHITELIST.filter(name => ElementPlusIconsVue[name])
 )
 
 // 图标选择器相关
@@ -36,7 +37,6 @@ const togglePopover = () => {
 
 const selectIcon = (iconName) => {
   basicSettings.selectedIcon = iconName
-  popoverVisible.value = false // 选择后关闭弹窗
 }
 
 const selectIconColor = (color) => {
@@ -90,19 +90,19 @@ onMounted(() => {
                 <component :is="basicSettings.selectedIcon" />
               </el-icon>
             </div>
-            <el-popover placement="bottom-start" :width="350" trigger="click" v-model:visible="popoverVisible">
+            <el-popover placement="bottom-start" :width="380" trigger="click" v-model:visible="popoverVisible">
               <template #reference>
                   <el-button>更换图标</el-button>
               </template>
               <div class="icon-picker-container">
                 <div class="icon-picker">
-                  <div class="icon-picker-item" v-for="icon in iconList" :key="icon.name"
-                    @click="selectIcon(icon.name)">
-                    <el-icon>
-                      <component :is="icon.name" />
+                  <div class="icon-picker-item" v-for="iconName in iconList" :key="iconName"
+                    @click="selectIcon(iconName)">
+                    <el-icon :size="18">
+                      <component :is="iconName" />
                     </el-icon>
+                  </div>
                 </div>
-              </div>
               </div>
             </el-popover>
             <div class="color-option-item">
@@ -273,24 +273,24 @@ onMounted(() => {
 }
 
 .icon-picker-container {
-  max-height: 300px;
+  max-height: 320px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .icon-picker {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-  padding: 15px;
+  padding: 12px;
   width: 100%;
 
   .icon-picker-item {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 32px;
-    width: 32px;
+    height: 36px;
+    width: 36px;
     border: 1px solid #dcdfe6;
     border-radius: 4px;
     cursor: pointer;
