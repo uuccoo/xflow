@@ -226,7 +226,8 @@ onMounted(() => {
       <el-menu-item index="basicSettings" @click="activeComponent = 'basicSettings'">基础设置</el-menu-item>
       <el-menu-item index="formDesign" @click="activeComponent = 'formDesign'">表单设计</el-menu-item>
       <el-menu-item index="flowDesign" @click="activeComponent = 'flowDesign'">流程设计</el-menu-item>
-      <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
+      <!-- 更多设置功能尚未实现，暂时隐藏 -->
+      <!-- <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item> -->
     </el-menu>
     <div class="publish">
       <el-button @click="preview">预览</el-button>
@@ -316,6 +317,10 @@ main {
       font-size: 14px;
       font-weight: 500;
       color: #606266;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }
