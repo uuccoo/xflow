@@ -236,10 +236,12 @@ const renderField = () => {
 
 .form-item-control {
   width: 100%;
+  pointer-events: none;
 }
 
 /* 分栏容器单栏样式 */
 .single-column-container {
+  pointer-events: auto;
   position: relative;
   border: 1px dashed #a0cfff;
   border-radius: 4px;
