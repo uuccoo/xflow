@@ -235,9 +235,9 @@ onBeforeMount(() => {
     right: 0;
     background-color: #E6A23C;
     color: white;
-    padding: 2px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .form-content {

@@ -68,10 +68,10 @@ const loadExistingData = (data) => {
     // 更多设置页面功能尚未实现，当前 loadMoreSettings 允许空对象兜底
     moreSettingsStore.loadMoreSettings(data.moreSettings)
 
-    ElMessage.success('数据加载成功')
     return true
   } catch (error) {
     console.error('加载数据失败:', error)
+    ElMessage.error('数据加载失败')
     return false
   } finally {
     loading.value = false
@@ -138,9 +138,10 @@ const publish = async () => {
       publishedForm = await formApi.saveForm(finalData)
     }
 
-    // 更新表单ID
-    if (publishedForm && publishedForm.id) {
+    // 更新表单ID和版本号（后端每次更新会递增版本号，必须同步，否则再次发布会因版本不一致而失败）
+    if (publishedForm) {
       basicSettingsStore.id = publishedForm.id
+      basicSettingsStore.formVersion = publishedForm.version
     }
 
     ElMessage({
@@ -225,7 +226,8 @@ onMounted(() => {
       <el-menu-item index="basicSettings" @click="activeComponent = 'basicSettings'">基础设置</el-menu-item>
       <el-menu-item index="formDesign" @click="activeComponent = 'formDesign'">表单设计</el-menu-item>
       <el-menu-item index="flowDesign" @click="activeComponent = 'flowDesign'">流程设计</el-menu-item>
-      <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item>
+      <!-- 更多设置功能尚未实现，暂时隐藏 -->
+      <!-- <el-menu-item index="moreSettings" @click="activeComponent = 'moreSettings'">更多设置</el-menu-item> -->
     </el-menu>
     <div class="publish">
       <el-button @click="preview">预览</el-button>
@@ -315,6 +317,10 @@ main {
       font-size: 14px;
       font-weight: 500;
       color: #606266;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }

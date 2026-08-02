@@ -28,10 +28,17 @@
                             <CopyDocument />
                         </el-icon>
 
-                        <!-- 删除分支按钮 -->
-                        <el-icon class="node-delete" @click.stop="deleteBranch(branchIndex)">
+                        <!-- 删除分支按钮 - 只在非默认条件下显示 -->
+                        <el-icon class="node-delete" v-if="!branch.isDefault" @click.stop="deleteBranch(branchIndex)">
                             <Delete />
                         </el-icon>
+
+                        <!-- 默认条件说明图标 -->
+                        <el-tooltip v-if="branch.isDefault" content="当其他条件都不满足时，流程将进入默认条件" placement="top">
+                            <el-icon class="node-info">
+                                <QuestionFilled />
+                            </el-icon>
+                        </el-tooltip>
                     </div>
 
                     <!-- 分支内容 - 根据分支类型显示不同内容 -->
@@ -77,7 +84,7 @@
 </template>
 
 <script setup>
-import { Delete, Edit, CopyDocument } from '@element-plus/icons-vue'
+import { Delete, Edit, CopyDocument, QuestionFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
@@ -545,6 +552,17 @@ const formatSingleCondition = (condition) => {
         visibility: hidden;
         opacity: 0;
         transition: visibility 0s, opacity 0.2s ease-in-out;
+        z-index: 2;
+    }
+
+    /* 默认条件说明图标样式 */
+    .node-info {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: #909399;
+        cursor: help;
+        font-size: 16px;
         z-index: 2;
     }
 }
