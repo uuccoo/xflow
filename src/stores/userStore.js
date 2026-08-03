@@ -1,3 +1,4 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 // 默认演示用户
@@ -5,41 +6,41 @@ const DEFAULT_USER = {
   id: 'user01',
   username: '',
   realName: '张三',
-  orgId: 'org01',
 }
 
-// 从 localStorage 恢复状态（仅用于页面刷新后恢复，外部不应直接读写 localStorage）
+// 持久化配置
 const STORAGE_KEY = 'currentUser'
+// 初始化用户信息
 const persisted = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEFAULT_USER
 
-// 定义用户信息存储（唯一数据源）
-export const useUserStore = defineStore('user', {
-  state: () => ({ ...persisted }),
+// 用户信息存储（唯一数据源）
+export const useUserStore = defineStore('user', () => {
+  // state
+  const id = ref(persisted.id)
+  const username = ref(persisted.username)
+  const realName = ref(persisted.realName)
+  
+  const orgId = ref('org01') // 固定组织
 
-  getters: {
-    // 用于显示的名称
-    displayName: (state) => state.realName || state.username || '未登录',
-    // 是否已登录
-    isLoggedIn: (state) => !!state.id
-  },
+  // getters
+  const displayName = computed(() => realName.value || username.value || '未登录')
+  const isLoggedIn = computed(() => !!id.value)
 
-  actions: {
-    // 更新用户信息
-    updateUser(userData) {
-      if (!userData) return;
+  // actions
+  function updateUser(userData) {
+    if (!userData) return
 
-      this.id = userData.id || '';
-      this.username = userData.username || '';
-      this.realName = userData.realName || '';
-      this.orgId = userData.orgId || '';
+    id.value = userData.id || ''
+    username.value = userData.username || ''
+    realName.value = userData.realName || ''
 
-      // write-through 持久化
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        id: this.id,
-        username: this.username,
-        realName: this.realName,
-        orgId: this.orgId,
-      }));
-    }
+    // write-through 持久化
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      id: id.value,
+      username: username.value,
+      realName: realName.value,
+    }))
   }
+
+  return { id, username, realName, orgId, displayName, isLoggedIn, updateUser }
 })
