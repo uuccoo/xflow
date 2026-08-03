@@ -14,46 +14,17 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // 从本地存储获取token
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    
-    // 从本地存储或 userStore 获取用户ID 和 组织ID（简化）
+    // 从 userStore 获取用户信息
     const userStore = useUserStore();
-    const userId = localStorage.getItem('userId') || userStore.id || '';
-    const orgId = localStorage.getItem('orgId') || userStore.orgId || '';
-    
-    // 检查并同步 userStore 中的数据（localStorage 为主）
-    // 检查是否需要更新userStore
-    const needUpdate = (userId && userId !== userStore.id) || (orgId && orgId !== userStore.orgId);
-    if (needUpdate) {
-      console.log('本地存储与Pinia Store数据不一致，正在同步...');
 
-      // 从 localStorage 获取完整的用户信息，fallback 到 userStore
-      const username = localStorage.getItem('username') || userStore.username || '';
-      const realName = localStorage.getItem('realName') || userStore.realName || '';
+    // 添加用户ID和组织ID到请求头
+    if (userStore.id) {
+      config.headers['X-User-Id'] = userStore.id
+    }
+    if (userStore.orgId) {
+      config.headers['X-Org-Id'] = userStore.orgId
+    }
 
-      // 更新 userStore
-      userStore.updateUser({
-        id: userId,
-        username: username,
-        realName: realName,
-        orgId: orgId
-      });
-    }
-    
-    // 如果有用户ID，则设置到请求头中
-    if (userId) {
-      config.headers['X-User-Id'] = userId
-    }
-    
-    // 如果有用户组织ID，则设置到请求头中
-    if (orgId) {
-      config.headers['X-Org-Id'] = orgId
-    }
-    
     return config
   },
   (error) => {

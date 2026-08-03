@@ -46,21 +46,16 @@ const handleUserSelectConfirm = (data) => {
   if (data.selectedUsers && data.selectedUsers.length > 0) {
     const selectedUser = data.selectedUsers[0];
     
-    // 直接更新 Pinia Store
+    // 更新 userStore（内部自动持久化）
     userStore.updateUser({
       id: selectedUser.id,
       username: selectedUser.username || selectedUser.name,
       realName: selectedUser.realName || selectedUser.name
     });
     
-    // 同步更新 localStorage
-    localStorage.setItem('userId', selectedUser.id);
-    localStorage.setItem('username', selectedUser.username || selectedUser.name || '');
-    localStorage.setItem('realName', selectedUser.realName || selectedUser.name || '');
-    
     ElMessage.success('切换账号成功');
     
-    // 使用路由刷新页面
+    // 刷新当前页面数据
     router.go(0);
   }
 };
