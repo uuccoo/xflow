@@ -214,19 +214,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
 
   // 克隆组件
   const cloneComponent = (component) => {
-    if (component.type === FormComponentType.COLUMNS) {
-      // 创建分栏容器时，直接使用一维数组存储子组件
-      return {
-        ...component,
-        id: generateUniqueId(),
-        children: [], // 使用一维数组存储子组件
-      }
-    }
+    const cloned = JSON.parse(JSON.stringify(component))
+    cloned.id = generateUniqueId()
 
-    return {
-      ...component,
-      id: generateUniqueId(),
-    }
+    return cloned
   }
 
   // 添加组件
