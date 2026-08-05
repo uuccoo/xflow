@@ -225,11 +225,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     formItems.value.push(cloneComponent(component))
   }
 
-  // 选中组件
-  const selectItem = (item) => {
-    activeItem.value = item
-  }
-
   // 在指定数组中递归查找目标组件所在的位置
   const findInArray = (arr, componentId) => {
     const index = arr.findIndex((item) => item.id === componentId)
@@ -310,7 +305,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     toPayload,
     cloneComponent,
     addComponent,
-    selectItem,
     handleSelectComponent,
     handleCopyComponent,
     handleDeleteComponent,
