@@ -62,9 +62,9 @@
             </div>
             <div class="drag-handle form-item-wrapper"
               :class="{ active: formStore.activeItem && formStore.activeItem.id === element.id }"
-              v-for="(element, index) in formStore.formItems" :key="element.id" @click="formStore.selectItem(element)">
+              v-for="element in formStore.formItems" :key="element.id" @click="formStore.selectItem(element)">
               <!-- 动态组件渲染 - 不再传递事件处理程序 -->
-              <component-renderer :component="element" :showActions="true" :isNested="false" :index="index"
+              <component-renderer :component="element" :showActions="true" :isNested="false"
                 :isActive="formStore.activeItem && formStore.activeItem.id === element.id"
                 :activeItem="formStore.activeItem" />
             </div>

@@ -18,14 +18,14 @@
           :animation="300" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="dragging-item">
 
           <!-- 多列布局渲染区域 - 仅用于显示，不参与拖拽 -->
-          <template v-for="(element, idx) in component.children" :key="element.id">
+          <template v-for="element in component.children" :key="element.id">
             <div class="drag-handle form-item-wrapper nested-item"
               :class="{ active: activeItem && activeItem.id === element.id }"
               @click.stop="formStore.handleSelectComponent(element)">
               <div class="form-item-content">
-                <component-renderer :component="element" :showActions="showActions" :isNested="true" :index="idx"
-                  :parentComponent="component" :isActive="activeItem && activeItem.id === element.id"
-                  :activeItem="activeItem" />
+                <component-renderer :component="element" :showActions="showActions" :isNested="true"
+                :isActive="activeItem && activeItem.id === element.id"
+                :activeItem="activeItem" />
               </div>
             </div>
           </template>
@@ -46,10 +46,10 @@
 
     <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
     <div v-if="showActions && isActive" class="form-item-actions">
-      <el-icon @click.stop="formStore.handleCopyComponent(component, index, parentComponent)">
+      <el-icon @click.stop="formStore.handleCopyComponent(component.id)">
         <CopyDocument />
       </el-icon>
-      <el-icon @click.stop="formStore.handleDeleteComponent(component, index, parentComponent)" class="delete-button">
+      <el-icon @click.stop="formStore.handleDeleteComponent(component.id)" class="delete-button">
         <Delete class="delete-icon" />
       </el-icon>
     </div>
@@ -89,14 +89,6 @@ const props = defineProps({
   isNested: {
     type: Boolean,
     default: false
-  },
-  index: {
-    type: Number,
-    default: undefined
-  },
-  parentComponent: {
-    type: Object,
-    default: null
   },
   isActive: {
     type: Boolean,

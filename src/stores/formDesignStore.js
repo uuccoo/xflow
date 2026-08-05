@@ -228,43 +228,25 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 选中组件
   const selectItem = (item) => {
     activeItem.value = item
-
-    // 如果选中的是分栏组件，并且没有布局值，设置默认值
-    if (item.type === FormComponentType.COLUMNS && !item.layoutValue) {
-      item.layoutValue = '1:1'
-    }
   }
 
-  // 删除组件
-  const deleteItem = (component, index, parentComponent) => {
-    if (parentComponent && parentComponent.type === FormComponentType.COLUMNS && parentComponent.children) {
-      // 从分栏容器的children中删除
-      parentComponent.children.splice(index, 1)
-    } else {
-      // 从表单项中删除
-      formItems.value.splice(index, 1)
-    }
+  // 在指定数组中递归查找目标组件所在的位置
+  const findInArray = (arr, componentId) => {
+    const index = arr.findIndex((item) => item.id === componentId)
+    if (index !== -1) return { arr, index }
 
-    // 如果删除的是当前选中的组件，则取消选中
-    if (activeItem.value && activeItem.value === component) {
-      activeItem.value = null
+    for (const item of arr) {
+      if (item.type === FormComponentType.COLUMNS && item.children) {
+        const result = findInArray(item.children, componentId)
+        if (result) return result
+      }
     }
+    return null
   }
 
-  // 复制组件
-  const copyItem = (component, index, parentComponent) => {
-    // 确定要操作的数组
-    const arr = parentComponent?.type === FormComponentType.COLUMNS ? parentComponent.children : formItems.value
-    const sourceItem = arr[index]
-
-    // 深拷贝组件
-    const newItem = JSON.parse(JSON.stringify(sourceItem))
-
-    // 递归更新组件和所有子组件的ID和编码
-    updateComponentIds(newItem)
-
-    // 将复制的组件插入到原组件后面
-    arr.splice(index + 1, 0, newItem)
+  // 通过 ID 查找组件所在的数组和索引
+  const findItemContext = (componentId) => {
+    return findInArray(formItems.value, componentId)
   }
 
   // 递归更新组件和所有子组件的ID
@@ -286,16 +268,34 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   }
 
   // 处理组件复制事件
-  const handleCopyComponent = (component, index, parentComponent) => {
-    if (index !== undefined) {
-      copyItem(component, index, parentComponent)
-    }
+  const handleCopyComponent = (componentId) => {
+    // 查找组件所在的数组和位置索引
+    const context = findItemContext(componentId)
+    if (!context) return
+    const { arr, index } = context
+
+    // 深拷贝组件
+    const newItem = JSON.parse(JSON.stringify(arr[index]))
+
+    // 递归更新组件和所有子组件的ID
+    updateComponentIds(newItem)
+
+    // 将复制的组件插入到原组件后面
+    arr.splice(index + 1, 0, newItem)
   }
 
   // 处理组件删除事件
-  const handleDeleteComponent = (component, index, parentComponent) => {
-    if (index !== undefined) {
-      deleteItem(component, index, parentComponent)
+  const handleDeleteComponent = (componentId) => {
+    // 查找组件所在的数组和位置索引
+    const context = findItemContext(componentId)
+    if (!context) return
+    const { arr, index } = context
+
+    const removed = arr.splice(index, 1)[0]
+
+    // 如果删除的是当前选中的组件，则取消选中
+    if (activeItem.value?.id === removed.id) {
+      activeItem.value = null
     }
   }
 
