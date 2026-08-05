@@ -1,6 +1,6 @@
 <template>
   <!-- 包装器 - 包含组件内容和操作按钮 -->
-  <div class="form-item-wrapper-outer">
+  <div class="form-item-wrapper drag-handle" :class="{ active: isActive }" @click.stop="formStore.handleSelectComponent(component)">
     <!-- 分栏容器组件 -->
     <div v-if="component.type === FormComponentType.COLUMNS" class="form-item column-container">
       <div class="form-item-label" v-if="component.label">
@@ -19,15 +19,7 @@
 
           <!-- 多列布局渲染区域 - 仅用于显示，不参与拖拽 -->
           <template v-for="element in component.children" :key="element.id">
-            <div class="drag-handle form-item-wrapper nested-item"
-              :class="{ active: activeItem && activeItem.id === element.id }"
-              @click.stop="formStore.handleSelectComponent(element)">
-              <div class="form-item-content">
-                <component-renderer :component="element" :showActions="showActions" :isNested="true"
-                :isActive="activeItem && activeItem.id === element.id"
-                :activeItem="activeItem" />
-              </div>
-            </div>
+            <component-renderer :component="element" />
           </template>
         </draggable>
       </div>
@@ -45,7 +37,7 @@
     </div>
 
     <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
-    <div v-if="showActions && isActive" class="form-item-actions">
+    <div v-if="isActive" class="form-item-actions">
       <el-icon @click.stop="formStore.handleCopyComponent(component.id)">
         <CopyDocument />
       </el-icon>
@@ -57,9 +49,9 @@
 </template>
 
 <script setup>
-import { h, defineAsyncComponent } from 'vue';
+import { h, defineAsyncComponent, computed } from 'vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
-import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue';
+import { Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
@@ -81,24 +73,11 @@ const props = defineProps({
   component: {
     type: Object,
     required: true
-  },
-  showActions: {
-    type: Boolean,
-    default: true
-  },
-  isNested: {
-    type: Boolean,
-    default: false
-  },
-  isActive: {
-    type: Boolean,
-    default: false
-  },
-  activeItem: {
-    type: Object,
-    default: null
   }
 });
+
+// 当前组件是否被选中
+const isActive = computed(() => formStore.activeItem?.id === props.component.id)
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
@@ -208,10 +187,21 @@ const renderField = () => {
   width: 100%;
 }
 
-.form-item-wrapper-outer {
+.form-item-wrapper {
   display: flex;
   align-items: center;
   width: 100%;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: move;
+  transition: all 0.3s;
+
+  &.active {
+    border-color: #409eff;
+    background-color: #f0faff;
+  }
 }
 
 .form-item-label {
@@ -249,12 +239,6 @@ const renderField = () => {
   width: 100%;
 }
 
-.preview-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .empty-column-tip {
   position: absolute;
   top: calc(50% - 10.4px);
@@ -262,21 +246,6 @@ const renderField = () => {
   color: #909399;
   font-size: 13px;
   pointer-events: none;
-}
-
-/* 修改嵌套项样式，添加边框和背景色 */
-.nested-item {
-  margin-bottom: 0;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  padding: 10px;
-  background-color: #fff;
-}
-
-/* 选中样式 - 与主表单区域保持一致 */
-.form-item-wrapper.active {
-  border-color: #409eff;
-  background-color: #f0faff;
 }
 
 .form-item-actions {
@@ -343,13 +312,6 @@ const renderField = () => {
   100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
   }
-}
-
-.text-content {
-  padding: 10px;
-  background-color: #f8f8f8;
-  border-radius: 4px;
-  border: 1px solid #ebeef5;
 }
 
 ::v-deep .avatar-uploader .el-upload {
