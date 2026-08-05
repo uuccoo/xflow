@@ -4,15 +4,6 @@ import { generateUniqueId } from '@/utils/idGenerator'
 import { FormComponentType } from '@/enums'
 
 export const useFormDesignStore = defineStore('formDesign', () => {
-  // 创建默认表单设计状态（工厂函数，避免数组引用复用导致串改）
-  const createDefaultFormDesignState = () => {
-    return {
-      formItems: [],
-      activeItem: null,
-      viewMode: 'mobile',
-    }
-  }
-
   // 设计区域的表单控件列表
   const formItems = ref([])
 
@@ -187,15 +178,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     viewMode.value = mode
   }
 
-  // 重置表单设计草稿数据
-  // 注意：不重置 components 配置数据
-  const resetFormDesign = () => {
-    const defaults = createDefaultFormDesignState()
-    formItems.value = [...defaults.formItems]
-    activeItem.value = defaults.activeItem
-    viewMode.value = defaults.viewMode
-  }
-
   // 加载表单设计数据（用于加载接口数据，全量覆盖）
   // 注意：这里不修改 viewMode，由页面/用户控制
   // 注意：建议在外层切换表单时先 reset，再调用该方法
@@ -300,7 +282,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     components,
     viewMode,
     setViewMode,
-    resetFormDesign,
     loadFormDesign,
     toPayload,
     cloneComponent,
