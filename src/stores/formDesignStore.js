@@ -280,12 +280,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     }
   }
 
-  // 更新分栏布局
-  const updateColumnsLayout = (layout) => {
-    if (!activeItem.value || activeItem.value.type !== FormComponentType.COLUMNS) return
-    activeItem.value.layoutValue = layout
-  }
-
   // 处理组件选择事件
   const handleSelectComponent = (component) => {
     activeItem.value = component
@@ -317,7 +311,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     cloneComponent,
     addComponent,
     selectItem,
-    updateColumnsLayout,
     handleSelectComponent,
     handleCopyComponent,
     handleDeleteComponent,
