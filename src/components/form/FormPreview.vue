@@ -18,8 +18,7 @@
                 <div class="form-content">
                     <el-form :model="formValues" label-position="top" class="custom-form">
                         <div v-for="item in formItems" :key="item.id" class="form-item-container">
-                            <form-renderer :component="item" :form-values="formValues" :validation-errors="validationErrors"
-                                @update:value="updateValue" @update:error="updateError" />
+                            <form-renderer :component="item" />
                         </div>
                     </el-form>
                 </div>
@@ -35,7 +34,7 @@
 </template>
 
 <script setup>
-import { onBeforeMount, reactive, computed } from 'vue';
+import { onBeforeMount, reactive, computed, provide } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
@@ -56,6 +55,10 @@ const { formItems } = storeToRefs(formDesignStore);
 // 表单相关状态
 const formValues = reactive({});
 const validationErrors = reactive({});
+
+// 通过 provide 向下共享数据，避免递归组件中 props 逐层透传
+provide('formValues', formValues);
+provide('validationErrors', validationErrors);
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
@@ -89,6 +92,10 @@ const updateError = (id, error) => {
         }
     }
 };
+
+// 通过 provide 向下共享事件处理函数，避免递归组件中事件逐层透传
+provide('updateValue', updateValue);
+provide('updateError', updateError);
 
 // 判断必填字段是否为空
 const isRequiredValueEmpty = (item, value) => {
