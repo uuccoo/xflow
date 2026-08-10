@@ -21,8 +21,7 @@
                 <div class="form-content">
                     <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
                         <div v-for="item in formFillData.formItems" :key="item.id" class="form-item-container">
-                            <form-renderer :component="item" :form-values="formValues" :validation-errors="validationErrors"
-                                @update:value="updateValue" @update:error="updateError" />
+                            <form-renderer :component="item" />
                         </div>
                     </el-form>
                 </div>
@@ -43,27 +42,26 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, reactive } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import { formApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
-import { FormComponentType } from '@/enums';
-import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems';
+import { useFormFill } from '@/composables/useFormFill';
 
 const route = useRoute();
 const router = useRouter();
 
-// 表单相关状态
 // 填写页表单数据（后端 FormFillResp）
 const formFillData = ref(null);
 const formName = ref('表单填写');
 const loading = ref(true);
 const submitting = ref(false);
-const formValues = reactive({});
-const validationErrors = reactive({});
 const formRef = ref(null);
+
+// 表单填写状态（状态、provide 注入均由 composable 处理）
+const { formValues, validateForm, initFormValues } = useFormFill();
 
 // 获取表单详情
 const loadForm = async () => {
@@ -89,11 +87,8 @@ const loadForm = async () => {
         if (fillData) {
             formFillData.value = fillData;
             formName.value = fillData.formName || '表单填写';
-
             // 初始化表单字段和默认值
-            if (Array.isArray(fillData.formItems)) {
-                Object.assign(formValues, buildDefaultFormValues(fillData.formItems));
-            }
+            initFormValues(fillData.formItems);
         } else {
             ElMessage.error('表单数据获取失败');
         }
@@ -115,101 +110,10 @@ const goToInitiateApproval = () => {
     router.push('/home/initiate');
 };
 
-// 更新表单值
-const updateValue = (id, value) => {
-    if (id) {
-        formValues[id] = value;
-    }
-};
-
-// 更新校验错误
-const updateError = (id, error) => {
-    if (!id) return;
-    if (error) {
-        validationErrors[id] = error;
-    } else {
-        if (validationErrors[id] !== undefined) {
-            delete validationErrors[id]
-        }
-    }
-};
-
-// 判断必填字段是否为空
-const isRequiredValueEmpty = (item, value) => {
-    if (item?.type === FormComponentType.TEXT) {
-        return false;
-    }
-
-    if (item?.type === FormComponentType.PHONE) {
-        return !value || typeof value !== 'object' || !value.number || value.number.trim() === '';
-    }
-
-    if (item?.type === FormComponentType.DATE && item?.dateType === 'datetimeAmPm') {
-        return !value || typeof value !== 'object' || !value.date;
-    }
-
-    if (item?.type === FormComponentType.DATERANGE) {
-        if (!value || typeof value !== 'object') {
-            return true;
-        }
-
-        if (item?.dateType === 'datetimeAmPm') {
-            return !value.startDate || typeof value.startDate !== 'object' || !value.startDate.date || !value.endDate || typeof value.endDate !== 'object' || !value.endDate.date;
-        }
-
-        return !value.startDate || !value.endDate;
-    }
-
-    const arrayRequiredTypes = [
-        FormComponentType.CHECKBOX,
-        FormComponentType.UPLOAD,
-        FormComponentType.IMAGE
-    ];
-
-    if (arrayRequiredTypes.includes(item?.type)) {
-        return !Array.isArray(value) || value.length === 0;
-    }
-
-    if (typeof value === 'string') {
-        return value.trim() === '';
-    }
-
-    return value === undefined || value === null;
-};
-
-// 验证表单
-const validateForm = () => {
-    if (!formFillData.value || !Array.isArray(formFillData.value.formItems)) {
-        return false;
-    }
-
-    const requiredItems = collectRequiredFormItems(formFillData.value.formItems);
-    // 1. 必填项校验
-    for (const item of requiredItems) {
-        if (!item.id) continue;
-
-        const value = formValues[item.id];
-        if (isRequiredValueEmpty(item, value)) {
-            ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
-            return false;
-        }
-    }
-
-    // 2. 检查父组件维护的 validationErrors 是否存在错误
-    for (const [id, err] of Object.entries(validationErrors)) {
-        if (err?.message) {
-            ElMessage.error(`${err.label || '字段'}: ${err.message}`)
-            return false
-        }
-    }
-
-    return true;
-};
-
 // 提交表单
 const submitForm = async () => {
     // 表单验证
-    if (!validateForm()) {
+    if (!validateForm(formFillData.value?.formItems)) {
         return;
     }
 
