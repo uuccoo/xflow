@@ -17,9 +17,7 @@
                 <!-- 表单填写部分 -->
                 <div class="form-content">
                     <el-form :model="formValues" label-position="top" class="custom-form">
-                        <div v-for="item in formItems" :key="item.id" class="form-item-container">
-                            <form-renderer :component="item" />
-                        </div>
+                        <form-renderer v-for="item in formItems" :key="item.id" :component="item" />
                     </el-form>
                 </div>
 
@@ -146,10 +144,6 @@ onBeforeMount(() => {
 .form-content {
     margin-top: 30px;
     padding-bottom: 20px;
-}
-
-.form-item-container {
-    margin-bottom: 20px;
 }
 
 .form-actions {
