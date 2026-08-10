@@ -5,9 +5,7 @@
       <div class="form-item-control columns-grid"
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
-        <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
-          <form-renderer :component="element" />
-        </div>
+        <form-renderer v-for="element in component.children" :key="element.id" :component="element" />
       </div>
     </div>
 
@@ -218,7 +216,7 @@ const renderField = () => {
   width: 100%;
 }
 
-.form-item {
+.form-item:not(.column-container) {
   width: 100%;
   margin-bottom: 20px;
 }
@@ -245,23 +243,12 @@ const renderField = () => {
   margin-top: 6px;
 }
 
-.column-container {
-  margin-bottom: 20px;
-}
-
 .columns-grid {
   display: grid;
-  gap: 16px;
+  grid-column-gap: 16px;
   width: 100%;
 }
 
-.form-item-wrapper {
-  margin-bottom: 20px;
-}
-
-.nested-item {
-  padding: 0;
-}
 
 ::v-deep .avatar-uploader .el-upload,
 .el-upload-list__item {
