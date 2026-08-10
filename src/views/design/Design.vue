@@ -158,20 +158,10 @@ const publish = async () => {
 
 // 重置所有表单数据
 const resetFormData = () => {
-  // 重置表单元信息（ID/编码/版本）
-  basicSettingsStore.resetFormMeta()
-
-  // 重置基本设置
-  basicSettingsStore.resetBasicSettings()
-
-  // 重置表单设计
-  formDesignStore.resetFormDesign()
-
-  // 重置流程设计
-  flowDesignStore.resetFlowDesign()
-
-  // 重置更多设置
-  moreSettingsStore.resetMoreSettings()
+  basicSettingsStore.$reset()
+  formDesignStore.$reset()
+  flowDesignStore.$reset()
+  moreSettingsStore.$reset()
 
   console.log('表单数据已重置')
 }

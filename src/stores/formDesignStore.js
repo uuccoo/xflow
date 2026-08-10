@@ -4,15 +4,6 @@ import { generateUniqueId } from '@/utils/idGenerator'
 import { FormComponentType } from '@/enums'
 
 export const useFormDesignStore = defineStore('formDesign', () => {
-  // 创建默认表单设计状态（工厂函数，避免数组引用复用导致串改）
-  const createDefaultFormDesignState = () => {
-    return {
-      formItems: [],
-      activeItem: null,
-      viewMode: 'mobile',
-    }
-  }
-
   // 设计区域的表单控件列表
   const formItems = ref([])
 
@@ -187,15 +178,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     viewMode.value = mode
   }
 
-  // 重置表单设计草稿数据
-  // 注意：不重置 components 配置数据
-  const resetFormDesign = () => {
-    const defaults = createDefaultFormDesignState()
-    formItems.value = [...defaults.formItems]
-    activeItem.value = defaults.activeItem
-    viewMode.value = defaults.viewMode
-  }
-
   // 加载表单设计数据（用于加载接口数据，全量覆盖）
   // 注意：这里不修改 viewMode，由页面/用户控制
   // 注意：建议在外层切换表单时先 reset，再调用该方法
@@ -214,19 +196,10 @@ export const useFormDesignStore = defineStore('formDesign', () => {
 
   // 克隆组件
   const cloneComponent = (component) => {
-    if (component.type === FormComponentType.COLUMNS) {
-      // 创建分栏容器时，直接使用一维数组存储子组件
-      return {
-        ...component,
-        id: generateUniqueId(),
-        children: [], // 使用一维数组存储子组件
-      }
-    }
+    const cloned = JSON.parse(JSON.stringify(component))
+    cloned.id = generateUniqueId()
 
-    return {
-      ...component,
-      id: generateUniqueId(),
-    }
+    return cloned
   }
 
   // 添加组件
@@ -234,46 +207,23 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     formItems.value.push(cloneComponent(component))
   }
 
-  // 选中组件
-  const selectItem = (item) => {
-    activeItem.value = item
+  // 在指定数组中递归查找目标组件所在的位置
+  const findInArray = (arr, componentId) => {
+    const index = arr.findIndex((item) => item.id === componentId)
+    if (index !== -1) return { arr, index }
 
-    // 如果选中的是分栏组件，并且没有布局值，设置默认值
-    if (item.type === FormComponentType.COLUMNS && !item.layoutValue) {
-      item.layoutValue = '1:1'
+    for (const item of arr) {
+      if (item.type === FormComponentType.COLUMNS && item.children) {
+        const result = findInArray(item.children, componentId)
+        if (result) return result
+      }
     }
+    return null
   }
 
-  // 删除组件
-  const deleteItem = (component, index, parentComponent) => {
-    if (parentComponent && parentComponent.type === FormComponentType.COLUMNS && parentComponent.children) {
-      // 从分栏容器的children中删除
-      parentComponent.children.splice(index, 1)
-    } else {
-      // 从表单项中删除
-      formItems.value.splice(index, 1)
-    }
-
-    // 如果删除的是当前选中的组件，则取消选中
-    if (activeItem.value && activeItem.value === component) {
-      activeItem.value = null
-    }
-  }
-
-  // 复制组件
-  const copyItem = (component, index, parentComponent) => {
-    // 确定要操作的数组
-    const arr = parentComponent?.type === FormComponentType.COLUMNS ? parentComponent.children : formItems.value
-    const sourceItem = arr[index]
-
-    // 深拷贝组件
-    const newItem = JSON.parse(JSON.stringify(sourceItem))
-
-    // 递归更新组件和所有子组件的ID和编码
-    updateComponentIds(newItem)
-
-    // 将复制的组件插入到原组件后面
-    arr.splice(index + 1, 0, newItem)
+  // 通过 ID 查找组件所在的数组和索引
+  const findItemContext = (componentId) => {
+    return findInArray(formItems.value, componentId)
   }
 
   // 递归更新组件和所有子组件的ID
@@ -289,87 +239,40 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     }
   }
 
-  // 更新分栏布局
-  const updateColumnsLayout = (layout) => {
-    if (!activeItem.value || activeItem.value.type !== FormComponentType.COLUMNS) return
-    activeItem.value.layoutValue = layout
-  }
-
   // 处理组件选择事件
   const handleSelectComponent = (component) => {
     activeItem.value = component
   }
 
   // 处理组件复制事件
-  const handleCopyComponent = (component, index, parentComponent) => {
-    if (index !== undefined) {
-      copyItem(component, index, parentComponent)
-    }
+  const handleCopyComponent = (componentId) => {
+    // 查找组件所在的数组和位置索引
+    const context = findItemContext(componentId)
+    if (!context) return
+    const { arr, index } = context
+
+    // 深拷贝组件
+    const newItem = JSON.parse(JSON.stringify(arr[index]))
+
+    // 递归更新组件和所有子组件的ID
+    updateComponentIds(newItem)
+
+    // 将复制的组件插入到原组件后面
+    arr.splice(index + 1, 0, newItem)
   }
 
   // 处理组件删除事件
-  const handleDeleteComponent = (component, index, parentComponent) => {
-    if (index !== undefined) {
-      deleteItem(component, index, parentComponent)
-    }
-  }
+  const handleDeleteComponent = (componentId) => {
+    // 查找组件所在的数组和位置索引
+    const context = findItemContext(componentId)
+    if (!context) return
+    const { arr, index } = context
 
-  // 添加单选/多选选项
-  const addOption = () => {
-    if (!activeItem.value) return
-    // 确保组件是单选框或多选框
-    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
-      // 生成唯一的选项值
-      const uniqueValue = `option_${generateUniqueId()}`
+    const removed = arr.splice(index, 1)[0]
 
-      const newOption = {
-        label: `选项${activeItem.value.options.length + 1}`,
-        value: uniqueValue,
-      }
-      activeItem.value.options.push(newOption)
-    }
-  }
-
-  // 移除单选/多选选项
-  const removeOption = (index) => {
-    if (!activeItem.value) return
-    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
-      // 至少保留一个选项
-      if (activeItem.value.options.length > 1) {
-        activeItem.value.options.splice(index, 1)
-        // 如果删除的是当前选中的默认值，清空默认值
-        if (
-          activeItem.value.type === FormComponentType.RADIO &&
-          activeItem.value.defaultValue === activeItem.value.options[index]?.value
-        ) {
-          activeItem.value.defaultValue = ''
-        } else if (
-          activeItem.value.type === FormComponentType.CHECKBOX &&
-          activeItem.value.defaultValue.includes(activeItem.value.options[index]?.value)
-        ) {
-          const valueIndex = activeItem.value.defaultValue.indexOf(
-            activeItem.value.options[index].value,
-          )
-          if (valueIndex > -1) {
-            activeItem.value.defaultValue.splice(valueIndex, 1)
-          }
-        }
-      }
-    }
-  }
-
-  // 移动选项位置
-  const moveOption = (index, direction) => {
-    if (!activeItem.value) return
-    if (activeItem.value.type === FormComponentType.RADIO || activeItem.value.type === FormComponentType.CHECKBOX) {
-      const options = activeItem.value.options
-      const newIndex = index + direction
-
-      // 确保新索引在有效范围内
-      if (newIndex >= 0 && newIndex < options.length) {
-        // 交换选项位置
-        ;[options[index], options[newIndex]] = [options[newIndex], options[index]]
-      }
+    // 如果删除的是当前选中的组件，则取消选中
+    if (activeItem.value?.id === removed.id) {
+      activeItem.value = null
     }
   }
 
@@ -379,18 +282,12 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     components,
     viewMode,
     setViewMode,
-    resetFormDesign,
     loadFormDesign,
     toPayload,
     cloneComponent,
     addComponent,
-    selectItem,
-    updateColumnsLayout,
     handleSelectComponent,
     handleCopyComponent,
     handleDeleteComponent,
-    addOption,
-    removeOption,
-    moveOption,
   }
 })

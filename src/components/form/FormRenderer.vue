@@ -6,9 +6,7 @@
         :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
         <!-- 子组件直接放入grid布局中 -->
         <div v-for="element in component.children" :key="element.id" class="form-item-wrapper nested-item">
-          <form-renderer :component="element" :form-values="formValues" :view-mode="viewMode" :validation-errors="validationErrors"
-            @update:value="(id, value) => $emit('update:value', id, value)"
-            @update:error="(id, error) => $emit('update:error', id, error)" />
+          <form-renderer :component="element" />
         </div>
       </div>
     </div>
@@ -32,7 +30,7 @@
 
 <script setup>
 import { Plus } from '@element-plus/icons-vue';
-import { computed, defineAsyncComponent, h } from 'vue';
+import { computed, defineAsyncComponent, h, inject } from 'vue';
 import IdCardField from './fields/IdCardField.vue'
 import { FormComponentType } from '@/enums';
 import PhoneField from './fields/PhoneField.vue'
@@ -46,32 +44,36 @@ import CheckboxField from './fields/CheckboxField.vue'
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
 
+// 通过 inject 从祖先组件（FormPreview）获取共享数据和事件处理函数
+const formValues = inject('formValues', {});
+const validationErrors = inject('validationErrors', {});
+const viewMode = inject('viewMode', 'pc');
+const updateValue = inject('updateValue');
+const updateError = inject('updateError');
+
 const props = defineProps({
   component: {
     type: Object,
     required: true
-  },
-  formValues: {
-    type: Object,
-    default: () => ({})
-  },
-  viewMode: {
-    type: String,
-    default: 'pc', // 'pc' 或 'mobile'
-    validator: (value) => ['pc', 'mobile'].includes(value)
-  },
-  validationErrors: {
-    type: Object,
-    default: () => ({})
   }
 });
 
-const emit = defineEmits(['update:value', 'update:error']);
+// 处理值变化
+const handleValueChange = (value) => {
+  if (props.component.id) {
+    updateValue(props.component.id, value);
+  }
+};
+
+const handleFieldErrorChange = (error) => {
+  if (!props.component.id) return
+  updateError(props.component.id, error)
+};
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {
   // 如果是手机视图,则每行只显示一个组件
-  if (props.viewMode === 'mobile') {
+  if (viewMode === 'mobile') {
     return "1fr";
   }
   
@@ -84,26 +86,12 @@ const getGridTemplateColumns = (layoutValue) => {
 // 获取当前组件的值
 const getValue = computed(() => {
   let componentId = props.component.id;
-  let formValues = props.formValues;
-
   // 从 formValues 中获取当前组件的值，如果没有则使用组件的默认值
   if (componentId && formValues && formValues.hasOwnProperty(componentId)) {
     return formValues[componentId];
   }
   return props.component.defaultValue || '';
 });
-
-// 处理值变化
-const handleValueChange = (value) => {
-  if (props.component.id) {
-    emit('update:value', props.component.id, value);
-  }
-};
-
-const handleFieldErrorChange = (error) => {
-  if (!props.component.id) return
-  emit('update:error', props.component.id, error)
-};
 
 // 渲染表单控件
 const renderField = () => {

@@ -60,14 +60,7 @@
             <div v-if="formStore.formItems.length === 0" class="empty-tip">
               拖拽左侧组件到此处进行表单设计
             </div>
-            <div class="drag-handle form-item-wrapper"
-              :class="{ active: formStore.activeItem && formStore.activeItem.id === element.id }"
-              v-for="(element, index) in formStore.formItems" :key="element.id" @click="formStore.selectItem(element)">
-              <!-- 动态组件渲染 - 不再传递事件处理程序 -->
-              <component-renderer :component="element" :showActions="true" :isNested="false" :index="index"
-                :isActive="formStore.activeItem && formStore.activeItem.id === element.id"
-                :activeItem="formStore.activeItem" />
-            </div>
+            <component-renderer v-for="element in formStore.formItems" :key="element.id" :component="element" />
           </draggable>
         </div>
       </div>
@@ -85,7 +78,7 @@ import { ref, computed } from 'vue'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ComponentRenderer from '@/components/form/ComponentRenderer.vue'
 import PropertyPanel from '@/components/form/property/PropertyPanel.vue'
-import { Delete, CopyDocument, Iphone, Monitor, ArrowUp, ArrowDown, Plus, Operation } from '@element-plus/icons-vue'
+import { Iphone, Monitor } from '@element-plus/icons-vue'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 
 // 使用 Pinia store
@@ -264,69 +257,6 @@ const dragEnd = () => { }
   gap: 10px;
   padding: 10px 0;
   min-height: 100%;
-}
-
-.form-item-wrapper {
-  display: flex;
-  align-items: center;
-  border: var(--x-border-base);
-  border-radius: 6px;
-  padding: 10px;
-  background-color: #fff;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &.active {
-    border-color: #409eff;
-    background-color: #f0faff;
-  }
-}
-
-.drag-handle {
-  cursor: move;
-}
-
-.form-item-content {
-  flex: 1;
-}
-
-.form-item-actions {
-  margin-left: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  cursor: pointer;
-  color: #909399;
-
-  .el-icon {
-    &:first-child:hover {
-      color: #409EFF;
-    }
-
-    &:last-child:hover {
-      color: #F56C6C;
-    }
-  }
-}
-
-.form-item {
-  width: 100%;
-}
-
-.form-item-label {
-  color: #606266;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-
-  .required {
-    color: #f56c6c;
-    margin-left: 4px;
-  }
-}
-
-.form-item-control {
-  width: 100%;
 }
 
 /* 拖动动画相关样式 */

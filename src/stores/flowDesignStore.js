@@ -5,26 +5,21 @@ import { FlowNodeType } from '@/enums'
 import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
 
 export const useFlowDesignStore = defineStore('flowDesign', () => {
-  // 创建默认流程数据（工厂函数，避免默认对象被复用导致引用串改）
-  const createDefaultFlowData = () => {
-    return {
-      id: 'flow_' + Date.now(),
-      name: '未命名流程',
-      version: '1.0',
-      initiator: {
-        id: INITIATOR_NODE_ID,
-        type: FlowNodeType.INITIATE,
-        name: '发起人',
-        props: {
-          initiator: [],
-        },
-      },
-      nodes: [],
-    }
-  }
-
   // 存储完整流程数据
-  const flowData = reactive(createDefaultFlowData())
+  const flowData = reactive({
+    id: 'flow_' + Date.now(),
+    name: '未命名流程',
+    version: '1.0',
+    initiator: {
+      id: INITIATOR_NODE_ID,
+      type: FlowNodeType.INITIATE,
+      name: '发起人',
+      props: {
+        initiator: [],
+      },
+    },
+    nodes: [],
+  })
 
   // 当前选中的节点
   const selectedNode = ref(null)
@@ -57,15 +52,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 清除选中节点
   const clearSelectedNode = () => {
-    selectedNode.value = null
-    drawerVisible.value = false
-  }
-
-  // 重置流程设计数据
-  // 注意：这里用 Object.assign 保持 flowData 的响应式引用不变
-  const resetFlowDesign = () => {
-    Object.assign(flowData, createDefaultFlowData())
-    // 其他状态也一并重置
     selectedNode.value = null
     drawerVisible.value = false
   }
@@ -180,7 +166,6 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     clearSelectedNode,
     toPayload,
     loadFlowDesign,
-    resetFlowDesign,
     deleteNode,
     editCondition,
     formatNames,

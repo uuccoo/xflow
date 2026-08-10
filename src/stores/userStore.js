@@ -1,42 +1,46 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-// 定义用户信息存储
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    id: 'user01',
-    username: '',
-    realName: '张三',
-    orgId: 'org01'
-  }),
-  
-  getters: {
-    // 用于显示的名称
-    displayName: (state) => state.realName || state.username || '未登录',
-    // 是否已登录
-    isLoggedIn: (state) => !!state.id
-  },
-  
-  actions: {
-    // 更新用户信息
-    updateUser(userData) {
-      if (!userData) return;
-      
-      this.id = userData.id || '';
-      this.username = userData.username || '';
-      this.realName = userData.realName || '';
-    },
+// 默认演示用户
+const DEFAULT_USER = {
+  id: 'user01',
+  username: '',
+  realName: '张三',
+}
 
-    // 从本地存储初始化用户信息
-    initFromLocalStorage() {
-      const userId = localStorage.getItem('userId');
-      const username = localStorage.getItem('username');
-      const realName = localStorage.getItem('realName');
-      
-      if (userId) {
-        this.id = userId;
-        this.username = username || '';
-        this.realName = realName || '';
-      }
-    }
+// 持久化配置
+const STORAGE_KEY = 'currentUser'
+// 初始化用户信息
+const persisted = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEFAULT_USER
+
+// 用户信息存储（唯一数据源）
+export const useUserStore = defineStore('user', () => {
+  // state
+  const id = ref(persisted.id)
+  const username = ref(persisted.username)
+  const realName = ref(persisted.realName)
+  
+  const orgId = ref('org01') // 固定组织
+
+  // getters
+  const displayName = computed(() => realName.value || username.value || '未登录')
+  const isLoggedIn = computed(() => !!id.value)
+
+  // actions
+  function updateUser(userData) {
+    if (!userData) return
+
+    id.value = userData.id || ''
+    username.value = userData.username || ''
+    realName.value = userData.realName || ''
+
+    // write-through 持久化
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      id: id.value,
+      username: username.value,
+      realName: realName.value,
+    }))
   }
+
+  return { id, username, realName, orgId, displayName, isLoggedIn, updateUser }
 })
