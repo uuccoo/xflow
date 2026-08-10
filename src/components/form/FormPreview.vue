@@ -34,15 +34,14 @@
 </template>
 
 <script setup>
-import { onBeforeMount, reactive, computed, provide } from 'vue';
+import { computed, onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
 import { useFormDesignStore } from '@/stores/formDesignStore';
-import { FormComponentType } from '@/enums';
-import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems';
+import { useFormFill } from '@/composables/useFormFill';
 
 // 定义emits
 const emit = defineEmits(['close-preview']);
@@ -52,124 +51,21 @@ const basicSettingsStore = useBasicSettingsStore();
 const formDesignStore = useFormDesignStore();
 const { formItems } = storeToRefs(formDesignStore);
 
-// 表单相关状态
-const formValues = reactive({});
-const validationErrors = reactive({});
-
-// 通过 provide 向下共享数据，避免递归组件中 props 逐层透传
-provide('formValues', formValues);
-provide('validationErrors', validationErrors);
+// 表单状态（状态、provide 注入均由 composable 处理）
+const { formValues, validateForm, initFormValues } = useFormFill();
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
-
-// 初始化表单字段和默认值
-const initFormValues = () => {
-    const defaultValues = buildDefaultFormValues(formItems.value);
-    Object.assign(formValues, defaultValues);
-};
 
 // 返回上一页
 const goBack = () => {
     emit('close-preview');
 };
 
-// 更新表单值
-const updateValue = (id, value) => {
-    if (id) {
-        formValues[id] = value;
-    }
-};
-
-// 更新校验错误
-const updateError = (id, error) => {
-    if (!id) return;
-    if (error) {
-        validationErrors[id] = error;
-    } else {
-        if (validationErrors[id] !== undefined) {
-            delete validationErrors[id]
-        }
-    }
-};
-
-// 通过 provide 向下共享事件处理函数，避免递归组件中事件逐层透传
-provide('updateValue', updateValue);
-provide('updateError', updateError);
-
-// 判断必填字段是否为空
-const isRequiredValueEmpty = (item, value) => {
-    if (item?.type === FormComponentType.TEXT) {
-        return false;
-    }
-
-    if (item?.type === FormComponentType.PHONE) {
-        return !value || typeof value !== 'object' || !value.number || value.number.trim() === '';
-    }
-
-    if (item?.type === FormComponentType.DATE && item?.dateType === 'datetimeAmPm') {
-        return !value || typeof value !== 'object' || !value.date;
-    }
-
-    if (item?.type === FormComponentType.DATERANGE) {
-        if (!value || typeof value !== 'object') {
-            return true;
-        }
-
-        if (item?.dateType === 'datetimeAmPm') {
-            return !value.startDate || typeof value.startDate !== 'object' || !value.startDate.date || !value.endDate || typeof value.endDate !== 'object' || !value.endDate.date;
-        }
-
-        return !value.startDate || !value.endDate;
-    }
-
-    const arrayRequiredTypes = [
-        FormComponentType.CHECKBOX,
-        FormComponentType.UPLOAD,
-        FormComponentType.IMAGE
-    ];
-
-    if (arrayRequiredTypes.includes(item?.type)) {
-        return !Array.isArray(value) || value.length === 0;
-    }
-
-    if (typeof value === 'string') {
-        return value.trim() === '';
-    }
-
-    return value === undefined || value === null;
-};
-
-// 验证表单
-const validateForm = () => {
-    const requiredItems = collectRequiredFormItems(formItems.value);
-
-    // 1. 必填项校验
-    for (const item of requiredItems) {
-        if (!item.id) continue;
-
-        const value = formValues[item.id];
-        if (isRequiredValueEmpty(item, value)) {
-            ElMessage.error(`${item.label || '未命名字段'} 为必填项`);
-            return false;
-        }
-    }
-
-    // 2. 检查父组件维护的 validationErrors 是否存在错误
-    for (const [id, err] of Object.entries(validationErrors)) {
-        if (err?.message) {
-            ElMessage.error(`${err.label || '字段'}: ${err.message}`)
-            return false
-        }
-    }
-
-    return true;
-};
-
 // 提交表单
 const submitForm = async () => {
     // 表单验证
-    if (!validateForm()) {
+    if (!validateForm(formItems.value)) {
         return;
     }
     ElMessage({
@@ -180,7 +76,7 @@ const submitForm = async () => {
 
 // 组件挂载时初始化表单默认值
 onBeforeMount(() => {
-    initFormValues();
+    initFormValues(formItems.value);
 });
 </script>
 
