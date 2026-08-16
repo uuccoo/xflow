@@ -1,14 +1,18 @@
 <template>
   <el-upload
     class="avatar-uploader"
-    action="#"
     list-type="picture-card"
-    :auto-upload="false"
-    multiple
+    :multiple="true"
+    :auto-upload="true"
+    :http-request="handleHttpUpload"
+    :before-upload="handleBeforeUpload"
+    :on-remove="handleFileRemove"
+    :on-exceed="handleExceed"
+    :on-success="handleUploadSuccess"
+    :limit="maxCount"
+    v-model:file-list="displayFileList"
+    :disabled="readonly"
     accept="image/*"
-    :file-list="props.modelValue"
-    @update:file-list="onFileListChange"
-    :disabled="props.readonly"
     @preview="handlePreview"
   >
     <template #default>
@@ -27,25 +31,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { uploadApi } from '@/api'
+import { getFileUrl } from '@/utils/file'
 
-const previewVisible = ref(false)
-const previewIndex = ref(0)
-
-const previewUrlList = computed(() => {
-  return props.modelValue.map(file => file.url)
-})
-
-
+// ========== Props ==========
 const props = defineProps({
   component: {
     type: Object,
     required: true,
-  },
-  modelValue: {
-    type: Array,
-    default: () => [],
   },
   readonly: {
     type: Boolean,
@@ -53,16 +49,95 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const fileList = defineModel({ type: Array, default: () => [] })
 
-const onFileListChange = (files) => {
-  if (props.readonly) return
-  emit('update:modelValue', files)
+const maxCount = 10
+const maxSizeMB = 10
+
+// ========== UI 列表（独立维护，仅在初始化时使用 fileList 赋值） ==========
+
+// 将数据映射为 el-upload 的 UploadFile 格式
+const mapToUploadFile = (file) => {
+  return {
+    ...file,
+    url: getFileUrl(file.url),
+    status: 'success',
+    // response 中保留原始数据，用于同步到 fileList
+    response: file,
+  }
 }
 
+const displayFileList = ref(fileList.value.map(mapToUploadFile))
+
+// ========== 从 uploadFiles 反向同步到 fileList ==========
+const syncFileList = (uploadFiles) => {
+  const files = uploadFiles
+    .filter((f) => f.status === 'success')
+    .map((f) => f.response)
+  fileList.value = files
+}
+
+// ========== 预览 ==========
+const previewVisible = ref(false)
+const previewIndex = ref(0)
+const previewUrlList = ref([])
+
 const handlePreview = (uploadFile) => {
-  const index = props.modelValue.findIndex(file => file.uid === uploadFile.uid)
+  previewUrlList.value = displayFileList.value
+    .filter((f) => f.status === 'success' && f.url)
+    .map((f) => f.url)
+  const index = displayFileList.value.findIndex((f) => f.uid === uploadFile.uid)
   previewIndex.value = index >= 0 ? index : 0
-  previewVisible.value = true
+  if (previewUrlList.value.length > 0) {
+    previewVisible.value = true
+  }
+}
+
+// ========== 上传前校验 ==========
+const handleBeforeUpload = (file) => {
+  // 类型校验（兜底，accept + 后端也会校验）
+  if (!file.type || !file.type.startsWith('image/')) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+
+  // 大小限制
+  const sizeMB = file.size / 1024 / 1024
+  if (sizeMB > maxSizeMB) {
+    ElMessage.error(`图片大小不能超过 ${maxSizeMB}MB（当前 ${sizeMB.toFixed(2)}MB）`)
+    return false
+  }
+
+  return true
+}
+
+// ========== 超限提示 ==========
+const handleExceed = () => {
+  ElMessage.warning(`最多只能上传 ${maxCount} 张图片`)
+}
+
+// ========== 自定义上传（调用后端接口） ==========
+const handleHttpUpload = async (options) => {
+  const { file } = options
+
+  try {
+    // 调后端上传
+    const result = await uploadApi.uploadImage(file)
+    // result: { id, name, url, size }
+    return result
+  } catch (err) {
+    return err
+  }
+}
+
+// ========== 上传成功回调 ==========
+const handleUploadSuccess = (response, uploadFile, uploadFiles) => {
+  // 同步到 fileList
+  syncFileList(uploadFiles)
+}
+
+// ========== 用户手动删除列表中的图 ==========
+const handleFileRemove = (uploadFile, uploadFiles) => {
+  syncFileList(uploadFiles)
 }
 </script>
