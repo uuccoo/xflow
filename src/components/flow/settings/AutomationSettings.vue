@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 
@@ -105,11 +105,6 @@ const initFormData = () => {
     externalApi.value = props.node.props.externalApi || ''
     externalTriggerMethod.value = props.node.props.externalTriggerMethod || 'webhook'
 }
-
-// 监听节点变化
-watch(() => props.node, () => {
-    initFormData()
-}, { immediate: true, deep: true })
 
 // 组件挂载时初始化数据
 onMounted(() => {

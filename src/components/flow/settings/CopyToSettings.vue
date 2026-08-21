@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
@@ -160,11 +160,6 @@ const initFormData = () => {
     initiatorSelectRange.value = props.node.props.initiatorSelectRange || []
     roles.value = props.node.props.roles || []
 }
-
-// 监听节点变化
-watch(() => props.node, () => {
-    initFormData()
-}, { immediate: true, deep: true })
 
 // 组件挂载时初始化数据
 onMounted(() => {

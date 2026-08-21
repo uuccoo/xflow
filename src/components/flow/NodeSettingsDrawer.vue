@@ -1,6 +1,6 @@
 <template>
-    <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="false"
-        :with-header="true" direction="rtl" :before-close="handleSave" class="node-settings-drawer">
+    <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="true"
+        :with-header="true" direction="rtl" class="node-settings-drawer">
         <!-- 自定义头部，包含节点名称编辑 -->
         <template #header>
             <div class="drawer-header">
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
@@ -146,14 +146,11 @@ const adjustBranchPosition = (currentBranch, newPriority) => {
     console.log('分支位置已调整，新的优先级顺序:', branches.filter(b => !b.isDefault).map(b => b.priority))
 }
 
-// 监听节点变化
-watch(() => flowStore.selectedNode?.node, () => {
-    initFormData()
-}, { immediate: true, deep: true })
-
-// 组件挂载时初始化数据
-onMounted(() => {
-    initFormData()
+// 抽屉打开时初始化表单数据
+watch(() => flowStore.drawerVisible, (visible) => {
+    if (visible) {
+        initFormData()
+    }
 })
 
 // 根据当前选中节点类型，返回对应的设置组件
@@ -193,8 +190,8 @@ const finishEditName = () => {
 
 // 处理取消
 const handleCancel = () => {
+    // TODO: 校验是否有未保存的更改，如果有，提示用户确认是否关闭
     flowStore.closeDrawer()
-    initFormData()
 }
 
 // 处理保存 - 使用ref获取组件实例

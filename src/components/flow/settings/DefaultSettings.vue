@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { getFlowNodeOption } from '@/constants/flowNodeOptions'
 
@@ -55,11 +55,6 @@ const initFormData = () => {
     // 初始化节点名称
     localNodeName.value = props.node.name || ''
 }
-
-// 监听节点变化
-watch(() => props.node, () => {
-    initFormData()
-}, { immediate: true, deep: true })
 
 // 组件挂载时初始化数据
 onMounted(() => {

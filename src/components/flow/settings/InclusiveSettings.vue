@@ -140,7 +140,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
@@ -327,11 +327,6 @@ const confirmAddCondition = () => {
 const removeCondition = (groupIndex, conditionIndex) => {
     conditionGroups.value[groupIndex].conditions.splice(conditionIndex, 1);
 }
-
-// 监听节点变化
-watch(() => props.node, () => {
-    initFormData()
-}, { immediate: true })
 
 // 组件挂载时初始化数据
 onMounted(() => {
