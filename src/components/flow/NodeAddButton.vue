@@ -116,6 +116,26 @@ const createNodeByType = (type, nodeId) => {
                 },
             ],
         },
+        [FlowNodeType.INCLUSIVE]: {
+            name: '包容分支',
+            props: {},
+            branches: [
+                {
+                    id: `branch_${Date.now()}`,
+                    name: '包容条件1',
+                    expression: '',
+                    nodes: [],
+                    isDefault: false,
+                },
+                {
+                    id: `branch_${Date.now() + 1}`,
+                    name: '默认条件',
+                    expression: '其他条件进入此流程',
+                    nodes: [],
+                    isDefault: true,
+                },
+            ],
+        },
         [FlowNodeType.AUTOMATION]: {
             name: '自动化',
             props: {

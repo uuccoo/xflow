@@ -68,6 +68,7 @@ import ApproverSettings from './settings/ApproverSettings.vue'
 import CopyToSettings from './settings/CopyToSettings.vue'
 import ProcessSettings from './settings/ProcessSettings.vue'
 import ConditionSettings from './settings/ConditionSettings.vue'
+import InclusiveSettings from './settings/InclusiveSettings.vue'
 import AutomationSettings from './settings/AutomationSettings.vue'
 import DefaultSettings from './settings/DefaultSettings.vue'
 
@@ -168,6 +169,7 @@ const nodeComponent = computed(() => {
         case FlowNodeType.CC: return CopyToSettings
         case FlowNodeType.HANDLE: return ProcessSettings
         case FlowNodeType.CONDITION: return ConditionSettings
+        case FlowNodeType.INCLUSIVE: return InclusiveSettings
         case FlowNodeType.AUTOMATION: return AutomationSettings
         default: return DefaultSettings
     }

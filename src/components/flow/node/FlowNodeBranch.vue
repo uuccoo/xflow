@@ -1,10 +1,8 @@
 <template>
     <div class="flow-branch-container">
-        <!-- 分支顶部按钮 - 根据分支类型显示不同按钮 -->
+        <!-- 分支顶部按钮 -->
         <div class="branch-add-btn">
-            <el-button size="small" type="primary" plain round @click="addBranch"
-                v-if="branchType === FlowNodeType.CONDITION">添加条件</el-button>
-            <el-button size="small" type="primary" plain round @click="addBranch" v-else>添加分支</el-button>
+            <el-button size="small" type="primary" plain round @click="addBranch">添加条件</el-button>
         </div>
 
         <!-- 分支内容 -->
@@ -16,12 +14,15 @@
                 <div v-if="branchIndex === 0 || branchIndex === branches.length - 1"
                     :class="{ 'hide-bottom-left-line': branchIndex === 0, 'hide-bottom-right-line': branchIndex === branches.length - 1 }">
                 </div>
-                <!-- 分支项头部 -->
-                <div class="flow-node branch-node" :class="[branchType]">
+                <!-- 分支节点头部（统一模板，通过branchType控制差异） -->
+                <div class="flow-node branch-node" :class="branchType">
                     <div class="branch-header">
                         {{ branch.name }}
-                        <!-- 优先级标签 - 仅在条件分支类型且非默认条件时显示 -->
-                        <div class="priority-tag" v-if="branchType === FlowNodeType.CONDITION && !branch.isDefault">优先级{{ branch.priority }}</div>
+
+                        <!-- 优先级标签 - 仅条件分支且非默认条件时显示 -->
+                        <div class="priority-tag" v-if="branchType === FlowNodeType.CONDITION && !branch.isDefault">
+                            优先级{{ branch.priority }}
+                        </div>
 
                         <!-- 复制按钮 - 只在非默认条件下显示 -->
                         <el-icon class="node-copy" v-if="!branch.isDefault" @click.stop="copyBranch(branchIndex)">
@@ -41,18 +42,11 @@
                         </el-tooltip>
                     </div>
 
-                    <!-- 分支内容 - 根据分支类型显示不同内容 -->
+                    <!-- 分支内容 -->
                     <div class="node-content branch-content"
                         @click="!branch.isDefault ? editBranch(branchIndex, branch) : undefined"
                         :class="{ 'default-condition': branch.isDefault }">
-                        <!-- 条件分支内容 -->
-                        <template v-if="branchType === FlowNodeType.CONDITION">
-                            <span class="condition-text" v-html="getConditionDescription(branch)"></span>
-                        </template>
-                        <!-- 其他类型分支内容可在此扩展 -->
-                        <template v-else>
-                            <span>{{ branch.description || '请配置分支' }}</span>
-                        </template>
+                        <span class="condition-text" v-html="getConditionDescription(branch)"></span>
                         <el-icon class="chevron-icon" v-if="!branch.isDefault">
                             <Edit />
                         </el-icon>
@@ -116,126 +110,73 @@ const emit = defineEmits([])
 // 分支类型 - 目前支持条件分支(condition)，未来可扩展更多类型
 const branchType = computed(() => props.node.type)
 
-// 根据分支类型获取分支集合
-const branches = computed(() => {
-    if (branchType.value === FlowNodeType.CONDITION) {
-        return props.node.branches || [];
-    }
-    // 未来可以在这里添加其他类型的分支数据获取逻辑
-    return [];
-})
+// 获取分支集合
+const branches = computed(() => props.node.branches || [])
 
 // ===== 通用分支操作逻辑 =====
 
+// 分支名称前缀映射
+const branchNamePrefix = {
+    [FlowNodeType.CONDITION]: '条件',
+    [FlowNodeType.INCLUSIVE]: '包容条件',
+}
+
 // 添加分支
 const addBranch = () => {
+    const nonDefaultBranches = props.node.branches.filter(b => !b.isDefault);
+    const conditionNumber = nonDefaultBranches.length + 1;
+    const prefix = branchNamePrefix[branchType.value] || '分支';
+
+    const newBranch = {
+        id: `branch_${Date.now()}`,
+        name: `${prefix}${conditionNumber}`,
+        expression: '',
+        nodes: [],
+        isDefault: false,
+    };
+
+    props.node.branches.splice(nonDefaultBranches.length, 0, newBranch);
+
+    // 条件分支需要更新优先级（包容分支无优先级概念）
     if (branchType.value === FlowNodeType.CONDITION) {
-        addConditionBranch();
-    } else {
-        // 其他类型分支的添加逻辑可在此扩展
-        ElMessage.info('尚未支持该类型分支的添加');
+        flowStore.updateBranchesPriority(props.node.branches);
     }
 }
 
 // 删除分支
 const deleteBranch = (branchIndex) => {
+    if (props.node.branches.length <= 2) {
+        flowStore.deleteNode(props.node, props.index, props.branch);
+        return;
+    }
+
+    // 收集被删除分支中的所有节点，转移到默认分支
+    const orphanedNodes = props.node.branches[branchIndex].nodes;
+    if (orphanedNodes.length > 0) {
+        const defaultIndex = props.node.branches.findIndex(b => b.isDefault);
+        if (defaultIndex !== -1) {
+            props.node.branches[defaultIndex].nodes.push(...orphanedNodes);
+            ElMessage.info('已将分支中的节点转移到默认条件');
+        }
+    }
+
+    props.node.branches.splice(branchIndex, 1);
+
+    // 条件分支需要更新优先级
     if (branchType.value === FlowNodeType.CONDITION) {
-        deleteConditionBranch(branchIndex);
-    } else {
-        // 其他类型分支的删除逻辑可在此扩展
-        ElMessage.info('尚未支持该类型分支的删除');
+        flowStore.updateBranchesPriority(props.node.branches);
     }
 }
 
 // 编辑分支
 const editBranch = (branchIndex, branch) => {
-    if (branchType.value === FlowNodeType.CONDITION) {
-        editCondition(branchIndex, branch);
-    } else {
-        // 其他类型分支的编辑逻辑可在此扩展
-        ElMessage.info('尚未支持该类型分支的编辑');
-    }
+    branch.type = branchType.value;
+    flowStore.selectNode(branch, branchIndex, null, props.node);
 }
 
 // 复制分支
 const copyBranch = (branchIndex) => {
-    if (branchType.value === FlowNodeType.CONDITION) {
-        // 调用store中的复制方法
-        flowStore.copyConditionBranch(props.node, branchIndex);
-    } else {
-        // 其他类型分支的复制逻辑可在此扩展
-        ElMessage.info('尚未支持该类型分支的复制');
-    }
-}
-
-// ===== 条件分支特定操作 =====
-
-// 添加条件分支
-const addConditionBranch = () => {
-    // 获取现有非默认条件数量
-    const nonDefaultBranches = props.node.branches.filter(b => !b.isDefault);
-    const conditionNumber = nonDefaultBranches.length + 1; // 新条件的编号
-
-    // 创建新条件
-    const newCondition = {
-        id: `branch_${Date.now()}`, // 添加唯一id，使用时间戳
-        name: `条件${conditionNumber}`,
-        expression: '',
-        priority: conditionNumber,
-        nodes: [],
-        isDefault: false  // 普通条件，非默认
-    };
-
-    // 确定插入位置 - 插入到所有非默认条件的末尾
-    const insertIndex = nonDefaultBranches.length;
-
-    // 在数组中插入新条件
-    props.node.branches.splice(insertIndex, 0, newCondition);
-
-    // 更新分支优先级
-    flowStore.updateBranchesPriority(props.node.branches);
-
-    console.log('添加条件分支成功', newCondition);
-    // 不再向上传递事件，只在本地处理即可
-}
-
-// 删除条件分支
-const deleteConditionBranch = (condIndex) => {
-    if (props.node.branches.length <= 2) {
-        // 当只有两个条件分支时，删除整个当前条件分支组件
-        // 直接使用 store 中的方法删除，传递branch属性
-        flowStore.deleteNode(props.node, props.index, props.branch);
-        return;
-    }
-
-    // 收集被删除分支中的所有节点
-    const orphanedNodes = props.node.branches[condIndex].nodes;
-
-    // 如果有孤立节点，可以选择将它们移到默认分支
-    if (orphanedNodes.length > 0) {
-        const defaultConditionIndex = props.node.branches.findIndex(c => c.isDefault);
-        if (defaultConditionIndex !== -1) {
-            props.node.branches[defaultConditionIndex].nodes.push(...orphanedNodes);
-            ElMessage.info('已将分支中的节点转移到默认条件');
-        }
-    }
-
-    // 删除条件分支
-    props.node.branches.splice(condIndex, 1);
-
-    // 更新分支优先级
-    flowStore.updateBranchesPriority(props.node.branches);
-
-    console.log('删除条件分支', condIndex);
-}
-
-// 编辑条件表达式
-const editCondition = (condIndex, condition) => {
-    condition.type = FlowNodeType.CONDITION; // 确保条件对象包含类型信息
-    // 传递父节点 props.node 作为 parentNode
-    flowStore.selectNode(condition, condIndex, null, props.node);
-
-    console.log('编辑条件', condIndex, condition);
+    flowStore.copyConditionBranch(props.node, branchIndex);
 }
 
 // 将条件设置转换为文本描述
@@ -579,6 +520,10 @@ const formatSingleCondition = (condition) => {
     // 根据分支类型添加不同的左边框颜色
     &.condition {
         border-left: 3px solid #f56c6c;
+    }
+
+    &.inclusive {
+        border-left: 3px solid #0ea5e9;
     }
 
     // 修改优先级标签的显示逻辑

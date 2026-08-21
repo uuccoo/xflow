@@ -62,7 +62,7 @@ const isRegularNode = computed(() => {
 // 判断是否为分支节点
 const isBranchNode = computed(() => {
     // 当前支持的分支类型列表，未来可以扩展
-    const branchTypes = [FlowNodeType.CONDITION];
+    const branchTypes = [FlowNodeType.CONDITION, FlowNodeType.INCLUSIVE];
     return branchTypes.includes(props.node.type);
 });
 
