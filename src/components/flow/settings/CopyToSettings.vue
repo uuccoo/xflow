@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw } from 'vue'
+import { reactive, onMounted, toRaw, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
@@ -140,10 +140,14 @@ const defaultForm = {
 }
 
 const form = reactive(structuredClone(defaultForm))
+const initialFormSnapshot = ref('')
+
+const getFormSnapshot = () => JSON.stringify(toRaw(form))
 
 // 初始化表单数据
 const initFormData = () => {
     Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    initialFormSnapshot.value = getFormSnapshot()
 }
 
 // 组件挂载时初始化数据
@@ -202,9 +206,12 @@ const saveSettings = () => {
     return true
 }
 
+const isFormChanged = () => getFormSnapshot() !== initialFormSnapshot.value
+
 // 将方法暴露给父组件
 defineExpose({
-    saveSettings
+    saveSettings,
+    isFormChanged
 })
 </script>
 

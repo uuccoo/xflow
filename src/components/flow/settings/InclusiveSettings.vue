@@ -167,6 +167,9 @@ const defaultForm = {
 }
 
 const form = reactive(structuredClone(defaultForm));
+const initialFormSnapshot = ref('');
+
+const getFormSnapshot = () => JSON.stringify(toRaw(form));
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
@@ -201,6 +204,8 @@ const initFormData = () => {
         // 包容分支初始状态为空，不自动添加条件组
         form.conditionGroups = [];
     }
+
+    initialFormSnapshot.value = getFormSnapshot();
 }
 
 // 创建发起人条件对象
@@ -338,9 +343,12 @@ const saveSettings = () => {
     return true;
 }
 
+const isFormChanged = () => getFormSnapshot() !== initialFormSnapshot.value;
+
 // 将方法暴露给父组件
 defineExpose({
-    saveSettings
+    saveSettings,
+    isFormChanged
 })
 </script>
 

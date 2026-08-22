@@ -1,5 +1,6 @@
 <template>
     <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="true"
+        :before-close="handleBeforeClose"
         :with-header="true" direction="rtl" class="node-settings-drawer">
         <!-- 自定义头部，包含节点名称编辑 -->
         <template #header>
@@ -59,7 +60,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { FlowNodeType } from '@/enums'
 
 // 导入各种节点设置组件
@@ -78,9 +79,13 @@ const flowStore = useFlowDesignStore()
 const isEditingName = ref(false)
 const nodeNameInput = ref(null)
 const localNodeName = ref('')
+// 初始节点名称快照，用于判断是否有修改
+const initialNodeName = ref('')
 
 // 优先级设置
 const localPriority = ref(0)
+// 初始优先级快照，用于判断是否有修改
+const initialPriority = ref(0)
 
 // 添加对当前设置组件的ref引用
 const nodeComponentRef = ref(null)
@@ -114,9 +119,11 @@ const priorityOptions = computed(() => {
 const initFormData = () => {
     if (flowStore.selectedNode?.node) {
         localNodeName.value = flowStore.selectedNode.node.name || ''
+        initialNodeName.value = localNodeName.value
         // 初始化优先级数据 - 只对条件分支设置优先级
         if (isConditionBranch.value) {
             localPriority.value = flowStore.selectedNode.node.priority || 1
+            initialPriority.value = localPriority.value
         }
     }
 }
@@ -187,10 +194,47 @@ const finishEditName = () => {
     // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
-// 处理取消
-const handleCancel = () => {
-    // TODO: 校验是否有未保存的更改，如果有，提示用户确认是否关闭
+// 统一判断设置组件是否有未保存修改，并等待用户确认
+const confirmClose = async () => {
+    const componentInstance = nodeComponentRef.value
+    // 检查设置组件是否有未保存的修改
+    const hasComponentChanges = componentInstance &&
+        typeof componentInstance.isFormChanged === 'function' &&
+        componentInstance.isFormChanged()
+
+    // 检查节点名称和优先级是否有修改
+    const hasNodeNameChanges = localNodeName.value !== initialNodeName.value
+    const hasPriorityChanges = isConditionBranch.value && localPriority.value !== initialPriority.value
+
+    if (hasComponentChanges || hasNodeNameChanges || hasPriorityChanges) {
+        try {
+            // 确认后丢弃组件内部草稿；取消则继续保留抽屉和编辑内容
+            await ElMessageBox.confirm(
+                '当前配置尚未保存，确定要取消修改吗？',
+                '提示',
+                {
+                    confirmButtonText: '取消修改',
+                    cancelButtonText: '继续编辑',
+                    type: 'warning'
+                }
+            )
+        } catch {
+            return false
+        }
+    }
+
+    return true
+}
+
+// 处理取消按钮和自定义关闭按钮
+const handleCancel = async () => {
+    if (!await confirmClose()) return
     flowStore.closeDrawer()
+}
+
+// 处理抽屉自身的关闭事件（遮罩、ESC 等），done 执行后才真正关闭抽屉
+const handleBeforeClose = async (done) => {
+    if (await confirmClose()) done()
 }
 
 // 处理保存 - 使用ref获取组件实例

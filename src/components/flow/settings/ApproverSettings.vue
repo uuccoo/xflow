@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw } from 'vue'
+import { reactive, onMounted, toRaw, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
@@ -226,10 +226,17 @@ const defaultForm = {
 
 // 表单草稿，编辑过程中不直接修改父组件的 nodeProps
 const form = reactive(structuredClone(defaultForm))
+// 保存打开时的表单快照，用于判断用户是否产生了未保存修改
+const initialFormSnapshot = ref('')
+
+// 获取表单字段的快照，用于判断表单是否有修改
+const getFormSnapshot = () => JSON.stringify(toRaw(form))
 
 // 初始化表单数据
 const initFormData = () => {
     Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    // 快照必须在数据装载完成后记录
+    initialFormSnapshot.value = getFormSnapshot()
 }
 
 // 组件挂载时初始化数据
@@ -309,9 +316,13 @@ const saveSettings = () => {
     return true
 }
 
+// 判断表单是否有修改，关闭抽屉前由父组件调用
+const isFormChanged = () => getFormSnapshot() !== initialFormSnapshot.value
+
 // 将方法暴露给父组件
 defineExpose({
-    saveSettings
+    saveSettings,
+    isFormChanged
 })
 </script>
 
