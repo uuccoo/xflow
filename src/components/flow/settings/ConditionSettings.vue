@@ -3,7 +3,7 @@
         <!-- 条件设置内容 -->
         <div class="condition-content">
             <!-- 条件组列表 -->
-            <div v-for="(group, groupIndex) in conditionGroups" :key="'group-' + groupIndex"
+            <div v-for="(group, groupIndex) in form.conditionGroups" :key="'group-' + groupIndex"
                 class="condition-group-wrapper">
                 <!-- 在非第一个条件组前显示"或"字样 -->
                 <div v-if="groupIndex > 0" class="or-divider">
@@ -12,11 +12,11 @@
 
                 <!-- 当只有一个条件组时不显示条件组边框和标题 -->
                 <div
-                    :class="{ 'condition-group': conditionGroups.length > 1, 'single-condition-group': conditionGroups.length === 1 }">
+                    :class="{ 'condition-group': form.conditionGroups.length > 1, 'single-condition-group': form.conditionGroups.length === 1 }">
                     <!-- 只有多个条件组时才显示条件组标题 -->
-                    <div v-if="conditionGroups.length > 1" class="condition-group-header">
+                    <div v-if="form.conditionGroups.length > 1" class="condition-group-header">
                         <span class="condition-group-title">条件组</span>
-                        <el-button v-if="conditionGroups.length > 1" type="danger" link size="small"
+                        <el-button v-if="form.conditionGroups.length > 1" type="danger" link size="small"
                             @click="removeConditionGroup(groupIndex)">
                             删除
                         </el-button>
@@ -135,8 +135,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useFlowDesignStore } from '@/stores/flowDesignStore'
+import { reactive, ref, onMounted, toRaw } from 'vue'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
@@ -146,23 +145,23 @@ import { collectRequiredConditionFields } from '@/utils/formItems'
 import { FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
 
-// 接收节点数据
-const props = defineProps({
-    node: {
-        type: Object,
-        required: true
-    }
+const nodeProps = defineModel({
+    type: Object,
+    required: true
 })
 
-// 使用 store
-const flowStore = useFlowDesignStore()
 const formDesignStore = useFormDesignStore()
 
 // 存储可用于条件判断的必填字段
 const requiredItems = ref([]);
 
 // 条件组列表
-const conditionGroups = ref([]);
+const defaultForm = {
+    // 条件组列表
+    conditionGroups: []
+}
+
+const form = reactive(structuredClone(defaultForm));
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
@@ -187,15 +186,15 @@ const checkboxConditionOptions = [
 
 // 初始化表单数据
 const initFormData = () => {
-    console.log('初始化表单数据', props.node);
     // 获取必填表单项
     requiredItems.value = collectRequiredConditionFields(formDesignStore.formItems);
 
     // 如果节点中已有条件组数据，则使用；否则初始化一个默认条件组
-    if (props.node.props && props.node.props.conditionGroups && props.node.props.conditionGroups.length) {
-        conditionGroups.value = JSON.parse(JSON.stringify(props.node.props.conditionGroups));
+    const nodeConditionGroups = toRaw(nodeProps.value?.conditionGroups)
+    if (nodeConditionGroups && nodeConditionGroups.length) {
+        form.conditionGroups = structuredClone(nodeConditionGroups);
     } else {
-        conditionGroups.value = [];
+        form.conditionGroups = [];
         addConditionGroup();
     }
 }
@@ -213,7 +212,7 @@ function createInitiatorCondition() {
 
 // 添加条件组
 const addConditionGroup = () => {
-    conditionGroups.value.push({
+    form.conditionGroups.push({
         id: Date.now(),
         conditions: [
             createInitiatorCondition()
@@ -223,14 +222,14 @@ const addConditionGroup = () => {
 
 // 删除条件组
 const removeConditionGroup = (groupIndex) => {
-    conditionGroups.value.splice(groupIndex, 1);
+    form.conditionGroups.splice(groupIndex, 1);
 }
 
 // 打开添加条件对话框
 const openAddConditionDialog = (groupIndex) => {
     currentGroupIndex.value = groupIndex;
     // 根据当前条件组中已有的条件类型来初始化选择项
-    selectedFieldIds.value = conditionGroups.value[groupIndex].conditions.map(c => c.fieldId);
+    selectedFieldIds.value = form.conditionGroups[groupIndex].conditions.map(c => c.fieldId);
     conditionDialogVisible.value = true;
 }
 
@@ -242,7 +241,7 @@ const cancelAddCondition = () => {
 // 确认添加条件
 const confirmAddCondition = () => {
     // 获取当前条件组中的条件
-    const currentGroupConditions = conditionGroups.value[currentGroupIndex.value].conditions;
+    const currentGroupConditions = form.conditionGroups[currentGroupIndex.value].conditions;
 
     // 保存现有条件的字段ID或类型，以便与选中的类型比较
     const existingFields = currentGroupConditions.map(c => c.fieldId);
@@ -321,7 +320,7 @@ const confirmAddCondition = () => {
 
 // 删除条件
 const removeCondition = (groupIndex, conditionIndex) => {
-    conditionGroups.value[groupIndex].conditions.splice(conditionIndex, 1);
+    form.conditionGroups[groupIndex].conditions.splice(conditionIndex, 1);
 }
 
 // 组件挂载时初始化数据
@@ -331,24 +330,7 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    // 确保节点有 props 属性和 branches 字段
-    if (!props.node.props) {
-        props.node.props = {};
-    }
-
-    // 根据条件组数据生成branches字段
-    // 注意：这里将条件组数据转换为branches字段格式
-    // 这里是简化实现，实际可能需要根据业务逻辑进行更复杂的转换
-
-    // 首先确保节点的branches数组存在
-    if (!props.node.branches) {
-        props.node.branches = [];
-    }
-
-    // 保存条件组设置到节点的props对象中（用于内部处理）
-    props.node.props.conditionGroups = JSON.parse(JSON.stringify(conditionGroups.value));
-
-    console.log('保存的条件组数据:', props.node.props.conditionGroups);
+    nodeProps.value = structuredClone(toRaw(form));
     return true;
 }
 

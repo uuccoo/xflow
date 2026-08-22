@@ -39,8 +39,8 @@
             <!-- 滚动内容区域 -->
             <div class="drawer-content">
                 <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
-                <component :is="nodeComponent" v-if="nodeComponent" :node="flowStore.selectedNode.node"
-                    ref="nodeComponentRef" />
+                <component :is="nodeComponent" v-if="nodeComponent"
+                    v-model="flowStore.selectedNode.node.props" ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
                 </div>
@@ -70,7 +70,6 @@ import ProcessSettings from './settings/ProcessSettings.vue'
 import ConditionSettings from './settings/ConditionSettings.vue'
 import InclusiveSettings from './settings/InclusiveSettings.vue'
 import AutomationSettings from './settings/AutomationSettings.vue'
-import DefaultSettings from './settings/DefaultSettings.vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -168,7 +167,7 @@ const nodeComponent = computed(() => {
         case FlowNodeType.CONDITION: return ConditionSettings
         case FlowNodeType.INCLUSIVE: return InclusiveSettings
         case FlowNodeType.AUTOMATION: return AutomationSettings
-        default: return DefaultSettings
+        default: return null
     }
 })
 
