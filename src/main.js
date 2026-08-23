@@ -2,7 +2,6 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import piniaResetPlugin from '@/utils/piniaResetPlugin'
 // 导入 ElMessage 及其样式
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
@@ -20,10 +19,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-const pinia = createPinia()
-pinia.use(piniaResetPlugin)
-
-app.use(pinia)
+app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
