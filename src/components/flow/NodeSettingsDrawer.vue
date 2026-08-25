@@ -60,7 +60,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
 
 // 导入各种节点设置组件
@@ -210,11 +210,11 @@ const confirmClose = async () => {
         try {
             // 确认后丢弃组件内部草稿；取消则继续保留抽屉和编辑内容
             await ElMessageBox.confirm(
-                '当前配置尚未保存，确定要取消修改吗？',
+                '有未保存的修改，确定要放弃吗？',
                 '提示',
                 {
-                    confirmButtonText: '取消修改',
-                    cancelButtonText: '继续编辑',
+                    confirmButtonText: '放弃',
+                    cancelButtonText: '继续修改',
                     type: 'warning'
                 }
             )

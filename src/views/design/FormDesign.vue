@@ -120,7 +120,7 @@ const dragEnd = () => { }
   }
 
   .component-list {
-    padding: 0 10px;
+    padding: 0 15px;
 
     .component-category {
       margin-bottom: 15px;

@@ -7,7 +7,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     return {
       // 表单图标和颜色
       iconColor: '#FF8800', // 表单图标背景色
-      selectedIcon: 'Promotion', // 当前选择的图标
+      selectedIcon: 'Tickets', // 当前选择的图标
       // 表单基础信息
       formName: '', // 表单名称
       groupId: '', // 所属分组ID

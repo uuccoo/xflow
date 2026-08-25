@@ -108,8 +108,6 @@ const handleConfirm = (result) => {
     // 触发change事件
     emit('change', result.selectedUsers)
 
-    ElMessage.success('人员已选择，请点击保存生效')
-
     // 关闭选择器
     selectorVisible.value = false
 }
