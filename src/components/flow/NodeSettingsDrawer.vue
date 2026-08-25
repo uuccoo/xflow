@@ -1,6 +1,7 @@
 <template>
-    <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="false"
-        :with-header="true" direction="rtl" :before-close="handleSave" class="node-settings-drawer">
+    <el-drawer v-model="flowStore.drawerVisible" :show-close="false" title="节点设置" size="550" :destroy-on-close="true"
+        :before-close="handleBeforeClose"
+        :with-header="true" direction="rtl" class="node-settings-drawer">
         <!-- 自定义头部，包含节点名称编辑 -->
         <template #header>
             <div class="drawer-header">
@@ -39,8 +40,8 @@
             <!-- 滚动内容区域 -->
             <div class="drawer-content">
                 <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
-                <component :is="nodeComponent" v-if="nodeComponent" :node="flowStore.selectedNode.node"
-                    ref="nodeComponentRef" />
+                <component :is="nodeComponent" v-if="nodeComponent"
+                    v-model="flowStore.selectedNode.node.props" ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
                 </div>
@@ -56,10 +57,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { FlowNodeType } from '@/enums'
 
 // 导入各种节点设置组件
@@ -68,8 +69,8 @@ import ApproverSettings from './settings/ApproverSettings.vue'
 import CopyToSettings from './settings/CopyToSettings.vue'
 import ProcessSettings from './settings/ProcessSettings.vue'
 import ConditionSettings from './settings/ConditionSettings.vue'
+import InclusiveSettings from './settings/InclusiveSettings.vue'
 import AutomationSettings from './settings/AutomationSettings.vue'
-import DefaultSettings from './settings/DefaultSettings.vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -78,9 +79,13 @@ const flowStore = useFlowDesignStore()
 const isEditingName = ref(false)
 const nodeNameInput = ref(null)
 const localNodeName = ref('')
+// 初始节点名称快照，用于判断是否有修改
+const initialNodeName = ref('')
 
 // 优先级设置
 const localPriority = ref(0)
+// 初始优先级快照，用于判断是否有修改
+const initialPriority = ref(0)
 
 // 添加对当前设置组件的ref引用
 const nodeComponentRef = ref(null)
@@ -114,9 +119,11 @@ const priorityOptions = computed(() => {
 const initFormData = () => {
     if (flowStore.selectedNode?.node) {
         localNodeName.value = flowStore.selectedNode.node.name || ''
+        initialNodeName.value = localNodeName.value
         // 初始化优先级数据 - 只对条件分支设置优先级
         if (isConditionBranch.value) {
             localPriority.value = flowStore.selectedNode.node.priority || 1
+            initialPriority.value = localPriority.value
         }
     }
 }
@@ -145,14 +152,11 @@ const adjustBranchPosition = (currentBranch, newPriority) => {
     console.log('分支位置已调整，新的优先级顺序:', branches.filter(b => !b.isDefault).map(b => b.priority))
 }
 
-// 监听节点变化
-watch(() => flowStore.selectedNode?.node, () => {
-    initFormData()
-}, { immediate: true, deep: true })
-
-// 组件挂载时初始化数据
-onMounted(() => {
-    initFormData()
+// 抽屉打开时初始化表单数据
+watch(() => flowStore.drawerVisible, (visible) => {
+    if (visible) {
+        initFormData()
+    }
 })
 
 // 根据当前选中节点类型，返回对应的设置组件
@@ -168,8 +172,9 @@ const nodeComponent = computed(() => {
         case FlowNodeType.CC: return CopyToSettings
         case FlowNodeType.HANDLE: return ProcessSettings
         case FlowNodeType.CONDITION: return ConditionSettings
+        case FlowNodeType.INCLUSIVE: return InclusiveSettings
         case FlowNodeType.AUTOMATION: return AutomationSettings
-        default: return DefaultSettings
+        default: return null
     }
 })
 
@@ -189,10 +194,47 @@ const finishEditName = () => {
     // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
-// 处理取消
-const handleCancel = () => {
+// 统一判断设置组件是否有未保存修改，并等待用户确认
+const confirmClose = async () => {
+    const componentInstance = nodeComponentRef.value
+    // 检查设置组件是否有未保存的修改
+    const hasComponentChanges = componentInstance &&
+        typeof componentInstance.isFormChanged === 'function' &&
+        componentInstance.isFormChanged()
+
+    // 检查节点名称和优先级是否有修改
+    const hasNodeNameChanges = localNodeName.value !== initialNodeName.value
+    const hasPriorityChanges = isConditionBranch.value && localPriority.value !== initialPriority.value
+
+    if (hasComponentChanges || hasNodeNameChanges || hasPriorityChanges) {
+        try {
+            // 确认后丢弃组件内部草稿；取消则继续保留抽屉和编辑内容
+            await ElMessageBox.confirm(
+                '当前配置尚未保存，确定要取消修改吗？',
+                '提示',
+                {
+                    confirmButtonText: '取消修改',
+                    cancelButtonText: '继续编辑',
+                    type: 'warning'
+                }
+            )
+        } catch {
+            return false
+        }
+    }
+
+    return true
+}
+
+// 处理取消按钮和自定义关闭按钮
+const handleCancel = async () => {
+    if (!await confirmClose()) return
     flowStore.closeDrawer()
-    initFormData()
+}
+
+// 处理抽屉自身的关闭事件（遮罩、ESC 等），done 执行后才真正关闭抽屉
+const handleBeforeClose = async (done) => {
+    if (await confirmClose()) done()
 }
 
 // 处理保存 - 使用ref获取组件实例

@@ -1,5 +1,5 @@
 import { FlowNodeType } from '@/enums'
-import { Connection, Document, Edit, Money, Setting, TurnOff, User } from '@element-plus/icons-vue'
+import { Connection, Document, Edit, Grid, Money, Setting, TurnOff, User } from '@element-plus/icons-vue'
 
 // 流程节点可选项（常量配置）：
 export const flowNodeOptions = [
@@ -12,6 +12,13 @@ export const flowNodeOptions = [
     icon: TurnOff,
     color: '#f56c6c',
     headerBg: '#fef0f0',
+  },
+  {
+    type: FlowNodeType.INCLUSIVE,
+    label: '包容分支',
+    icon: Grid,
+    color: '#0ea5e9',
+    headerBg: '#f0f9ff',
   },
   // TODO: 后端暂未实现，后续开放
   // { type: FlowNodeType.AUTOMATION, label: '自动化', icon: Setting, color: '#909399', headerBg: '#f4f4f5' },

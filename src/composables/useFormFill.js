@@ -1,7 +1,6 @@
 import { reactive, provide } from 'vue'
 import { ElMessage } from 'element-plus'
-import { FormComponentType } from '@/enums'
-import { buildDefaultFormValues, collectRequiredFormItems } from '@/utils/formItems'
+import { buildDefaultFormValues, collectRequiredFormItems, isRequiredValueEmpty } from '@/utils/formItems'
 
 /**
  * 表单填写 composable。
@@ -46,58 +45,6 @@ export function useFormFill() {
         delete validationErrors[id]
       }
     }
-  }
-
-  /**
-   * 判断必填字段是否为空（内部使用）。
-   */
-  const isRequiredValueEmpty = (item, value) => {
-    if (item?.type === FormComponentType.TEXT) {
-      return false
-    }
-
-    if (item?.type === FormComponentType.PHONE) {
-      return !value || typeof value !== 'object' || !value.number || value.number.trim() === ''
-    }
-
-    if (item?.type === FormComponentType.DATE && item?.dateType === 'datetimeAmPm') {
-      return !value || typeof value !== 'object' || !value.date
-    }
-
-    if (item?.type === FormComponentType.DATERANGE) {
-      if (!value || typeof value !== 'object') {
-        return true
-      }
-
-      if (item?.dateType === 'datetimeAmPm') {
-        return (
-          !value.startDate ||
-          typeof value.startDate !== 'object' ||
-          !value.startDate.date ||
-          !value.endDate ||
-          typeof value.endDate !== 'object' ||
-          !value.endDate.date
-        )
-      }
-
-      return !value.startDate || !value.endDate
-    }
-
-    const arrayRequiredTypes = [
-      FormComponentType.CHECKBOX,
-      FormComponentType.UPLOAD,
-      FormComponentType.IMAGE,
-    ]
-
-    if (arrayRequiredTypes.includes(item?.type)) {
-      return !Array.isArray(value) || value.length === 0
-    }
-
-    if (typeof value === 'string') {
-      return value.trim() === ''
-    }
-
-    return value === undefined || value === null
   }
 
   /**
