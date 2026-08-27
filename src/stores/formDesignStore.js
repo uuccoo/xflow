@@ -199,14 +199,13 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 加载表单设计数据（用于加载接口数据，全量覆盖）
   // 注意：这里不修改 viewMode，由页面/用户控制
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadFormDesign = (payload) => {
-    const items = payload?.formItems
-    formItems.value = Array.isArray(items) ? [...items] : []
+  const loadFormDesign = (formDesignData) => {
+    formItems.value = formDesignData?.formItems || []
     activeItem.value = null
   }
 
   // 导出表单设计数据（用于预览/发布组装）
-  const toPayload = () => {
+  const toFormDesignPayload = () => {
     return {
       formItems: [...formItems.value],
     }
@@ -302,7 +301,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     setViewMode,
     resetFormDesign,
     loadFormDesign,
-    toPayload,
+    toFormDesignPayload,
     cloneComponent,
     addComponent,
     handleSelectComponent,

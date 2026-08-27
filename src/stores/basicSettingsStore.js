@@ -54,12 +54,12 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
   // 加载基础设置（全量覆盖）
   // 入参只接收 basicSettings 对象，避免依赖接口详情整体结构
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadBasicSettings = (payload) => {
-    Object.assign(basicSettings, payload || {})
+  const loadBasicSettings = (basicSettingsData) => {
+    Object.assign(basicSettings, basicSettingsData || {})
   }
 
   // 导出基础设置数据（用于发布等场景的组装）
-  const toPayload = () => ({
+  const toBasicSettingsPayload = () => ({
     ...basicSettings,
   })
 
@@ -72,7 +72,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     // 方法
     resetBasicSettings,
     loadBasicSettings,
-    toPayload,
+    toBasicSettingsPayload,
 
     // 元信息方法
     resetFormMeta,

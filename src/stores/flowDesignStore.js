@@ -71,7 +71,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   }
 
   // 导出流程设计数据（用于预览/发布组装）
-  const toPayload = () => {
+  const toFlowDesignPayload = () => {
     return {
       ...flowData,
     }
@@ -79,9 +79,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 加载流程设计数据（全量覆盖，用于加载接口数据）
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadFlowDesign = (data) => {
+  const loadFlowDesign = (flowDesignData) => {
     // 外层已先 resetFlowDesign，这里直接覆盖写入即可（不做深拷贝/默认值兜底）
-    Object.assign(flowData, data || {})
+    Object.assign(flowData, flowDesignData || {})
     return true
   }
 
@@ -178,7 +178,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     closeDrawer,
     cancelNodeEdit,
     clearSelectedNode,
-    toPayload,
+    toFlowDesignPayload,
     loadFlowDesign,
     resetFlowDesign,
     deleteNode,
