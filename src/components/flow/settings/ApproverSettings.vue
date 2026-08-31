@@ -189,6 +189,8 @@
 import { reactive, onMounted, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
 import {
     APPROVER_FIELD,
     getErrorMessage,
@@ -212,37 +214,10 @@ const nodeProps = defineModel({
 
 const nodeId = props.nodeId
 
-const defaultForm = {
-    // 审批人类型
-    handlerType: 'designated',
-    // 多人审批方式
-    approvalMode: 'anyone',
-    // 发起人自选模式
-    initiatorSelectMode: 'single',
-    // 发起人自选范围类型
-    initiatorSelectRangeType: 'all',
-    // 主管级别
-    managerType: 1,
-    // 找不到主管时是否由上级主管代审批
-    fallbackToHigherManager: false,
-    // 审批人为空时的处理方式
-    emptyApproverAction: 'auto_pass',
-    // 连续多级主管的审批终点
-    approvalEndPoint: 'top_manager',
-    // 连续多级主管的具体级别
-    specificLevel: 1,
-    // 指定审批人列表
-    handlers: [],
-    // 发起人自选人员范围
-    initiatorSelectRange: [],
-    // 角色列表
-    roles: [],
-    // 审批人为空时的指定转交人员
-    emptyApproverTransferUser: []
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.APPROVE)
 
 // 表单草稿，编辑过程中不直接修改父组件的 nodeProps
-const form = reactive(structuredClone(defaultForm))
+const form = reactive(createDefaultForm())
 // 保存打开时的表单快照，用于判断用户是否产生了未保存修改
 const initialFormSnapshot = ref('')
 
@@ -251,7 +226,7 @@ const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), JSON.parse(JSON.stringify(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     // 快照必须在数据装载完成后记录
     initialFormSnapshot.value = getFormSnapshot()
 }

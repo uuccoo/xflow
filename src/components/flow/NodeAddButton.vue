@@ -37,7 +37,8 @@ import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { useFlowDesignStore } from '@/stores/flowDesignStore';
 import { FlowNodeType } from '@/enums'
-import { flowNodeOptions, getFlowNodeOption } from '@/constants/flowNodeOptions'
+import { flowNodeOptions } from '@/constants/flowNodeOptions'
+import { getNodeByType } from '@/constants/nodeTypeConfig'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
@@ -69,111 +70,6 @@ const props = defineProps({
     }
 });
 
-// 创建新节点对象 - 原来在 store 中的方法
-const createNodeByType = (type, nodeId) => {
-    // 节点类型配置映射
-    const nodeConfigs = {
-        [FlowNodeType.APPROVE]: {
-            name: '审批人',
-            props: {
-                handlers: [],
-                mode: 'anyone', // 任意一人通过即可，可选值：anyone, all
-            },
-        },
-        [FlowNodeType.CC]: {
-            name: '抄送人',
-            props: {
-                handlers: [],
-            },
-        },
-        [FlowNodeType.HANDLE]: {
-            name: '办理',
-            props: {
-                processors: [],
-                mode: 'sequential', // 串行处理，可选值：sequential, parallel
-            },
-        },
-        [FlowNodeType.CONDITION]: {
-            name: '条件分支',
-            props: {
-                // 移除 conditions 字段
-            },
-            branches: [
-                {
-                    id: `branch_${Date.now()}`, // 添加唯一id，使用时间戳
-                    name: '条件1',
-                    expression: '',
-                    priority: 1,
-                    nodes: [],
-                    isDefault: false, // 添加默认条件标识，普通条件为false
-                },
-                {
-                    id: `branch_${Date.now() + 1}`, // 添加唯一id，使用时间戳+1避免重复
-                    name: '默认条件',
-                    expression: '其他条件进入此流程',
-                    nodes: [],
-                    isDefault: true, // 添加默认条件标识
-                },
-            ],
-        },
-        [FlowNodeType.INCLUSIVE]: {
-            name: '包容分支',
-            props: {},
-            branches: [
-                {
-                    id: `branch_${Date.now()}`,
-                    name: '包容条件1',
-                    expression: '',
-                    nodes: [],
-                    isDefault: false,
-                },
-                {
-                    id: `branch_${Date.now() + 1}`,
-                    name: '默认条件',
-                    expression: '其他条件进入此流程',
-                    nodes: [],
-                    isDefault: true,
-                },
-            ],
-        },
-        [FlowNodeType.AUTOMATION]: {
-            name: '自动化',
-            props: {
-                actions: [],
-            },
-        },
-        [FlowNodeType.CONNECTOR]: {
-            name: '连接器',
-            props: {
-                connector: '',
-                config: {},
-            },
-        },
-        [FlowNodeType.PAYMENT]: {
-            name: '付款人',
-            props: {
-                payers: [],
-                amount: 0,
-            },
-        },
-    };
-
-    // 获取节点配置
-    const config = nodeConfigs[type] || {};
-    const option = getFlowNodeOption(type);
-    const label = option?.label || '未知节点';
-
-    // 创建并返回节点
-    return {
-        id: nodeId,
-        type,
-        name: config.name || label,
-        props: { ...(config.props || {}) },
-        // 如果配置中包含 branches 字段，则添加到返回的节点对象中
-        ...(config.branches ? { branches: config.branches } : {})
-    };
-};
-
 // 向主流程中添加节点 - 原来在 store 中的方法
 const addNodeToMainFlow = (node, position) => {
     // 添加到主流程中的指定位置
@@ -194,7 +90,7 @@ const addNodeToBranch = (node, branch, position) => {
 
 const handleNodeAdd = (type) => {
     // 创建新节点
-    const newNode = createNodeByType(type, `node_${Date.now()}`);
+    const newNode = getNodeByType(type);
 
     // 根据不同情况处理节点添加
     if (props.branch) {

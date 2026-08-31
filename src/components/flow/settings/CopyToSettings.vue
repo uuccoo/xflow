@@ -106,47 +106,28 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-const defaultForm = {
-    // 抄送人类型
-    handlerType: 'designated',
-    // 发起人自选模式
-    initiatorSelectMode: 'single',
-    // 发起人自选范围类型
-    initiatorSelectRangeType: 'all',
-    // 主管级别
-    managerType: 1,
-    // 找不到主管时是否由上级主管接收抄送
-    fallbackToHigherManager: false,
-    // 连续多级主管的审批终点
-    approvalEndPoint: 'top_manager',
-    // 连续多级主管的具体级别
-    specificLevel: 1,
-    // 指定抄送人列表
-    handlers: [],
-    // 发起人自选人员范围
-    initiatorSelectRange: [],
-    // 角色列表
-    roles: []
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.CC)
 
-const form = reactive(structuredClone(defaultForm))
+const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     initialFormSnapshot.value = getFormSnapshot()
 }
 
@@ -201,7 +182,7 @@ const saveSettings = () => {
             break
     }
 
-    nodeProps.value = structuredClone(toRaw(newProps))
+    nodeProps.value = JSON.parse(JSON.stringify(newProps))
 
     return true
 }

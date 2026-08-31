@@ -20,30 +20,27 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-const defaultForm = {
-    // 发起人范围类型
-    initiatorScope: 'all',
-    // 指定的发起人列表
-    initiators: []
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.INITIATE)
 
-const form = reactive(structuredClone(defaultForm))
+const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     initialFormSnapshot.value = getFormSnapshot()
 }
 
@@ -60,7 +57,7 @@ const saveSettings = () => {
         return false
     }
 
-    nodeProps.value = structuredClone(toRaw(form))
+    nodeProps.value = JSON.parse(JSON.stringify(form))
     return true
 }
 

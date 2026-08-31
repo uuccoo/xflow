@@ -140,7 +140,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
@@ -161,15 +161,15 @@ const formDesignStore = useFormDesignStore()
 const requiredItems = ref([]);
 
 // 条件组列表
-const defaultForm = {
+const createDefaultForm = () => ({
     // 包容分支条件组列表
     conditionGroups: []
-}
+})
 
-const form = reactive(structuredClone(defaultForm));
+const form = reactive(createDefaultForm());
 const initialFormSnapshot = ref('');
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form));
+const getFormSnapshot = () => JSON.stringify(form);
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
@@ -197,9 +197,9 @@ const initFormData = () => {
     requiredItems.value = collectRequiredConditionFields(formDesignStore.formItems);
 
     // 如果节点中已有条件组数据，则使用；否则初始化为空数组（不自动添加条件组）
-    const nodeConditionGroups = toRaw(nodeProps.value?.conditionGroups)
+    const nodeConditionGroups = nodeProps.value?.conditionGroups
     if (nodeConditionGroups && nodeConditionGroups.length) {
-        form.conditionGroups = structuredClone(nodeConditionGroups);
+        form.conditionGroups = JSON.parse(JSON.stringify(nodeConditionGroups));
     } else {
         // 包容分支初始状态为空，不自动添加条件组
         form.conditionGroups = [];
@@ -339,7 +339,7 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    nodeProps.value = structuredClone(toRaw(form));
+    nodeProps.value = JSON.parse(JSON.stringify(form));
     return true;
 }
 

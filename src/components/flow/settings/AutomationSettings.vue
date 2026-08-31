@@ -57,41 +57,26 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-const defaultForm = {
-    // 自动化动作类型
-    actionType: 'notification',
-    // 通知类型
-    notificationType: 'email',
-    // 通知标题
-    notificationTitle: '',
-    // 通知内容
-    notificationContent: '',
-    // 数据操作类型
-    dataOperation: 'update',
-    // 数据源信息
-    dataSource: '',
-    // 外部系统 API 地址
-    externalApi: '',
-    // 外部系统触发方式
-    externalTriggerMethod: 'webhook'
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.AUTOMATION)
 
-const form = reactive(structuredClone(defaultForm))
+const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     initialFormSnapshot.value = getFormSnapshot()
 }
 
@@ -148,7 +133,7 @@ const saveSettings = () => {
         })
     }
 
-    nodeProps.value = structuredClone(toRaw(newProps))
+    nodeProps.value = JSON.parse(JSON.stringify(newProps))
 
     return true
 }
