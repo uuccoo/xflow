@@ -7,8 +7,8 @@ import { useFormDesignStore } from '@/stores/formDesignStore'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { useMoreSettingsStore } from '@/stores/moreSettingsStore'
 import { ArrowLeft } from '@element-plus/icons-vue'
-// 导入API
 import { formApi } from '@/api'
+import PublishValidationDialog from '@/components/validation/PublishValidationDialog.vue'
 
 // 导入各个组件
 import BasicSettings from './BasicSettings.vue'
@@ -31,10 +31,15 @@ const activeComponent = ref('basicSettings')
 
 // 是否显示预览
 const showPreview = ref(false)
+const validationDialog = ref(null)
 
 // 返回上一页的功能
 const handleBack = () => {
   router.push('/home/manage-forms')
+}
+
+const handleFixPublishError = (error) => {
+  activeComponent.value = error?.target?.tab || 'basicSettings'
 }
 
 // 是否正在发布
@@ -79,16 +84,9 @@ const publish = async () => {
   publishing.value = true
 
   try {
-    // 数据验证
-    if (!basicSettings.formName) {
-      ElMessage.error('请设置表单名称')
-      router.push('/design/basicSettings')
-      return
-    }
+    const pageErrors = await validationDialog.value?.check?.() || []
 
-    if (formDesignStore.formItems.length === 0) {
-      ElMessage.error('表单内容不能为空')
-      router.push('/design/formDesign')
+    if (pageErrors.length > 0) {
       return
     }
 
@@ -238,6 +236,11 @@ onMounted(() => {
     <FlowDesign v-show="activeComponent === 'flowDesign'" />
     <MoreSettings v-show="activeComponent === 'moreSettings'" />
   </main>
+
+  <PublishValidationDialog
+    ref="validationDialog"
+    @fix="handleFixPublishError"
+  />
 
   <!-- 全屏预览组件 -->
   <div v-if="showPreview" class="preview-overlay">

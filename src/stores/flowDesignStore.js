@@ -25,6 +25,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 存储完整流程数据
   const flowData = reactive(createDefaultFlowData())
+  // 流程设计校验错误信息
+  const errors = ref({})
 
   // 当前选中的节点
   const selectedNode = ref(null)
@@ -65,6 +67,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 注意：这里用 Object.assign 保持 flowData 的响应式引用不变
   const resetFlowDesign = () => {
     Object.assign(flowData, createDefaultFlowData())
+    errors.value = {}
     // 其他状态也一并重置
     selectedNode.value = null
     drawerVisible.value = false
@@ -172,6 +175,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   return {
     flowData,
+    errors,
     selectedNode,
     drawerVisible,
     selectNode,

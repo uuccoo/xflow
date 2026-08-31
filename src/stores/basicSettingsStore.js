@@ -45,10 +45,13 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
 
   // 基础设置状态（统一放在一个对象中，便于重置/加载/导出）
   const basicSettings = reactive(createDefaultBasicSettings())
+  // 基础设置校验错误信息
+  const errors = ref({})
 
   // 重置基础设置
   const resetBasicSettings = () => {
     Object.assign(basicSettings, createDefaultBasicSettings())
+    errors.value = {}
   }
 
   // 加载基础设置（全量覆盖）
@@ -65,6 +68,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
 
   return {
     basicSettings,
+    errors,
     id,
     formCode,
     formVersion,

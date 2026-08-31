@@ -41,7 +41,9 @@
             <div class="drawer-content">
                 <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
                 <component :is="nodeComponent" v-if="nodeComponent"
-                    v-model="flowStore.selectedNode.node.props" ref="nodeComponentRef" />
+                    v-model="flowStore.selectedNode.node.props"
+                    :node-id="flowStore.selectedNode.node.id"
+                    ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
                 </div>
@@ -62,6 +64,7 @@ import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
+import { validateApprover } from '@/validation/approverValidator'
 
 // 导入各种节点设置组件
 import InitiatorSettings from './settings/InitiatorSettings.vue'
@@ -194,6 +197,13 @@ const finishEditName = () => {
     // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
+const validateCurrentNode = () => {
+    const selectedNode = flowStore.selectedNode
+    if (selectedNode?.node?.type !== FlowNodeType.APPROVE) return []
+
+    return validateApprover(selectedNode.node.id, selectedNode.node.props || {})
+}
+
 // 统一判断设置组件是否有未保存修改，并等待用户确认
 const confirmClose = async () => {
     const componentInstance = nodeComponentRef.value
@@ -229,12 +239,15 @@ const confirmClose = async () => {
 // 处理取消按钮和自定义关闭按钮
 const handleCancel = async () => {
     if (!await confirmClose()) return
+    validateCurrentNode()
     flowStore.closeDrawer()
 }
 
 // 处理抽屉自身的关闭事件（遮罩、ESC 等），done 执行后才真正关闭抽屉
 const handleBeforeClose = async (done) => {
-    if (await confirmClose()) done()
+    if (!await confirmClose()) return
+    validateCurrentNode()
+    done()
 }
 
 // 处理保存 - 使用ref获取组件实例
@@ -248,7 +261,7 @@ const handleSave = () => {
         // 调用组件的saveSettings方法
         const valid = componentInstance.saveSettings()
 
-        // 如果验证通过，则保存节点设置
+        // 保存节点设置后，由父组件统一校验当前节点
         if (valid) {
             // 将节点名称应用到原始节点
             if (flowStore.selectedNode?.node && localNodeName.value) {
@@ -264,6 +277,7 @@ const handleSave = () => {
                 
                 console.log('已保存优先级:', localPriority.value)
             }
+            validateCurrentNode()
             ElMessage.success('节点设置已保存')
             flowStore.closeDrawer()
         }

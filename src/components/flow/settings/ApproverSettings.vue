@@ -25,13 +25,14 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.HANDLERS)">
                 <designated-person-selector
                     v-model="form.handlers"
                     title="选择审批人"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['user']"
+                    @update:modelValue="validateApproverHandlers(nodeId, form.handlers, form.handlerType)"
                 />
             </el-form-item>
 
@@ -59,7 +60,7 @@
 
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item v-if="form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified'"
-                label-position="left" required>
+                label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.INITIATOR_SELECT_RANGE)">
                 <designated-person-selector
                     v-model="form.initiatorSelectRange"
                     title="选择发起人自选范围"
@@ -67,17 +68,19 @@
                     :required="true"
                     :single-mode="form.initiatorSelectMode === 'single'"
                     :selectable-types="['user']"
+                    @update:modelValue="validateInitiatorSelectRange(nodeId, form.initiatorSelectRange, form.handlerType, form.initiatorSelectRangeType)"
                 />
             </el-form-item>
 
             <!-- 角色设置 -->
-            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.ROLES)">
                 <designated-person-selector
                     v-model="form.roles"
                     title="选择角色"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['role']"
+                    @update:modelValue="validateApproverRoles(nodeId, form.roles, form.handlerType)"
                 />
             </el-form-item>
 
@@ -165,7 +168,8 @@
                 </div>
                 
                 <!-- 转交到指定人员的选择器 -->
-                <el-form-item v-if="form.emptyApproverAction === 'transfer_specific'" label-position="left" required style="margin-top: 15px;">
+                <el-form-item v-if="form.emptyApproverAction === 'transfer_specific'" label-position="left" required
+                    :error="getErrorMessage(nodeId, APPROVER_FIELD.EMPTY_APPROVER_TRANSFER_USER)" style="margin-top: 15px;">
                     <designated-person-selector
                         v-model="form.emptyApproverTransferUser"
                         title="选择转交人员"
@@ -173,6 +177,7 @@
                         :required="true"
                         :single-mode="true"
                         :selectable-types="['user']"
+                        @update:modelValue="validateEmptyApproverTransferUser(nodeId, form.emptyApproverTransferUser, form.emptyApproverAction)"
                     />
                 </el-form-item>
             </div>
@@ -181,19 +186,31 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { useFlowDesignStore } from '@/stores/flowDesignStore'
-import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import {
+    APPROVER_FIELD,
+    getErrorMessage,
+    validateApproverHandlers,
+    validateApproverRoles,
+    validateInitiatorSelectRange,
+    validateEmptyApproverTransferUser,
+} from '@/validation/approverValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-// 使用 store
-const flowStore = useFlowDesignStore()
+const nodeId = props.nodeId
 
 const defaultForm = {
     // 审批人类型
@@ -230,11 +247,11 @@ const form = reactive(structuredClone(defaultForm))
 const initialFormSnapshot = ref('')
 
 // 获取表单字段的快照，用于判断表单是否有修改
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, structuredClone(defaultForm), JSON.parse(JSON.stringify(nodeProps.value || {})))
     // 快照必须在数据装载完成后记录
     initialFormSnapshot.value = getFormSnapshot()
 }
@@ -246,28 +263,6 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    // 验证必填项
-    if (form.handlerType === 'designated' && form.handlers.length === 0) {
-        ElMessage.warning('请至少选择一名审批人')
-        return false
-    }
-
-    if (form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified' && form.initiatorSelectRange.length === 0) {
-        ElMessage.warning('请至少选择一名发起人自选范围人员')
-        return false
-    }
-
-    if (form.handlerType === 'role' && form.roles.length === 0) {
-        ElMessage.warning('请至少选择一个角色')
-        return false
-    }
-    
-    // 验证转交到指定人员时必须选择人员
-    if (form.emptyApproverAction === 'transfer_specific' && form.emptyApproverTransferUser.length === 0) {
-        ElMessage.warning('请选择转交的指定人员')
-        return false
-    }
-
     // 构建新的 props 对象
     const newProps = {
         // 基础字段
@@ -311,7 +306,7 @@ const saveSettings = () => {
     }
 
     // 只有保存成功时才将编辑草稿写回父组件
-    nodeProps.value = structuredClone(newProps)
+    nodeProps.value = JSON.parse(JSON.stringify(newProps))
 
     return true
 }
