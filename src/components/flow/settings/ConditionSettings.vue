@@ -10,11 +10,9 @@
                     <span class="or-text">或</span>
                 </div>
 
-                <!-- 当只有一个条件组时不显示条件组边框和标题 -->
-                <div
-                    :class="{ 'condition-group': form.conditionGroups.length > 1, 'single-condition-group': form.conditionGroups.length === 1 }">
-                    <!-- 只有多个条件组时才显示条件组标题 -->
-                    <div v-if="form.conditionGroups.length > 1" class="condition-group-header">
+                <!-- 条件组边框和标题始终显示 -->
+                <div class="condition-group">
+                    <div class="condition-group-header">
                         <span class="condition-group-title">条件组</span>
                         <el-button v-if="form.conditionGroups.length > 1" type="danger" link size="small"
                             @click="removeConditionGroup(groupIndex)">
@@ -25,10 +23,9 @@
                     <!-- 条件项和添加条件按钮的父容器 -->
                     <div class="conditions-container">
                         <!-- 条件项列表 -->
-                        <div v-for="(condition, index) in group.conditions"
-                            :key="'condition-' + groupIndex + '-' + index" class="condition-item">
-                            <span class="condition-type">{{ condition.label}}</span>
-
+                        <el-form-item v-for="(condition, index) in group.conditions"
+                            :key="'condition-' + groupIndex + '-' + index" class="condition-item"
+                            :label="condition.label" label-width="100px">
                             <!-- 发起人条件时显示人员选择器 -->
                             <designated-person-selector
                                 v-if="condition.type === CONDITION_TYPE_INITIATOR"
@@ -83,7 +80,7 @@
                                     <Delete />
                                 </el-icon>
                             </el-button>
-                        </div>
+                        </el-form-item>
 
                         <!-- 添加条件按钮 -->
                         <div class="add-button-container">
@@ -219,9 +216,7 @@ function createInitiatorCondition() {
 const addConditionGroup = () => {
     form.conditionGroups.push({
         id: Date.now(),
-        conditions: [
-            createInitiatorCondition()
-        ]
+        conditions: []
     });
 }
 
@@ -395,25 +390,11 @@ defineExpose({
     }
 }
 
-.single-condition-group .conditions-container {
-    padding: 0;
-}
-
 .condition-item {
     display: flex;
     align-items: flex-start;
     margin-bottom: 20px;
     border-radius: 4px;
-
-    .condition-type {
-        font-weight: 500;
-        margin-right: 10px;
-        width: 100px;
-        margin-top: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
 
     .condition-select {
         width: 120px;
