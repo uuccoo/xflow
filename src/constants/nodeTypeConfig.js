@@ -150,51 +150,6 @@ const getNodeConfigs = () => ({
       },
     ],
   },
-  [FlowNodeType.AUTOMATION]: {
-    id: `node_${Date.now()}`,
-    type: FlowNodeType.AUTOMATION,
-    name: '自动化',
-    props: {
-      // 自动化动作类型
-      actionType: 'notification',
-      // 通知类型
-      notificationType: 'email',
-      // 通知标题
-      notificationTitle: '',
-      // 通知内容
-      notificationContent: '',
-      // 数据操作类型
-      dataOperation: 'update',
-      // 数据源信息
-      dataSource: '',
-      // 外部系统 API 地址
-      externalApi: '',
-      // 外部系统触发方式
-      externalTriggerMethod: 'webhook',
-    },
-  },
-  [FlowNodeType.CONNECTOR]: {
-    id: `node_${Date.now()}`,
-    type: FlowNodeType.CONNECTOR,
-    name: '连接器',
-    props: {
-      // 连接器类型
-      connector: '',
-      // 连接器配置
-      config: {},
-    },
-  },
-  [FlowNodeType.PAYMENT]: {
-    id: `node_${Date.now()}`,
-    type: FlowNodeType.PAYMENT,
-    name: '付款人',
-    props: {
-      // 付款人列表
-      payers: [],
-      // 付款金额
-      amount: 0,
-    },
-  },
 })
 
 // 根据节点类型返回节点的完整默认配置对象

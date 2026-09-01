@@ -1,5 +1,5 @@
 import { FlowNodeType } from '@/enums'
-import { Connection, Document, Edit, Grid, Money, Setting, TurnOff, User } from '@element-plus/icons-vue'
+import { Document, Edit, Grid, TurnOff, User } from '@element-plus/icons-vue'
 
 // 流程节点可选项（常量配置）：
 export const flowNodeOptions = [
@@ -20,16 +20,6 @@ export const flowNodeOptions = [
     color: '#0ea5e9',
     headerBg: '#f0f9ff',
   },
-  // TODO: 后端暂未实现，后续开放
-  // { type: FlowNodeType.AUTOMATION, label: '自动化', icon: Setting, color: '#909399', headerBg: '#f4f4f5' },
-  // {
-  //   type: FlowNodeType.CONNECTOR,
-  //   label: '连接器',
-  //   icon: Connection,
-  //   color: '#9254de',
-  //   headerBg: '#f3f0fa',
-  // },
-  // { type: FlowNodeType.PAYMENT, label: '付款人', icon: Money, color: '#52c41a', headerBg: '#f6ffed' },
 ]
 
 // 根据节点类型获取节点选项配置

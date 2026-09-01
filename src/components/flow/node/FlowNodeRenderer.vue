@@ -3,7 +3,7 @@
         <!-- 发起人节点 -->
         <initiator-node v-if="node.type === FlowNodeType.INITIATE" />
 
-        <!-- 普通节点（审批人、抄送人、办理、付款人等） -->
+        <!-- 普通节点（审批人、抄送人、办理） -->
         <flow-node v-else-if="isRegularNode" :node="node" :index="index" :branch="branch" />
 
         <!-- 分支节点（条件分支及其他类型的分支） -->
@@ -51,10 +51,7 @@ const isRegularNode = computed(() => {
     const regularTypes = [
         FlowNodeType.APPROVE,
         FlowNodeType.CC,
-        FlowNodeType.HANDLE,
-        FlowNodeType.PAYMENT,
-        FlowNodeType.AUTOMATION,
-        FlowNodeType.CONNECTOR
+        FlowNodeType.HANDLE
     ];
     return regularTypes.includes(props.node.type);
 });

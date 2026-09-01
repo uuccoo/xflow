@@ -24,16 +24,4 @@ export const FlowNodeType = {
    * 包容分支（满足条件的分支同时执行，无满足时走默认分支）
    */
   INCLUSIVE: 'inclusive',
-  /**
-   * 自动化
-   */
-  AUTOMATION: 'automation',
-  /**
-   * 连接器
-   */
-  CONNECTOR: 'connector',
-  /**
-   * 付款
-   */
-  PAYMENT: 'payment',
 }
