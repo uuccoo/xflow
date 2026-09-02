@@ -65,6 +65,7 @@ import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
 import { validateNode } from '@/validation/flow'
+import { clearNodeErrors } from '@/validation/flow/error'
 
 // 导入各种节点设置组件
 import InitiatorSettings from './settings/InitiatorSettings.vue'
@@ -197,7 +198,10 @@ const finishEditName = () => {
 const validateCurrentNode = () => {
     if (!flowStore.selectedNode?.node) return []
 
-    return validateNode(flowStore.selectedNode.node)
+    const node = flowStore.selectedNode.node
+    clearNodeErrors(node.id)
+
+    return validateNode(node)
 }
 
 // 统一判断设置组件是否有未保存修改，并等待用户确认

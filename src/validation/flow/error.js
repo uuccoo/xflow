@@ -13,6 +13,15 @@ export const saveError = (nodeId, field, error) => {
   return error
 }
 
+export const clearNodeErrors = (nodeId) => {
+  const flowStore = useFlowDesignStore()
+  const prefix = `${nodeId}:`
+
+  Object.keys(flowStore.errors)
+    .filter((key) => key.startsWith(prefix))
+    .forEach((key) => delete flowStore.errors[key])
+}
+
 export const createError = (nodeId, field, code, message) => ({
   module: '流程设计',
   code,
