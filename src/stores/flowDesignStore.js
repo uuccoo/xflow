@@ -146,25 +146,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 更新优先级
     branches.splice(insertPosition, 0, copiedBranch)
 
-    // 只有条件分支需要维护优先级
-    if (sourceBranch.type === FlowNodeType.CONDITION_BRANCH) {
-      updateBranchesPriority(branches)
-    }
-
     ElMessage.success('复制分支成功')
     return copiedBranch
-  }
-
-  // 只更新分支的优先级属性
-  const updateBranchesPriority = (branches) => {
-    if (!branches) return
-    // 只为非默认分支分配优先级，按当前顺序
-    let priority = 1
-    for (const branch of branches) {
-      if (!branch.isDefault) {
-        branch.priority = priority++
-      }
-    }
   }
 
   // 格式化名称列表（通用方法）
@@ -191,6 +174,5 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     editCondition,
     formatNames,
     copyBranch,
-    updateBranchesPriority,
   }
 })

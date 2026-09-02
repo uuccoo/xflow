@@ -130,7 +130,6 @@ export const getConditionBranch = (sequence, isDefault = false) => ({
   type: FlowNodeType.CONDITION_BRANCH,
   name: isDefault ? '默认条件' : `条件${sequence}`,
   expression: '',
-  priority: sequence,
   props: {
     conditionGroups: [
       {
@@ -149,7 +148,6 @@ export const getInclusiveBranch = (sequence, isDefault = false) => ({
   type: FlowNodeType.INCLUSIVE_BRANCH,
   name: isDefault ? '默认条件' : `包容条件${sequence}`,
   expression: '',
-  priority: sequence,
   props: {
     conditionGroups: [],
   },

@@ -124,7 +124,8 @@ const initFormData = () => {
         initialNodeName.value = localNodeName.value
         // 初始化优先级数据 - 只对条件分支设置优先级
         if (isConditionBranch.value) {
-            localPriority.value = flowStore.selectedNode.node.priority || 1
+            const conditionBranches = flowStore.selectedNode.parentNode.branches.filter(branch => !branch.isDefault)
+            localPriority.value = conditionBranches.indexOf(flowStore.selectedNode.node) + 1
             initialPriority.value = localPriority.value
         }
     }
@@ -136,22 +137,19 @@ const adjustBranchPosition = (currentBranch, newPriority) => {
     if (!parentNode || !parentNode.branches) return
 
     const branches = parentNode.branches
-    // 根据priority来计算当前分支在branches中的索引
-    const currentIndex = currentBranch.priority - 1
-    // 新的索引位置
-    let insertIndex = newPriority - 1
+    const conditionBranches = branches.filter(branch => !branch.isDefault)
+    const currentIndex = conditionBranches.indexOf(currentBranch)
+    const insertIndex = newPriority - 1
+
+    if (currentIndex === -1 || insertIndex < 0 || insertIndex >= conditionBranches.length) return
     // 如果当前位置和目标位置一样，无需调整
     if (currentIndex === insertIndex) return
 
-    // 先移除当前分支
-    branches.splice(currentIndex, 1)
-    // 再插入到新位置
-    branches.splice(insertIndex, 0, currentBranch)
+    conditionBranches.splice(currentIndex, 1)
+    conditionBranches.splice(insertIndex, 0, currentBranch)
 
-    // 重新为所有非默认分支赋优先级
-    flowStore.updateBranchesPriority(branches)
-
-    console.log('分支位置已调整，新的优先级顺序:', branches.filter(b => !b.isDefault).map(b => b.priority))
+    const defaultBranches = branches.filter(branch => branch.isDefault)
+    branches.splice(0, branches.length, ...conditionBranches, ...defaultBranches)
 }
 
 // 抽屉打开时初始化表单数据
@@ -272,8 +270,6 @@ const handleSave = () => {
                 
                 // 调整分支位置
                 adjustBranchPosition(currentBranch, newPriority)
-                
-                console.log('已保存优先级:', localPriority.value)
             }
             validateCurrentNode()
             ElMessage.success('节点设置已保存')

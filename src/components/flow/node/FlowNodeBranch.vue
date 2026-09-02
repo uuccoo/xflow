@@ -21,7 +21,7 @@
 
                         <!-- 优先级标签 - 仅条件分支且非默认条件时显示 -->
                         <div class="priority-tag" v-if="branch.type === FlowNodeType.CONDITION_BRANCH && !branch.isDefault">
-                            优先级{{ branch.priority }}
+                            优先级{{ getBranchPriority(branch) }}
                         </div>
 
                         <!-- 复制按钮 - 只在非默认条件下显示 -->
@@ -111,6 +111,12 @@ const emit = defineEmits([])
 // 获取分支集合
 const branches = computed(() => props.node.branches || [])
 
+// 条件分支优先级由非默认分支在数组中的位置决定
+const getBranchPriority = (branch) => {
+    const conditionBranches = branches.value.filter(item => !item.isDefault)
+    return conditionBranches.indexOf(branch) + 1
+}
+
 // ===== 通用分支操作逻辑 =====
 
 // 添加分支
@@ -129,10 +135,6 @@ const addBranch = () => {
 
     props.node.branches.splice(nonDefaultBranches.length, 0, newBranch);
 
-    // 条件分支需要更新优先级（包容分支无优先级概念）
-    if (props.node.type === FlowNodeType.CONDITION) {
-        flowStore.updateBranchesPriority(props.node.branches);
-    }
 }
 
 // 删除分支
@@ -154,10 +156,6 @@ const deleteBranch = (branchIndex) => {
 
     props.node.branches.splice(branchIndex, 1);
 
-    // 条件分支需要更新优先级
-    if (props.node.type === FlowNodeType.CONDITION) {
-        flowStore.updateBranchesPriority(props.node.branches);
-    }
 }
 
 // 编辑分支
