@@ -25,13 +25,14 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.HANDLERS)">
                 <designated-person-selector
                     v-model="form.handlers"
                     title="选择办理人"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['user']"
+                    @update:modelValue="validateHandlers(nodeId, form.handlers, form.handlerType)"
                 />
             </el-form-item>
 
@@ -59,7 +60,7 @@
 
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item v-if="form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified'"
-                label-position="left" required>
+                label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.INITIATOR_SELECT_RANGE)">
                 <designated-person-selector
                     v-model="form.initiatorSelectRange"
                     title="选择发起人自选范围"
@@ -67,17 +68,19 @@
                     :required="true"
                     :single-mode="form.initiatorSelectMode === 'single'"
                     :selectable-types="['user']"
+                    @update:modelValue="validateInitiatorSelectRange(nodeId, form.initiatorSelectRange, form.handlerType, form.initiatorSelectRangeType)"
                 />
             </el-form-item>
 
             <!-- 角色设置 -->
-            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.ROLES)">
                 <designated-person-selector
                     v-model="form.roles"
                     title="选择角色"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['role']"
+                    @update:modelValue="validateRoles(nodeId, form.roles, form.handlerType)"
                 />
             </el-form-item>
 
@@ -148,10 +151,23 @@
 <script setup>
 import { reactive, onMounted, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 import { FlowNodeType } from '@/enums'
 import { getNodeProps } from '@/constants/nodeTypeConfig'
+import { getErrorMessage } from '@/validation/flow/error'
+import {
+    HANDLER_FIELD,
+    validateHandlers,
+    validateInitiatorSelectRange,
+    validateRoles,
+} from '@/validation/flow/handlerValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
 
 const nodeProps = defineModel({
     type: Object,
@@ -160,6 +176,7 @@ const nodeProps = defineModel({
 
 const createDefaultForm = () => getNodeProps(FlowNodeType.HANDLE)
 
+const nodeId = props.nodeId
 const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
@@ -178,22 +195,6 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    // 验证必填项
-    if (form.handlerType === 'designated' && form.handlers.length === 0) {
-        ElMessage.warning('请至少选择一名办理人')
-        return false
-    }
-
-    if (form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified' && form.initiatorSelectRange.length === 0) {
-        ElMessage.warning('请至少选择一名发起人自选范围人员')
-        return false
-    }
-
-    if (form.handlerType === 'role' && form.roles.length === 0) {
-        ElMessage.warning('请至少选择一个角色')
-        return false
-    }
-
     // 构建新的 props 对象
     const newProps = {
         handlerType: form.handlerType,

@@ -25,14 +25,14 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.HANDLERS)">
+            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.HANDLERS)">
                 <designated-person-selector
                     v-model="form.handlers"
                     title="选择审批人"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['user']"
-                    @update:modelValue="validateApproverHandlers(nodeId, form.handlers, form.handlerType)"
+                    @update:modelValue="validateHandlers(nodeId, form.handlers, form.handlerType)"
                 />
             </el-form-item>
 
@@ -60,7 +60,7 @@
 
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item v-if="form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified'"
-                label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.INITIATOR_SELECT_RANGE)">
+                label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.INITIATOR_SELECT_RANGE)">
                 <designated-person-selector
                     v-model="form.initiatorSelectRange"
                     title="选择发起人自选范围"
@@ -73,14 +73,14 @@
             </el-form-item>
 
             <!-- 角色设置 -->
-            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required :error="getErrorMessage(nodeId, APPROVER_FIELD.ROLES)">
+            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.ROLES)">
                 <designated-person-selector
                     v-model="form.roles"
                     title="选择角色"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['role']"
-                    @update:modelValue="validateApproverRoles(nodeId, form.roles, form.handlerType)"
+                    @update:modelValue="validateRoles(nodeId, form.roles, form.handlerType)"
                 />
             </el-form-item>
 
@@ -169,7 +169,7 @@
                 
                 <!-- 转交到指定人员的选择器 -->
                 <el-form-item v-if="form.emptyApproverAction === 'transfer_specific'" label-position="left" required
-                    :error="getErrorMessage(nodeId, APPROVER_FIELD.EMPTY_APPROVER_TRANSFER_USER)" style="margin-top: 15px;">
+                    :error="getErrorMessage(nodeId, HANDLER_FIELD.EMPTY_APPROVER_TRANSFER_USER)" style="margin-top: 15px;">
                     <designated-person-selector
                         v-model="form.emptyApproverTransferUser"
                         title="选择转交人员"
@@ -191,14 +191,14 @@ import { QuestionFilled } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
 import { FlowNodeType } from '@/enums'
 import { getNodeProps } from '@/constants/nodeTypeConfig'
+import { getErrorMessage } from '@/validation/flow/error'
 import {
-    APPROVER_FIELD,
-    getErrorMessage,
-    validateApproverHandlers,
-    validateApproverRoles,
+    HANDLER_FIELD,
+    validateHandlers,
     validateInitiatorSelectRange,
+    validateRoles,
     validateEmptyApproverTransferUser,
-} from '@/validation/approverValidator'
+} from '@/validation/flow/handlerValidator'
 
 const props = defineProps({
     nodeId: {

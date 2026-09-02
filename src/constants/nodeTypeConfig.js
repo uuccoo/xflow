@@ -113,6 +113,14 @@ const getNodeConfigs = () => ({
         name: '条件1',
         expression: '',
         priority: 1,
+        props: {
+          conditionGroups: [
+            {
+              id: `group_${Date.now()}`,
+              conditions: [],
+            },
+          ],
+        },
         nodes: [],
         isDefault: false,
       },

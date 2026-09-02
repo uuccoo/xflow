@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { validateBasicSettings } from '@/validation/basicSettingsValidator'
-import { validateFlowDesign } from '@/validation/approverValidator'
+import { validateFlowDesign } from '@/validation/flow'
 
 const emit = defineEmits(['fix'])
 

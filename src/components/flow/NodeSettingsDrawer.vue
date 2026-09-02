@@ -64,7 +64,7 @@ import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
-import { validateApprover } from '@/validation/approverValidator'
+import { validateNode } from '@/validation/flow'
 
 // 导入各种节点设置组件
 import InitiatorSettings from './settings/InitiatorSettings.vue'
@@ -195,11 +195,11 @@ const finishEditName = () => {
     // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
+// 校验当前节点并返回错误列表
 const validateCurrentNode = () => {
-    const selectedNode = flowStore.selectedNode
-    if (selectedNode?.node?.type !== FlowNodeType.APPROVE) return []
+    if (!flowStore.selectedNode?.node) return []
 
-    return validateApprover(selectedNode.node.id, selectedNode.node.props || {})
+    return validateNode(flowStore.selectedNode.node)
 }
 
 // 统一判断设置组件是否有未保存修改，并等待用户确认

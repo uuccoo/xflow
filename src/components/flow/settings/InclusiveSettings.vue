@@ -29,12 +29,13 @@
                         <!-- 条件项列表 -->
                         <el-form-item v-for="(condition, index) in group.conditions"
                             :key="'condition-' + groupIndex + '-' + index" class="condition-item"
-                            :label="condition.label" label-width="100px">
-
+                            :label="condition.label" label-width="100px"
+                            :error="getErrorMessage(nodeId, getConditionField(condition))">
                             <!-- 发起人条件时显示人员选择器 -->
                             <designated-person-selector
                                 v-if="condition.type === CONDITION_TYPE_INITIATOR"
                                 v-model="condition.users"
+                                @update:modelValue="validateInitiatorCondition(nodeId, condition)"
                             />
 
                             <!-- 数字输入框条件 -->
@@ -47,13 +48,15 @@
 
                                 <!-- 单个数值 -->
                                 <el-input-number v-model="condition.value" class="number-input"
-                                    :placeholder="'请输入数值'" />
+                                    :placeholder="'请输入数值'"
+                                    @change="validateNumberCondition(nodeId, condition)" />
                             </template>
 
                             <!-- 单选框条件 -->
                             <template v-else-if="condition.type === FormComponentType.RADIO">
                                 <div class="checkbox-options-container">
-                                    <el-checkbox-group v-model="condition.selectedOptions">
+                                    <el-checkbox-group v-model="condition.selectedOptions"
+                                        @change="validateRadioCondition(nodeId, condition)">
                                         <el-checkbox v-for="option in condition.options" :key="option.value"
                                             :label="option.value">
                                             {{ option.label }}
@@ -73,7 +76,8 @@
                                 <!-- 多选框选项 -->
                                 <div class="select-container">
                                     <el-select v-model="condition.selectedOptions" multiple collapse-tags
-                                        :placeholder="'请选择'" style="width: 100%">
+                                        :placeholder="'请选择'" style="width: 100%"
+                                        @change="validateCheckboxCondition(nodeId, condition)">
                                         <el-option v-for="option in condition.options" :key="option.value"
                                             :label="option.label" :value="option.value" />
                                     </el-select>
@@ -87,15 +91,15 @@
                             </el-button>
                         </el-form-item>
 
-                        <!-- 添加条件按钮 -->
-                        <div class="add-button-container">
+                        <el-form-item class="add-condition-form-item"
+                            :error="getErrorMessage(nodeId, getConditionGroupField(group))">
                             <el-button class="add-condition-btn" @click="openAddConditionDialog(groupIndex)">
                                 <el-icon>
                                     <Plus />
                                 </el-icon>
                                 添加条件
                             </el-button>
-                        </div>
+                        </el-form-item>
                     </div>
                 </div>
             </div>
@@ -146,6 +150,26 @@ import { generateUniqueId } from '@/utils/idGenerator'
 import { FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
 import { collectRequiredConditionFields } from '@/utils/formItems'
+import {
+    getErrorMessage,
+    getConditionField,
+    getConditionGroupField,
+    validateConditionGroup,
+    validateInitiatorCondition,
+    validateNumberCondition,
+    validateRadioCondition,
+    validateCheckboxCondition,
+} from '@/validation/flow/conditionValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
+
+const nodeId = props.nodeId
+
 
 const nodeProps = defineModel({
     type: Object,
@@ -319,12 +343,15 @@ const confirmAddCondition = () => {
         }
     }
 
+    validateConditionGroup(nodeId, form.conditionGroups[currentGroupIndex.value]);
     conditionDialogVisible.value = false;
 }
 
 // 删除条件
 const removeCondition = (groupIndex, conditionIndex) => {
-    form.conditionGroups[groupIndex].conditions.splice(conditionIndex, 1);
+    const group = form.conditionGroups[groupIndex];
+    group.conditions.splice(conditionIndex, 1);
+    validateConditionGroup(nodeId, group);
 }
 
 // 组件挂载时初始化数据
@@ -443,6 +470,10 @@ defineExpose({
         margin-left: auto;
         padding: 5px 10px;
     }
+}
+
+.add-condition-form-item {
+    margin-bottom: 0;
 }
 
 .add-condition-btn {
