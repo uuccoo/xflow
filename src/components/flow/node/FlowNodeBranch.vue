@@ -397,7 +397,7 @@ const formatSingleCondition = (condition) => {
             position: absolute;
             height: 5px;
             width: calc(50% - 1px);
-            background-color: #f5f7fa;
+            background-color: var(--x-bg-color-page);
             z-index: 1;
         }
 
