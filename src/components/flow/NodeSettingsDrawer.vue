@@ -250,6 +250,12 @@ const handleBeforeClose = async (done) => {
 const handleSave = () => {
     if (!flowStore.selectedNode) return
 
+    const nodeName = localNodeName.value.trim()
+    if (!nodeName) {
+        ElMessage.warning('节点名称不能为空')
+        return
+    }
+
     // 使用ref直接获取当前设置组件实例
     const componentInstance = nodeComponentRef.value
 
@@ -260,8 +266,8 @@ const handleSave = () => {
         // 保存节点设置后，由父组件统一校验当前节点
         if (valid) {
             // 将节点名称应用到原始节点
-            if (flowStore.selectedNode?.node && localNodeName.value) {
-                flowStore.selectedNode.node.name = localNodeName.value
+            if (flowStore.selectedNode?.node) {
+                flowStore.selectedNode.node.name = nodeName
             }
             // 保存优先级设置（仅条件分支）
             if (isConditionBranch.value) {
