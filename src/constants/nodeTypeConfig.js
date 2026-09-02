@@ -5,7 +5,7 @@ const getNodeConfigs = () => ({
   [FlowNodeType.INITIATE]: {
     id: `node_${Date.now()}`,
     type: FlowNodeType.INITIATE,
-    name: '发起',
+    name: '发起人',
     props: {
       // 发起人范围类型
       initiatorScope: 'all',
