@@ -94,7 +94,7 @@ const nodeComponentRef = ref(null)
 
 // 判断是否为条件节点中的分支
 const isConditionBranch = computed(() => {
-    return flowStore.selectedNode?.node?.type === FlowNodeType.CONDITION
+    return flowStore.selectedNode?.node?.type === FlowNodeType.CONDITION_BRANCH
 })
 
 // 获取非默认分支数量，动态生成优先级选项
@@ -173,8 +173,8 @@ const nodeComponent = computed(() => {
         case FlowNodeType.APPROVE: return ApproverSettings
         case FlowNodeType.CC: return CopyToSettings
         case FlowNodeType.HANDLE: return ProcessSettings
-        case FlowNodeType.CONDITION: return ConditionSettings
-        case FlowNodeType.INCLUSIVE: return InclusiveSettings
+        case FlowNodeType.CONDITION_BRANCH: return ConditionSettings
+        case FlowNodeType.INCLUSIVE_BRANCH: return InclusiveSettings
         default: return null
     }
 })

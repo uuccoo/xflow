@@ -14,13 +14,13 @@
                 <div v-if="branchIndex === 0 || branchIndex === branches.length - 1"
                     :class="{ 'hide-bottom-left-line': branchIndex === 0, 'hide-bottom-right-line': branchIndex === branches.length - 1 }">
                 </div>
-                <!-- 分支节点头部（统一模板，通过branchType控制差异） -->
-                <div class="flow-node branch-node" :class="branchType">
+                <!-- 分支节点头部（通过分支自身类型控制差异） -->
+                <div class="flow-node branch-node" :class="branch.type">
                     <div class="branch-header">
                         {{ branch.name }}
 
                         <!-- 优先级标签 - 仅条件分支且非默认条件时显示 -->
-                        <div class="priority-tag" v-if="branchType === FlowNodeType.CONDITION && !branch.isDefault">
+                        <div class="priority-tag" v-if="branch.type === FlowNodeType.CONDITION_BRANCH && !branch.isDefault">
                             优先级{{ branch.priority }}
                         </div>
 
@@ -84,6 +84,7 @@ import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
 import { FlowNodeType, FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR } from '@/constants/flowConstants'
+import { getConditionBranch, getInclusiveBranch } from '@/constants/nodeTypeConfig'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -107,38 +108,29 @@ const props = defineProps({
 // 由于已经直接使用store处理大部分操作
 const emit = defineEmits([])
 
-// 分支类型 - 目前支持条件分支(condition)，未来可扩展更多类型
-const branchType = computed(() => props.node.type)
-
 // 获取分支集合
 const branches = computed(() => props.node.branches || [])
 
 // ===== 通用分支操作逻辑 =====
 
-// 分支名称前缀映射
-const branchNamePrefix = {
-    [FlowNodeType.CONDITION]: '条件',
-    [FlowNodeType.INCLUSIVE]: '包容条件',
-}
-
 // 添加分支
 const addBranch = () => {
     const nonDefaultBranches = props.node.branches.filter(b => !b.isDefault);
     const conditionNumber = nonDefaultBranches.length + 1;
-    const prefix = branchNamePrefix[branchType.value] || '分支';
+    let newBranch
 
-    const newBranch = {
-        id: `branch_${Date.now()}`,
-        name: `${prefix}${conditionNumber}`,
-        expression: '',
-        nodes: [],
-        isDefault: false,
-    };
+    if (props.node.type === FlowNodeType.CONDITION) {
+        newBranch = getConditionBranch(conditionNumber)
+    } else if (props.node.type === FlowNodeType.INCLUSIVE) {
+        newBranch = getInclusiveBranch(conditionNumber)
+    } else {
+        return
+    }
 
     props.node.branches.splice(nonDefaultBranches.length, 0, newBranch);
 
     // 条件分支需要更新优先级（包容分支无优先级概念）
-    if (branchType.value === FlowNodeType.CONDITION) {
+    if (props.node.type === FlowNodeType.CONDITION) {
         flowStore.updateBranchesPriority(props.node.branches);
     }
 }
@@ -163,20 +155,19 @@ const deleteBranch = (branchIndex) => {
     props.node.branches.splice(branchIndex, 1);
 
     // 条件分支需要更新优先级
-    if (branchType.value === FlowNodeType.CONDITION) {
+    if (props.node.type === FlowNodeType.CONDITION) {
         flowStore.updateBranchesPriority(props.node.branches);
     }
 }
 
 // 编辑分支
 const editBranch = (branchIndex, branch) => {
-    branch.type = branchType.value;
     flowStore.selectNode(branch, branchIndex, null, props.node);
 }
 
 // 复制分支
 const copyBranch = (branchIndex) => {
-    flowStore.copyConditionBranch(props.node, branchIndex);
+    flowStore.copyBranch(props.node, branchIndex);
 }
 
 // 将条件设置转换为文本描述
@@ -517,12 +508,12 @@ const formatSingleCondition = (condition) => {
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
     background-color: white;
 
-    // 根据分支类型添加不同的左边框颜色
-    &.condition {
+    // 根据分支项类型添加不同的左边框颜色
+    &.condition_branch {
         border-left: 3px solid #f56c6c;
     }
 
-    &.inclusive {
+    &.inclusive_branch {
         border-left: 3px solid #0ea5e9;
     }
 

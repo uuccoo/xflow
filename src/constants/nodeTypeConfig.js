@@ -108,30 +108,8 @@ const getNodeConfigs = () => ({
     name: '条件分支',
     props: {},
     branches: [
-      {
-        id: `branch_${Date.now()}`,
-        name: '条件1',
-        expression: '',
-        priority: 1,
-        props: {
-          conditionGroups: [
-            {
-              id: `group_${Date.now()}`,
-              conditions: [],
-            },
-          ],
-        },
-        nodes: [],
-        isDefault: false,
-      },
-      {
-        id: `branch_${Date.now() + 1}`,
-        name: '默认条件',
-        expression: '其他条件进入此流程',
-        priority: 2,
-        nodes: [],
-        isDefault: true,
-      },
+      getConditionBranch(1),
+      getConditionBranch(2, true),
     ],
   },
   [FlowNodeType.INCLUSIVE]: {
@@ -140,24 +118,43 @@ const getNodeConfigs = () => ({
     name: '包容分支',
     props: {},
     branches: [
+      getInclusiveBranch(1),
+      getInclusiveBranch(2, true),
+    ],
+  },
+})
+
+// 根据序号和默认标识生成条件分支节点
+export const getConditionBranch = (sequence, isDefault = false) => ({
+  id: `branch_${Date.now()}`,
+  type: FlowNodeType.CONDITION_BRANCH,
+  name: isDefault ? '默认条件' : `条件${sequence}`,
+  expression: '',
+  priority: sequence,
+  props: {
+    conditionGroups: [
       {
-        id: `branch_${Date.now()}`,
-        name: '包容条件1',
-        expression: '',
-        priority: 1,
-        nodes: [],
-        isDefault: false,
-      },
-      {
-        id: `branch_${Date.now() + 1}`,
-        name: '默认条件',
-        expression: '其他条件进入此流程',
-        priority: 2,
-        nodes: [],
-        isDefault: true,
+        id: `group_${Date.now()}`,
+        conditions: [],
       },
     ],
   },
+  nodes: [],
+  isDefault,
+})
+
+// 根据序号和默认标识生成包容分支节点
+export const getInclusiveBranch = (sequence, isDefault = false) => ({
+  id: `branch_${Date.now()}`,
+  type: FlowNodeType.INCLUSIVE_BRANCH,
+  name: isDefault ? '默认条件' : `包容条件${sequence}`,
+  expression: '',
+  priority: sequence,
+  props: {
+    conditionGroups: [],
+  },
+  nodes: [],
+  isDefault,
 })
 
 // 根据节点类型返回节点的完整默认配置对象

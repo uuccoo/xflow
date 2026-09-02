@@ -115,8 +115,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     console.log('编辑条件表达式', node, condIndex, condition)
   }
 
-  // 复制条件分支
-  const copyConditionBranch = (node, condIndex) => {
+  // 复制分支
+  const copyBranch = (node, condIndex) => {
     // 获取要复制的条件
     const branches = node.branches
     const sourceBranch = branches[condIndex]
@@ -146,10 +146,12 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 更新优先级
     branches.splice(insertPosition, 0, copiedBranch)
 
-    // 更新所有分支的优先级
-    updateBranchesPriority(branches)
+    // 只有条件分支需要维护优先级
+    if (sourceBranch.type === FlowNodeType.CONDITION_BRANCH) {
+      updateBranchesPriority(branches)
+    }
 
-    ElMessage.success('复制条件分支成功')
+    ElMessage.success('复制分支成功')
     return copiedBranch
   }
 
@@ -188,7 +190,7 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     deleteNode,
     editCondition,
     formatNames,
-    copyConditionBranch,
+    copyBranch,
     updateBranchesPriority,
   }
 })

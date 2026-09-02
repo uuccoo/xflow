@@ -18,9 +18,8 @@ export function validateNode(node = {}) {
       return validateHandler(nodeId, nodeProps)
     case FlowNodeType.CC:
       return validateCopyTo(nodeId, nodeProps)
-    case FlowNodeType.CONDITION:
-      return validateCondition(nodeId, nodeProps)
-    case FlowNodeType.INCLUSIVE:
+    case FlowNodeType.CONDITION_BRANCH:
+    case FlowNodeType.INCLUSIVE_BRANCH:
       return validateCondition(nodeId, nodeProps)
     default:
       return []
@@ -41,7 +40,7 @@ export function validateFlowDesign(flowData = {}) {
       if (node.type === FlowNodeType.CONDITION || node.type === FlowNodeType.INCLUSIVE) {
         node.branches?.forEach((branch) => {
           if (!branch.isDefault) {
-            errors.push(...validateCondition(branch.id, branch.props || {}))
+            errors.push(...validateNode(branch))
           }
           validateNodes(branch.nodes)
         })
