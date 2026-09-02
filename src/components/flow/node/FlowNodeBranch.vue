@@ -175,11 +175,6 @@ const getConditionDescription = (branch) => {
         return '其他条件进入此流程';
     }
 
-    // 如果节点设置了自定义表达式，则优先使用
-    if (branch.expression && branch.expression.trim()) {
-        return branch.expression;
-    }
-
     // 如果有条件组数据，则生成描述
     if (branch.props && branch.props.conditionGroups && branch.props.conditionGroups.length) {
         // 返回包含所有条件组的描述
