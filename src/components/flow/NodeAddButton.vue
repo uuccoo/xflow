@@ -37,14 +37,14 @@ import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { useFlowDesignStore } from '@/stores/flowDesignStore';
 import { FlowNodeType } from '@/enums'
-import { flowNodeOptions } from '@/constants/flowNodeOptions'
+import { getAddableNodeOptions } from '@/constants/flowNodeOptions'
 import { getNodeByType } from '@/constants/nodeTypeConfig'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore();
 
-// 直接使用常量中的节点选项
-const nodeOptions = computed(() => flowNodeOptions);
+// 获取允许添加到流程中的节点选项
+const nodeOptions = getAddableNodeOptions();
 const flowData = computed(() => flowStore.flowData);
 
 // 简单的 popover 可见状态，由 el-popover 组件自动管理
