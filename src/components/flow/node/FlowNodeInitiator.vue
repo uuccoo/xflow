@@ -1,6 +1,7 @@
 <template>
     <flow-node-shell
         :node-type="initiator.type"
+        :node-id="initiator.id"
         :title="initiator.name"
         :node-content-text="initiatorContentText"
         @click="handleNodeClick"

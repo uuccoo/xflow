@@ -34,3 +34,12 @@ export const getErrorMessage = (nodeId, field) => {
   const flowStore = useFlowDesignStore()
   return flowStore.errors[`${nodeId}:${field}`]?.message || ''
 }
+
+// 获取指定节点的所有错误
+export const getNodeErrors = (nodeId) => {
+  const flowStore = useFlowDesignStore()
+
+  return Object.values(flowStore.errors).filter(
+    (error) => error?.target?.nodeId === nodeId && error.message
+  )
+}

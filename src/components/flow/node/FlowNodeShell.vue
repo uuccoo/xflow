@@ -1,5 +1,19 @@
 <template>
-    <div class="flow-node-shell" :style="nodeStyle" @click="$emit('click', $event)">
+    <div
+        class="flow-node-shell"
+        :class="{ 'has-error': nodeErrors.length > 0 }"
+        :style="nodeStyle"
+        @click="$emit('click', $event)"
+    >
+        <el-tooltip v-if="nodeErrors.length > 0" placement="right">
+            <template #content>
+                <div v-for="(error, index) in nodeErrors" :key="index">{{ error.message }}</div>
+            </template>
+            <el-icon class="node-error-indicator" aria-label="节点存在错误" role="img">
+                <WarningFilled />
+            </el-icon>
+        </el-tooltip>
+
         <div class="node-header" :style="headerStyle">
             <span v-if="icon" class="node-icon">
                 <el-icon>
@@ -34,12 +48,17 @@
 </template>
 
 <script setup>
-import { CopyDocument, Delete, ArrowRight } from '@element-plus/icons-vue'
+import { CopyDocument, Delete, ArrowRight, WarningFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { getFlowNodeOption } from '@/constants/flowNodeOptions'
+import { getNodeErrors } from '@/validation/flow/error'
 
 const props = defineProps({
     nodeType: {
+        type: String,
+        required: true
+    },
+    nodeId: {
         type: String,
         required: true
     },
@@ -74,10 +93,13 @@ const headerStyle = computed(() => {
 })
 
 const icon = computed(() => nodeOption.value?.icon)
+
+const nodeErrors = computed(() => getNodeErrors(props.nodeId))
 </script>
 
 <style scoped lang="scss">
 .flow-node-shell {
+    position: relative;
     width: 220px;
     background-color: #fff;
     border-radius: 4px;
@@ -91,6 +113,22 @@ const icon = computed(() => nodeOption.value?.icon)
     &:hover {
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
+
+    &.has-error {
+        outline: 1px solid #f56c6c;
+        outline-offset: 0;
+    }
+}
+
+.node-error-indicator {
+    position: absolute;
+    top: 50%;
+    right: -32px;
+    z-index: 3;
+    color: #f56c6c;
+    font-size: 22px;
+    transform: translateY(-50%);
+    cursor: help;
 }
 
 .node-header {

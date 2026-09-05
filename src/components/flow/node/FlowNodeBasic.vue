@@ -1,6 +1,7 @@
 <template>
     <flow-node-shell
         :node-type="node.type"
+        :node-id="node.id"
         :title="node.name"
         :node-content-text="nodeContentText"
         show-delete

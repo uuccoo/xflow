@@ -18,6 +18,7 @@
                 <flow-node-shell
                     class="branch-node"
                     :node-type="branch.type"
+                    :node-id="branch.id"
                     :title="branch.name"
                     :node-content-text="getConditionDescription(branch)"
                     :show-copy="!branch.isDefault"
