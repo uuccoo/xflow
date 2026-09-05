@@ -31,6 +31,7 @@ import { Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { uploadApi } from '@/api'
 import { getFileUrl } from '@/utils/file'
+import { generatePrefixedId } from '@/utils/idGenerator'
 
 // ========== Props ==========
 const props = defineProps({
@@ -55,7 +56,7 @@ const maxSizeMB = 10
 // 将数据映射为 el-upload 的 UploadFile 格式
 const mapToUploadFile = (file) => {
   return {
-    uid: file.uid || Date.now() + Math.random(),
+    uid: file.uid || generatePrefixedId('file'),
     name: file.name || '',
     url: getFileUrl(file.url),
     size: file.size,

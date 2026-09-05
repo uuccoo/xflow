@@ -1,9 +1,10 @@
 import { FlowNodeType } from '@/enums'
+import { generatePrefixedId } from '@/utils/idGenerator'
 
 // 节点配置模板集合，定义每种节点的默认结构、名称和 props
 const getNodeConfigs = () => ({
   [FlowNodeType.INITIATE]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.INITIATE,
     name: '发起人',
     props: {
@@ -14,7 +15,7 @@ const getNodeConfigs = () => ({
     },
   },
   [FlowNodeType.APPROVE]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.APPROVE,
     name: '审批人',
     props: {
@@ -47,7 +48,7 @@ const getNodeConfigs = () => ({
     },
   },
   [FlowNodeType.CC]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.CC,
     name: '抄送人',
     props: {
@@ -74,7 +75,7 @@ const getNodeConfigs = () => ({
     },
   },
   [FlowNodeType.HANDLE]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.HANDLE,
     name: '办理',
     props: {
@@ -103,7 +104,7 @@ const getNodeConfigs = () => ({
     },
   },
   [FlowNodeType.CONDITION]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.CONDITION,
     name: '条件分支',
     props: {},
@@ -113,7 +114,7 @@ const getNodeConfigs = () => ({
     ],
   },
   [FlowNodeType.INCLUSIVE]: {
-    id: `node_${Date.now()}`,
+    id: generatePrefixedId('node'),
     type: FlowNodeType.INCLUSIVE,
     name: '包容分支',
     props: {},
@@ -126,13 +127,13 @@ const getNodeConfigs = () => ({
 
 // 根据序号和默认标识生成条件分支节点
 export const getConditionBranch = (sequence, isDefault = false) => ({
-  id: `branch_${Date.now()}`,
+  id: generatePrefixedId('branch'),
   type: FlowNodeType.CONDITION_BRANCH,
   name: isDefault ? '默认条件' : `条件${sequence}`,
   props: {
     conditionGroups: [
       {
-        id: `group_${Date.now()}`,
+        id: generatePrefixedId('group'),
         conditions: [],
       },
     ],
@@ -143,7 +144,7 @@ export const getConditionBranch = (sequence, isDefault = false) => ({
 
 // 根据序号和默认标识生成包容分支节点
 export const getInclusiveBranch = (sequence, isDefault = false) => ({
-  id: `branch_${Date.now()}`,
+  id: generatePrefixedId('branch'),
   type: FlowNodeType.INCLUSIVE_BRANCH,
   name: isDefault ? '默认条件' : `包容条件${sequence}`,
   props: {

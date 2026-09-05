@@ -142,7 +142,7 @@ import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
-import { generateUniqueId } from '@/utils/idGenerator'
+import { generatePrefixedId, generateUniqueId } from '@/utils/idGenerator'
 import { collectRequiredConditionFields } from '@/utils/formItems'
 import { FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
@@ -239,7 +239,7 @@ function createInitiatorCondition() {
 // 添加条件组
 const addConditionGroup = () => {
     form.conditionGroups.push({
-        id: Date.now(),
+        id: generatePrefixedId('group'),
         conditions: []
     });
 }

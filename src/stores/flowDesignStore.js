@@ -3,12 +3,13 @@ import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
 import { getNodeByType } from '@/constants/nodeTypeConfig'
+import { generatePrefixedId } from '@/utils/idGenerator'
 
 export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 创建默认流程数据（工厂函数，避免默认对象被复用导致引用串改）
   const createDefaultFlowData = () => {
     return {
-      id: 'flow_' + Date.now(),
+      id: generatePrefixedId('flow'),
       name: '未命名流程',
       version: '1.0',
       initiator: getNodeByType(FlowNodeType.INITIATE),
@@ -108,6 +109,19 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     console.log('编辑条件表达式', node, condIndex, condition)
   }
 
+  // 复制分支时递归生成分支及其子节点的唯一ID
+  const regenerateBranchIds = (branch) => {
+    branch.id = generatePrefixedId('branch')
+
+    for (const childNode of branch.nodes || []) {
+      childNode.id = generatePrefixedId('node')
+
+      for (const childBranch of childNode.branches || []) {
+        regenerateBranchIds(childBranch)
+      }
+    }
+  }
+
   // 复制分支
   const copyBranch = (node, condIndex) => {
     // 获取要复制的条件
@@ -123,8 +137,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 创建深拷贝
     const copiedBranch = JSON.parse(JSON.stringify(sourceBranch))
 
-    // 生成新的唯一id
-    copiedBranch.id = `branch_${Date.now()}`
+    // 递归生成分支及其子数据的新ID
+    regenerateBranchIds(copiedBranch)
 
     // 修改名称，避免重名
     const baseName = copiedBranch.name.replace(/\s*\(\d+\)$/, '') // 移除可能已有的 (数字) 后缀
