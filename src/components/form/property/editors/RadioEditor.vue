@@ -1,13 +1,13 @@
 <template>
   <div>
-    <el-form-item label="标题">
+    <el-form-item label="标题" :error="getErrorMessage(component.id, FORM_DESIGN_FIELD.LABEL)">
       <el-input v-model="component.label" placeholder="请输入标题" maxlength="50" show-word-limit></el-input>
     </el-form-item>
     <el-form-item label="提示文字">
       <el-input v-model="component.placeholder" placeholder="请输入提示文字" maxlength="50" show-word-limit></el-input>
     </el-form-item>
     <el-form-item label="选项设置">
-      <OptionListEditor v-model="component.options" @remove="handleOptionRemove" />
+      <OptionListEditor v-model="component.options" :component-id="component.id" @remove="handleOptionRemove" />
     </el-form-item>
     <el-form-item label="选项平铺">
       <el-switch v-model="component.optionTile"></el-switch>
@@ -26,6 +26,7 @@
 
 <script setup>
 import OptionListEditor from '@/components/form/property/OptionListEditor.vue'
+import { FORM_DESIGN_FIELD, getErrorMessage } from '@/validation/formDesignValidator'
 
 const props = defineProps({
   component: {

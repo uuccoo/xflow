@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore'
+import { useFormDesignStore } from '@/stores/formDesignStore'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { validateBasicSettings } from '@/validation/basicSettingsValidator'
+import { validateFormDesign } from '@/validation/formDesignValidator'
 import { validateFlowDesign } from '@/validation/flow'
 
 const emit = defineEmits(['fix'])
@@ -12,11 +14,13 @@ const dialogVisible = ref(false)
 
 const check = () => {
   const basicSettingsStore = useBasicSettingsStore()
+  const formDesignStore = useFormDesignStore()
   const flowDesignStore = useFlowDesignStore()
 
   const basicSettingErrors = validateBasicSettings(basicSettingsStore.basicSettings)
+  const formDesignErrors = validateFormDesign(formDesignStore.formItems)
   const flowErrors = validateFlowDesign(flowDesignStore.flowData)
-  errors.value = [...basicSettingErrors, ...flowErrors]
+  errors.value = [...basicSettingErrors, ...formDesignErrors, ...flowErrors]
 
   if (errors.value.length > 0) {
     dialogVisible.value = true

@@ -6,7 +6,9 @@
         <el-icon class="drag-handle-option">
           <Operation />
         </el-icon>
-        <el-input v-model="option.label" placeholder="选项名称" class="option-input-full"></el-input>
+        <el-form-item :error="getErrorMessage(props.componentId, getOptionLabelField(option.value))" class="option-form-item">
+          <el-input v-model="option.label" placeholder="选项名称" class="option-input-full"></el-input>
+        </el-form-item>
         <div class="option-actions">
           <el-button size="small" circle type="danger" @click="removeOption(optIndex)" title="删除">
             <el-icon>
@@ -28,6 +30,7 @@
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import { generateUniqueId } from '@/utils/idGenerator'
 import { Delete, Plus, Operation } from '@element-plus/icons-vue'
+import { getErrorMessage, getOptionLabelField } from '@/validation/formDesignValidator'
 
 /**
  * 选项列表编辑器 - 用于单选框/多选框的选项管理
@@ -36,6 +39,12 @@ import { Delete, Plus, Operation } from '@element-plus/icons-vue'
  * @event remove - 删除选项时触发，参数为被删除的选项对象，父组件可借此清理默认值
  */
 const options = defineModel({ type: Array, required: true })
+const props = defineProps({
+  componentId: {
+    type: String,
+    default: '',
+  },
+})
 const emit = defineEmits(['remove'])
 
 const addOption = () => {
@@ -88,6 +97,11 @@ const removeOption = (index) => {
 .option-input-full {
   flex: 1;
   width: 100%;
+}
+
+.option-form-item {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .option-actions {

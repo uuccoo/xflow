@@ -19,6 +19,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 当前选中的组件
   const activeItem = ref(null)
 
+  // 表单设计校验错误信息
+  const errors = ref({})
+
   // 视图模式 - 'mobile' 或 'pc'
   const viewMode = ref('mobile')
 
@@ -194,6 +197,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     formItems.value = [...defaults.formItems]
     activeItem.value = defaults.activeItem
     viewMode.value = defaults.viewMode
+    errors.value = {}
   }
 
   // 加载表单设计数据（用于加载接口数据，全量覆盖）
@@ -202,6 +206,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   const loadFormDesign = (formDesignData) => {
     formItems.value = formDesignData?.formItems || []
     activeItem.value = null
+    errors.value = {}
   }
 
   // 导出表单设计数据（用于预览/发布组装）
@@ -296,6 +301,7 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   return {
     formItems,
     activeItem,
+    errors,
     components,
     viewMode,
     setViewMode,
