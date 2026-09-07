@@ -2,29 +2,25 @@ import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
-import { INITIATOR_NODE_ID } from '@/constants/flowConstants'
+import { getNodeByType } from '@/constants/nodeTypeConfig'
+import { generatePrefixedId } from '@/utils/idGenerator'
 
 export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 创建默认流程数据（工厂函数，避免默认对象被复用导致引用串改）
   const createDefaultFlowData = () => {
     return {
-      id: 'flow_' + Date.now(),
+      id: generatePrefixedId('flow'),
       name: '未命名流程',
       version: '1.0',
-      initiator: {
-        id: INITIATOR_NODE_ID,
-        type: FlowNodeType.INITIATE,
-        name: '发起人',
-        props: {
-          initiator: [],
-        },
-      },
+      initiator: getNodeByType(FlowNodeType.INITIATE),
       nodes: [],
     }
   }
 
   // 存储完整流程数据
   const flowData = reactive(createDefaultFlowData())
+  // 流程设计校验错误信息
+  const errors = ref({})
 
   // 当前选中的节点
   const selectedNode = ref(null)
@@ -65,13 +61,14 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
   // 注意：这里用 Object.assign 保持 flowData 的响应式引用不变
   const resetFlowDesign = () => {
     Object.assign(flowData, createDefaultFlowData())
+    errors.value = {}
     // 其他状态也一并重置
     selectedNode.value = null
     drawerVisible.value = false
   }
 
   // 导出流程设计数据（用于预览/发布组装）
-  const toPayload = () => {
+  const toFlowDesignPayload = () => {
     return {
       ...flowData,
     }
@@ -79,9 +76,9 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   // 加载流程设计数据（全量覆盖，用于加载接口数据）
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadFlowDesign = (data) => {
+  const loadFlowDesign = (flowDesignData) => {
     // 外层已先 resetFlowDesign，这里直接覆盖写入即可（不做深拷贝/默认值兜底）
-    Object.assign(flowData, data || {})
+    Object.assign(flowData, flowDesignData || {})
     return true
   }
 
@@ -112,8 +109,21 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     console.log('编辑条件表达式', node, condIndex, condition)
   }
 
-  // 复制条件分支
-  const copyConditionBranch = (node, condIndex) => {
+  // 复制分支时递归生成分支及其子节点的唯一ID
+  const regenerateBranchIds = (branch) => {
+    branch.id = generatePrefixedId('branch')
+
+    for (const childNode of branch.nodes || []) {
+      childNode.id = generatePrefixedId('node')
+
+      for (const childBranch of childNode.branches || []) {
+        regenerateBranchIds(childBranch)
+      }
+    }
+  }
+
+  // 复制分支
+  const copyBranch = (node, condIndex) => {
     // 获取要复制的条件
     const branches = node.branches
     const sourceBranch = branches[condIndex]
@@ -127,8 +137,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 创建深拷贝
     const copiedBranch = JSON.parse(JSON.stringify(sourceBranch))
 
-    // 生成新的唯一id
-    copiedBranch.id = `branch_${Date.now()}`
+    // 递归生成分支及其子数据的新ID
+    regenerateBranchIds(copiedBranch)
 
     // 修改名称，避免重名
     const baseName = copiedBranch.name.replace(/\s*\(\d+\)$/, '') // 移除可能已有的 (数字) 后缀
@@ -143,23 +153,8 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
     // 更新优先级
     branches.splice(insertPosition, 0, copiedBranch)
 
-    // 更新所有分支的优先级
-    updateBranchesPriority(branches)
-
-    ElMessage.success('复制条件分支成功')
+    ElMessage.success('复制分支成功')
     return copiedBranch
-  }
-
-  // 只更新分支的优先级属性
-  const updateBranchesPriority = (branches) => {
-    if (!branches) return
-    // 只为非默认分支分配优先级，按当前顺序
-    let priority = 1
-    for (const branch of branches) {
-      if (!branch.isDefault) {
-        branch.priority = priority++
-      }
-    }
   }
 
   // 格式化名称列表（通用方法）
@@ -172,19 +167,19 @@ export const useFlowDesignStore = defineStore('flowDesign', () => {
 
   return {
     flowData,
+    errors,
     selectedNode,
     drawerVisible,
     selectNode,
     closeDrawer,
     cancelNodeEdit,
     clearSelectedNode,
-    toPayload,
+    toFlowDesignPayload,
     loadFlowDesign,
     resetFlowDesign,
     deleteNode,
     editCondition,
     formatNames,
-    copyConditionBranch,
-    updateBranchesPriority,
+    copyBranch,
   }
 })

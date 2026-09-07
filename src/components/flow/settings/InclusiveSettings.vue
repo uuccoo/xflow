@@ -15,14 +15,11 @@
                     <span class="or-text">或</span>
                 </div>
 
-                <!-- 当只有一个条件组时不显示条件组边框和标题 -->
-                <div
-                    :class="{ 'condition-group': form.conditionGroups.length > 1, 'single-condition-group': form.conditionGroups.length === 1 }">
-                    <!-- 只有多个条件组时才显示条件组标题 -->
-                    <div v-if="form.conditionGroups.length > 1" class="condition-group-header">
+                <!-- 条件组边框和标题始终显示 -->
+                <div class="condition-group">
+                    <div class="condition-group-header">
                         <span class="condition-group-title">条件组</span>
-                        <el-button v-if="form.conditionGroups.length > 1" type="danger" link size="small"
-                            @click="removeConditionGroup(groupIndex)">
+                        <el-button type="danger" link size="small" @click="removeConditionGroup(groupIndex)">
                             删除
                         </el-button>
                     </div>
@@ -30,14 +27,15 @@
                     <!-- 条件项和添加条件按钮的父容器 -->
                     <div class="conditions-container">
                         <!-- 条件项列表 -->
-                        <div v-for="(condition, index) in group.conditions"
-                            :key="'condition-' + groupIndex + '-' + index" class="condition-item">
-                            <span class="condition-type">{{ condition.label}}</span>
-
+                        <el-form-item v-for="(condition, index) in group.conditions"
+                            :key="'condition-' + groupIndex + '-' + index" class="condition-item"
+                            :label="condition.label" label-width="100px"
+                            :error="getErrorMessage(nodeId, getConditionField(condition))">
                             <!-- 发起人条件时显示人员选择器 -->
                             <designated-person-selector
                                 v-if="condition.type === CONDITION_TYPE_INITIATOR"
                                 v-model="condition.users"
+                                @update:modelValue="validateInitiatorCondition(nodeId, condition)"
                             />
 
                             <!-- 数字输入框条件 -->
@@ -50,13 +48,15 @@
 
                                 <!-- 单个数值 -->
                                 <el-input-number v-model="condition.value" class="number-input"
-                                    :placeholder="'请输入数值'" />
+                                    :placeholder="'请输入数值'"
+                                    @change="validateNumberCondition(nodeId, condition)" />
                             </template>
 
                             <!-- 单选框条件 -->
                             <template v-else-if="condition.type === FormComponentType.RADIO">
                                 <div class="checkbox-options-container">
-                                    <el-checkbox-group v-model="condition.selectedOptions">
+                                    <el-checkbox-group v-model="condition.selectedOptions"
+                                        @change="validateRadioCondition(nodeId, condition)">
                                         <el-checkbox v-for="option in condition.options" :key="option.value"
                                             :label="option.value">
                                             {{ option.label }}
@@ -76,7 +76,8 @@
                                 <!-- 多选框选项 -->
                                 <div class="select-container">
                                     <el-select v-model="condition.selectedOptions" multiple collapse-tags
-                                        :placeholder="'请选择'" style="width: 100%">
+                                        :placeholder="'请选择'" style="width: 100%"
+                                        @change="validateCheckboxCondition(nodeId, condition)">
                                         <el-option v-for="option in condition.options" :key="option.value"
                                             :label="option.label" :value="option.value" />
                                     </el-select>
@@ -88,17 +89,17 @@
                                     <Delete />
                                 </el-icon>
                             </el-button>
-                        </div>
+                        </el-form-item>
 
-                        <!-- 添加条件按钮 -->
-                        <div class="add-button-container">
+                        <el-form-item class="add-condition-form-item"
+                            :error="getErrorMessage(nodeId, getConditionGroupField(group))">
                             <el-button class="add-condition-btn" @click="openAddConditionDialog(groupIndex)">
                                 <el-icon>
                                     <Plus />
                                 </el-icon>
                                 添加条件
                             </el-button>
-                        </div>
+                        </el-form-item>
                     </div>
                 </div>
             </div>
@@ -113,7 +114,7 @@
                         添加条件组
                     </el-button>
                 </div>
-                <p class="group-tip" v-if="conditionGroups.length > 0">如果添加了多个条件组，只要满足任一条件组即可进入此流程</p>
+                <p class="group-tip" v-if="form.conditionGroups.length > 0">如果添加了多个条件组，只要满足任一条件组即可进入此流程</p>
             </div>
         </div>
 
@@ -140,15 +141,35 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useFormDesignStore } from '@/stores/formDesignStore'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
-import { generateUniqueId } from '@/utils/idGenerator'
+import { generatePrefixedId, generateUniqueId } from '@/utils/idGenerator'
 import { FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR, CONDITION_FIELD_ID_INITIATOR } from '@/constants/flowConstants'
 import { collectRequiredConditionFields } from '@/utils/formItems'
+import {
+    getErrorMessage,
+    getConditionField,
+    getConditionGroupField,
+    validateConditionGroup,
+    validateInitiatorCondition,
+    validateNumberCondition,
+    validateRadioCondition,
+    validateCheckboxCondition,
+} from '@/validation/flow/conditionValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
+
+const nodeId = props.nodeId
+
 
 const nodeProps = defineModel({
     type: Object,
@@ -161,15 +182,15 @@ const formDesignStore = useFormDesignStore()
 const requiredItems = ref([]);
 
 // 条件组列表
-const defaultForm = {
+const createDefaultForm = () => ({
     // 包容分支条件组列表
     conditionGroups: []
-}
+})
 
-const form = reactive(structuredClone(defaultForm));
+const form = reactive(createDefaultForm());
 const initialFormSnapshot = ref('');
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form));
+const getFormSnapshot = () => JSON.stringify(form);
 
 // 条件对话框相关
 const conditionDialogVisible = ref(false);
@@ -197,9 +218,9 @@ const initFormData = () => {
     requiredItems.value = collectRequiredConditionFields(formDesignStore.formItems);
 
     // 如果节点中已有条件组数据，则使用；否则初始化为空数组（不自动添加条件组）
-    const nodeConditionGroups = toRaw(nodeProps.value?.conditionGroups)
+    const nodeConditionGroups = nodeProps.value?.conditionGroups
     if (nodeConditionGroups && nodeConditionGroups.length) {
-        form.conditionGroups = structuredClone(nodeConditionGroups);
+        form.conditionGroups = JSON.parse(JSON.stringify(nodeConditionGroups));
     } else {
         // 包容分支初始状态为空，不自动添加条件组
         form.conditionGroups = [];
@@ -222,10 +243,8 @@ function createInitiatorCondition() {
 // 添加条件组
 const addConditionGroup = () => {
     form.conditionGroups.push({
-        id: Date.now(),
-        conditions: [
-            createInitiatorCondition()
-        ]
+        id: generatePrefixedId('group'),
+        conditions: []
     });
 }
 
@@ -324,12 +343,15 @@ const confirmAddCondition = () => {
         }
     }
 
+    validateConditionGroup(nodeId, form.conditionGroups[currentGroupIndex.value]);
     conditionDialogVisible.value = false;
 }
 
 // 删除条件
 const removeCondition = (groupIndex, conditionIndex) => {
-    form.conditionGroups[groupIndex].conditions.splice(conditionIndex, 1);
+    const group = form.conditionGroups[groupIndex];
+    group.conditions.splice(conditionIndex, 1);
+    validateConditionGroup(nodeId, group);
 }
 
 // 组件挂载时初始化数据
@@ -339,7 +361,7 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    nodeProps.value = structuredClone(toRaw(form));
+    nodeProps.value = JSON.parse(JSON.stringify(form));
     return true;
 }
 
@@ -414,25 +436,11 @@ defineExpose({
     }
 }
 
-.single-condition-group .conditions-container {
-    padding: 0;
-}
-
 .condition-item {
     display: flex;
     align-items: flex-start;
     margin-bottom: 20px;
     border-radius: 4px;
-
-    .condition-type {
-        font-weight: 500;
-        margin-right: 10px;
-        width: 100px;
-        margin-top: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
 
     .condition-select {
         width: 120px;
@@ -462,6 +470,10 @@ defineExpose({
         margin-left: auto;
         padding: 5px 10px;
     }
+}
+
+.add-condition-form-item {
+    margin-bottom: 0;
 }
 
 .add-condition-btn {

@@ -14,25 +14,24 @@
                 <div v-if="branchIndex === 0 || branchIndex === branches.length - 1"
                     :class="{ 'hide-bottom-left-line': branchIndex === 0, 'hide-bottom-right-line': branchIndex === branches.length - 1 }">
                 </div>
-                <!-- 分支节点头部（统一模板，通过branchType控制差异） -->
-                <div class="flow-node branch-node" :class="branchType">
-                    <div class="branch-header">
-                        {{ branch.name }}
-
+                <!-- 分支节点 -->
+                <flow-node-shell
+                    class="branch-node"
+                    :node-type="branch.type"
+                    :node-id="branch.id"
+                    :title="branch.name"
+                    :node-content-text="getConditionDescription(branch)"
+                    :show-copy="!branch.isDefault"
+                    :show-delete="!branch.isDefault"
+                    @click="!branch.isDefault ? editBranch(branchIndex, branch) : undefined"
+                    @copy="copyBranch(branchIndex)"
+                    @delete="deleteBranch(branchIndex)"
+                >
+                    <template #header-suffix>
                         <!-- 优先级标签 - 仅条件分支且非默认条件时显示 -->
-                        <div class="priority-tag" v-if="branchType === FlowNodeType.CONDITION && !branch.isDefault">
-                            优先级{{ branch.priority }}
-                        </div>
-
-                        <!-- 复制按钮 - 只在非默认条件下显示 -->
-                        <el-icon class="node-copy" v-if="!branch.isDefault" @click.stop="copyBranch(branchIndex)">
-                            <CopyDocument />
-                        </el-icon>
-
-                        <!-- 删除分支按钮 - 只在非默认条件下显示 -->
-                        <el-icon class="node-delete" v-if="!branch.isDefault" @click.stop="deleteBranch(branchIndex)">
-                            <Delete />
-                        </el-icon>
+                        <span v-if="branch.type === FlowNodeType.CONDITION_BRANCH && !branch.isDefault" class="priority-tag">
+                            优先级{{ getBranchPriority(branch) }}
+                        </span>
 
                         <!-- 默认条件说明图标 -->
                         <el-tooltip v-if="branch.isDefault" content="当其他条件都不满足时，流程将进入默认条件" placement="top">
@@ -40,18 +39,14 @@
                                 <QuestionFilled />
                             </el-icon>
                         </el-tooltip>
-                    </div>
+                    </template>
 
-                    <!-- 分支内容 -->
-                    <div class="node-content branch-content"
-                        @click="!branch.isDefault ? editBranch(branchIndex, branch) : undefined"
-                        :class="{ 'default-condition': branch.isDefault }">
-                        <span class="condition-text" v-html="getConditionDescription(branch)"></span>
-                        <el-icon class="chevron-icon" v-if="!branch.isDefault">
+                    <template #content-suffix>
+                        <el-icon v-show="!branch.isDefault" class="chevron-icon">
                             <Edit />
                         </el-icon>
-                    </div>
-                </div>
+                    </template>
+                </flow-node-shell>
 
                 <!-- 分支内的节点列表 -->
                 <div class="branch-nodes-container">
@@ -78,12 +73,15 @@
 </template>
 
 <script setup>
-import { Delete, Edit, CopyDocument, QuestionFilled } from '@element-plus/icons-vue'
+import { Edit, QuestionFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
+import FlowNodeShell from './FlowNodeShell.vue'
 import { FlowNodeType, FormComponentType } from '@/enums'
 import { CONDITION_TYPE_INITIATOR } from '@/constants/flowConstants'
+import { getConditionBranch, getInclusiveBranch } from '@/constants/nodeTypeConfig'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -107,40 +105,33 @@ const props = defineProps({
 // 由于已经直接使用store处理大部分操作
 const emit = defineEmits([])
 
-// 分支类型 - 目前支持条件分支(condition)，未来可扩展更多类型
-const branchType = computed(() => props.node.type)
-
 // 获取分支集合
 const branches = computed(() => props.node.branches || [])
 
-// ===== 通用分支操作逻辑 =====
-
-// 分支名称前缀映射
-const branchNamePrefix = {
-    [FlowNodeType.CONDITION]: '条件',
-    [FlowNodeType.INCLUSIVE]: '包容条件',
+// 条件分支优先级由非默认分支在数组中的位置决定
+const getBranchPriority = (branch) => {
+    const conditionBranches = branches.value.filter(item => !item.isDefault)
+    return conditionBranches.indexOf(branch) + 1
 }
+
+// ===== 通用分支操作逻辑 =====
 
 // 添加分支
 const addBranch = () => {
     const nonDefaultBranches = props.node.branches.filter(b => !b.isDefault);
     const conditionNumber = nonDefaultBranches.length + 1;
-    const prefix = branchNamePrefix[branchType.value] || '分支';
+    let newBranch
 
-    const newBranch = {
-        id: `branch_${Date.now()}`,
-        name: `${prefix}${conditionNumber}`,
-        expression: '',
-        nodes: [],
-        isDefault: false,
-    };
+    if (props.node.type === FlowNodeType.CONDITION) {
+        newBranch = getConditionBranch(conditionNumber)
+    } else if (props.node.type === FlowNodeType.INCLUSIVE) {
+        newBranch = getInclusiveBranch(conditionNumber)
+    } else {
+        return
+    }
 
     props.node.branches.splice(nonDefaultBranches.length, 0, newBranch);
 
-    // 条件分支需要更新优先级（包容分支无优先级概念）
-    if (branchType.value === FlowNodeType.CONDITION) {
-        flowStore.updateBranchesPriority(props.node.branches);
-    }
 }
 
 // 删除分支
@@ -162,21 +153,16 @@ const deleteBranch = (branchIndex) => {
 
     props.node.branches.splice(branchIndex, 1);
 
-    // 条件分支需要更新优先级
-    if (branchType.value === FlowNodeType.CONDITION) {
-        flowStore.updateBranchesPriority(props.node.branches);
-    }
 }
 
 // 编辑分支
 const editBranch = (branchIndex, branch) => {
-    branch.type = branchType.value;
     flowStore.selectNode(branch, branchIndex, null, props.node);
 }
 
 // 复制分支
 const copyBranch = (branchIndex) => {
-    flowStore.copyConditionBranch(props.node, branchIndex);
+    flowStore.copyBranch(props.node, branchIndex);
 }
 
 // 将条件设置转换为文本描述
@@ -184,11 +170,6 @@ const getConditionDescription = (branch) => {
     // 如果是默认条件，直接返回默认文本
     if (branch.isDefault) {
         return '其他条件进入此流程';
-    }
-
-    // 如果节点设置了自定义表达式，则优先使用
-    if (branch.expression && branch.expression.trim()) {
-        return branch.expression;
     }
 
     // 如果有条件组数据，则生成描述
@@ -207,7 +188,7 @@ const formatConditionGroups = (conditionGroups) => {
         return '请设置条件';
     }
 
-    // 将每个条件组格式化，然后用<br>和"或"连接
+    // 将每个条件组格式化，然后用换行符和"或"连接
     const groupTexts = conditionGroups.map(group => formatConditionGroup(group));
 
     // 过滤掉空的条件组描述
@@ -221,7 +202,7 @@ const formatConditionGroups = (conditionGroups) => {
         return validGroupTexts[0];
     }
 
-    return validGroupTexts.join('<br>或 ');
+    return validGroupTexts.join('\n或 ');
 };
 
 // 格式化单个条件组为文字描述
@@ -413,7 +394,7 @@ const formatSingleCondition = (condition) => {
             position: absolute;
             height: 5px;
             width: calc(50% - 1px);
-            background-color: #f5f7fa;
+            background-color: var(--x-bg-color-page);
             z-index: 1;
         }
 
@@ -443,143 +424,30 @@ const formatSingleCondition = (condition) => {
     }
 }
 
-.branch-header {
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    font-size: 13px;
-    color: #333;
-    margin-bottom: 0;
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #e4e7ed;
-    border-radius: 4px 4px 0 0;
+.branch-node {
 
     .priority-tag {
-        position: absolute;
-        top: 8px;
-        right: 16px;
         color: #909399;
-        font-size: 12px;
-        font-weight: normal;
-        visibility: visible;
-        opacity: 1;
-        transition: visibility 0s, opacity 0.2s ease-in-out;
+        font-size: 13px;
     }
 
-    /* 复制图标样式 */
-    .node-copy {
-        position: absolute;
-        top: 8px;
-        right: 32px;
-        /* 位于删除按钮左侧 */
-        color: #409eff;
-        cursor: pointer;
-        font-size: 16px;
-        visibility: hidden;
-        opacity: 0;
-        transition: visibility 0s, opacity 0.2s ease-in-out;
-        z-index: 2;
-    }
-
-    /* 删除图标样式 */
-    .node-delete {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        color: #f56c6c;
-        cursor: pointer;
-        font-size: 16px;
-        visibility: hidden;
-        opacity: 0;
-        transition: visibility 0s, opacity 0.2s ease-in-out;
-        z-index: 2;
-    }
-
-    /* 默认条件说明图标样式 */
-    .node-info {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        color: #909399;
-        cursor: help;
-        font-size: 16px;
-        z-index: 2;
-    }
-}
-
-.branch-node {
-    width: 220px;
-    margin-bottom: 0;
-    /* 移除下边距 */
-    border: 1px solid #e4e7ed;
-    border-radius: 4px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-    background-color: white;
-
-    // 根据分支类型添加不同的左边框颜色
-    &.condition {
-        border-left: 3px solid #f56c6c;
-    }
-
-    &.inclusive {
-        border-left: 3px solid #0ea5e9;
-    }
-
-    // 修改优先级标签的显示逻辑
     &:hover {
         .priority-tag {
             visibility: hidden;
             opacity: 0;
         }
-
-        .node-copy,
-        .node-delete {
-            visibility: visible;
-            opacity: 1;
-        }
     }
 
-    /* 复制图标悬停样式 */
-    .node-copy:hover {
-        color: #66b1ff;
-    }
-
-    /* 删除图标样式 */
-    .node-delete:hover {
-        color: #ff4d4f;
-    }
-
-    .branch-content {
-        padding: 10px 12px;
-        /* 修改padding与普通节点一致 */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .node-info {
         color: #909399;
-        font-size: 14px;
-        cursor: pointer;
+        cursor: help;
+        font-size: 16px;
+    }
 
-        &:hover {
-            background-color: #f5f7fa;
-        }
-
-        .chevron-icon {
-            color: #c0c4cc;
-            flex-shrink: 0;
-            /* 防止图标被压缩 */
-        }
-
-        /* 添加条件文本容器的样式 */
-        .condition-text {
-            display: -webkit-box;
-            -webkit-line-clamp: 5;
-            line-clamp: 5; /* 标准属性 */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.5;
-        }
+    .chevron-icon {
+        margin-left: 8px;
+        flex-shrink: 0;
+        align-self: center;
     }
 }
 
@@ -598,9 +466,5 @@ const formatSingleCondition = (condition) => {
     width: 100%;
     margin-top: 0;
 
-    /* 每个节点后的添加按钮样式 */
-    :deep(.node-add-btn) {
-        margin: 0;
-    }
 }
 </style>

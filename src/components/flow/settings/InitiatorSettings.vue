@@ -7,12 +7,14 @@
                     <el-option label="指定人员" value="specified"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item v-if="form.initiatorScope !== 'all'" label-position="left" required>
+            <el-form-item v-if="form.initiatorScope !== 'all'" label-position="left" required
+                :error="getErrorMessage(nodeId, INITIATOR_FIELD.INITIATORS)">
                 <designated-person-selector
                     v-model="form.initiators"
                     title="选择发起人范围"
                     button-text="添加"
                     :required="true"
+                    @update:modelValue="validateInitiators(nodeId, form.initiators, form.initiatorScope)"
                 />
             </el-form-item>
         </el-form>
@@ -20,30 +22,35 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { reactive, onMounted, ref } from 'vue'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
+import { INITIATOR_FIELD, getErrorMessage, validateInitiators } from '@/validation/flow/initiatorValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-const defaultForm = {
-    // 发起人范围类型
-    initiatorScope: 'all',
-    // 指定的发起人列表
-    initiators: []
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.INITIATE)
 
-const form = reactive(structuredClone(defaultForm))
+const nodeId = props.nodeId
+const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     initialFormSnapshot.value = getFormSnapshot()
 }
 
@@ -54,13 +61,7 @@ onMounted(() => {
 
 // 向父组件暴露保存方法，由父组件在保存时调用
 const saveSettings = () => {
-    // 验证：如果选择了指定人员但没有选择人员
-    if (form.initiatorScope === 'specified' && form.initiators.length === 0) {
-        ElMessage.warning('请至少选择一名发起人')
-        return false
-    }
-
-    nodeProps.value = structuredClone(toRaw(form))
+    nodeProps.value = JSON.parse(JSON.stringify(form))
     return true
 }
 

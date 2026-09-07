@@ -17,23 +17,19 @@ export const FlowNodeType = {
    */
   HANDLE: 'handle',
   /**
-   * 条件
+   * 条件分支容器
    */
   CONDITION: 'condition',
   /**
-   * 包容分支（满足条件的分支同时执行，无满足时走默认分支）
+   * 条件分支项
+   */
+  CONDITION_BRANCH: 'condition_branch',
+  /**
+   * 包容分支容器（满足条件的分支同时执行，无满足时走默认分支）
    */
   INCLUSIVE: 'inclusive',
   /**
-   * 自动化
+   * 包容分支项
    */
-  AUTOMATION: 'automation',
-  /**
-   * 连接器
-   */
-  CONNECTOR: 'connector',
-  /**
-   * 付款
-   */
-  PAYMENT: 'payment',
+  INCLUSIVE_BRANCH: 'inclusive_branch',
 }

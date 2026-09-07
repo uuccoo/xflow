@@ -7,7 +7,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     return {
       // 表单图标和颜色
       iconColor: '#FF8800', // 表单图标背景色
-      selectedIcon: 'Promotion', // 当前选择的图标
+      selectedIcon: 'Tickets', // 当前选择的图标
       // 表单基础信息
       formName: '', // 表单名称
       groupId: '', // 所属分组ID
@@ -45,26 +45,30 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
 
   // 基础设置状态（统一放在一个对象中，便于重置/加载/导出）
   const basicSettings = reactive(createDefaultBasicSettings())
+  // 基础设置校验错误信息
+  const errors = ref({})
 
   // 重置基础设置
   const resetBasicSettings = () => {
     Object.assign(basicSettings, createDefaultBasicSettings())
+    errors.value = {}
   }
 
   // 加载基础设置（全量覆盖）
   // 入参只接收 basicSettings 对象，避免依赖接口详情整体结构
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadBasicSettings = (payload) => {
-    Object.assign(basicSettings, payload || {})
+  const loadBasicSettings = (basicSettingsData) => {
+    Object.assign(basicSettings, basicSettingsData || {})
   }
 
   // 导出基础设置数据（用于发布等场景的组装）
-  const toPayload = () => ({
+  const toBasicSettingsPayload = () => ({
     ...basicSettings,
   })
 
   return {
     basicSettings,
+    errors,
     id,
     formCode,
     formVersion,
@@ -72,7 +76,7 @@ export const useBasicSettingsStore = defineStore('basicSettings', () => {
     // 方法
     resetBasicSettings,
     loadBasicSettings,
-    toPayload,
+    toBasicSettingsPayload,
 
     // 元信息方法
     resetFormMeta,

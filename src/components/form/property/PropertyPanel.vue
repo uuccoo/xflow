@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { watch } from 'vue'
 import ColumnsEditor from './editors/ColumnsEditor.vue'
 import TextEditor from './editors/TextEditor.vue'
 import NumberEditor from './editors/NumberEditor.vue'
@@ -25,6 +25,7 @@ import DateEditor from './editors/DateEditor.vue'
 import DateRangeEditor from './editors/DateRangeEditor.vue'
 import CommonEditor from './editors/CommonEditor.vue'
 import { FormComponentType } from '@/enums'
+import { validateFormComponent } from '@/validation/formDesignValidator'
 
 // 接收组件属性
 const props = defineProps({
@@ -33,6 +34,16 @@ const props = defineProps({
         default: null
     }
 })
+
+watch(
+    () => props.component,
+    (component) => {
+        if (component) {
+            validateFormComponent(component)
+        }
+    },
+    { deep: true, immediate: true },
+)
 
 // 根据组件类型获取对应的编辑器组件
 const getEditorComponent = (type) => {
@@ -87,6 +98,5 @@ const getEditorComponent = (type) => {
     font-size: 14px;
     text-align: center;
     margin: auto;
-    padding-top: 100px;
 }
 </style>

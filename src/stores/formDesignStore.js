@@ -19,6 +19,9 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   // 当前选中的组件
   const activeItem = ref(null)
 
+  // 表单设计校验错误信息
+  const errors = ref({})
+
   // 视图模式 - 'mobile' 或 'pc'
   const viewMode = ref('mobile')
 
@@ -194,19 +197,20 @@ export const useFormDesignStore = defineStore('formDesign', () => {
     formItems.value = [...defaults.formItems]
     activeItem.value = defaults.activeItem
     viewMode.value = defaults.viewMode
+    errors.value = {}
   }
 
   // 加载表单设计数据（用于加载接口数据，全量覆盖）
   // 注意：这里不修改 viewMode，由页面/用户控制
   // 注意：建议在外层切换表单时先 reset，再调用该方法
-  const loadFormDesign = (payload) => {
-    const items = payload?.formItems
-    formItems.value = Array.isArray(items) ? [...items] : []
+  const loadFormDesign = (formDesignData) => {
+    formItems.value = formDesignData?.formItems || []
     activeItem.value = null
+    errors.value = {}
   }
 
   // 导出表单设计数据（用于预览/发布组装）
-  const toPayload = () => {
+  const toFormDesignPayload = () => {
     return {
       formItems: [...formItems.value],
     }
@@ -297,12 +301,13 @@ export const useFormDesignStore = defineStore('formDesign', () => {
   return {
     formItems,
     activeItem,
+    errors,
     components,
     viewMode,
     setViewMode,
     resetFormDesign,
     loadFormDesign,
-    toPayload,
+    toFormDesignPayload,
     cloneComponent,
     addComponent,
     handleSelectComponent,

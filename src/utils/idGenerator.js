@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 /**
  * ID生成工具类
  */
@@ -5,12 +7,10 @@
 /**
  * 生成唯一ID（时间戳 + 随机字符）
  * 主要方法，推荐在所有需要生成ID的场景中使用
- * @returns {string} 唯一ID字符串，格式：timestamp_randomChars
+ * @returns {string} UUID字符串
  */
 export const generateUniqueId = () => {
-  const timestamp = Date.now()
-  const randomChars = Math.random().toString(36).substring(2, 8)
-  return `${timestamp}_${randomChars}`
+  return uuidv4()
 }
 
 /**

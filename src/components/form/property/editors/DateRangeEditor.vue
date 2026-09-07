@@ -1,9 +1,9 @@
 <template>
     <div>
-        <el-form-item label="标题1">
+        <el-form-item label="标题1" :error="getErrorMessage(component.id, FORM_DESIGN_FIELD.START_LABEL)">
             <el-input v-model="component.startLabel" placeholder="请输入标题1" maxlength="50" show-word-limit></el-input>
         </el-form-item>
-        <el-form-item label="标题2">
+        <el-form-item label="标题2" :error="getErrorMessage(component.id, FORM_DESIGN_FIELD.END_LABEL)">
             <el-input v-model="component.endLabel" placeholder="请输入标题2" maxlength="50" show-word-limit></el-input>
         </el-form-item>
         <el-form-item label="提示文字">
@@ -24,6 +24,8 @@
 </template>
 
 <script setup>
+import { FORM_DESIGN_FIELD, getErrorMessage } from '@/validation/formDesignValidator'
+
 const props = defineProps({
     component: {
         type: Object,

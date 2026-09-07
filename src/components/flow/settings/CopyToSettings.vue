@@ -22,13 +22,15 @@
             </el-form-item>
 
             <!-- 指定人员的设置 -->
-            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'designated'" label-position="left" required
+                :error="getErrorMessage(nodeId, HANDLER_FIELD.HANDLERS)">
                 <designated-person-selector
                     v-model="form.handlers"
                     title="选择抄送人"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['user']"
+                    @update:modelValue="validateHandlers(nodeId, form.handlers, form.handlerType)"
                 />
             </el-form-item>
 
@@ -56,7 +58,7 @@
 
             <!-- 发起人自选需要从哪些人中选择 -->
             <el-form-item v-if="form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified'"
-                label-position="left" required>
+                label-position="left" required :error="getErrorMessage(nodeId, HANDLER_FIELD.INITIATOR_SELECT_RANGE)">
                 <designated-person-selector
                     v-model="form.initiatorSelectRange"
                     title="选择发起人自选范围"
@@ -64,6 +66,7 @@
                     :required="true"
                     :single-mode="form.initiatorSelectMode === 'single'"
                     :selectable-types="['user']"
+                    @update:modelValue="validateInitiatorSelectRange(nodeId, form.initiatorSelectRange, form.handlerType, form.initiatorSelectRangeType)"
                 />
             </el-form-item>
 
@@ -87,13 +90,15 @@
             </el-form-item>
 
             <!-- 角色设置 -->
-            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required>
+            <el-form-item v-if="form.handlerType === 'role'" label-position="left" required
+                :error="getErrorMessage(nodeId, HANDLER_FIELD.ROLES)">
                 <designated-person-selector
                     v-model="form.roles"
                     title="选择角色"
                     button-text="添加"
                     :required="true"
                     :selectable-types="['role']"
+                    @update:modelValue="validateRoles(nodeId, form.roles, form.handlerType)"
                 />
             </el-form-item>
 
@@ -106,47 +111,42 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, toRaw, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import DesignatedPersonSelector from '../../common/DesignatedPersonSelector.vue'
+import { FlowNodeType } from '@/enums'
+import { getNodeProps } from '@/constants/nodeTypeConfig'
+import { getErrorMessage } from '@/validation/flow/error'
+import {
+    HANDLER_FIELD,
+    validateHandlers,
+    validateInitiatorSelectRange,
+    validateRoles,
+} from '@/validation/flow/handlerValidator'
+
+const props = defineProps({
+    nodeId: {
+        type: String,
+        required: true,
+    },
+})
 
 const nodeProps = defineModel({
     type: Object,
     required: true
 })
 
-const defaultForm = {
-    // 抄送人类型
-    handlerType: 'designated',
-    // 发起人自选模式
-    initiatorSelectMode: 'single',
-    // 发起人自选范围类型
-    initiatorSelectRangeType: 'all',
-    // 主管级别
-    managerType: 1,
-    // 找不到主管时是否由上级主管接收抄送
-    fallbackToHigherManager: false,
-    // 连续多级主管的审批终点
-    approvalEndPoint: 'top_manager',
-    // 连续多级主管的具体级别
-    specificLevel: 1,
-    // 指定抄送人列表
-    handlers: [],
-    // 发起人自选人员范围
-    initiatorSelectRange: [],
-    // 角色列表
-    roles: []
-}
+const createDefaultForm = () => getNodeProps(FlowNodeType.CC)
 
-const form = reactive(structuredClone(defaultForm))
+const nodeId = props.nodeId
+const form = reactive(createDefaultForm())
 const initialFormSnapshot = ref('')
 
-const getFormSnapshot = () => JSON.stringify(toRaw(form))
+const getFormSnapshot = () => JSON.stringify(form)
 
 // 初始化表单数据
 const initFormData = () => {
-    Object.assign(form, structuredClone(defaultForm), structuredClone(toRaw(nodeProps.value || {})))
+    Object.assign(form, createDefaultForm(), JSON.parse(JSON.stringify(nodeProps.value || {})))
     initialFormSnapshot.value = getFormSnapshot()
 }
 
@@ -157,22 +157,6 @@ onMounted(() => {
 
 // 向父组件暴露保存方法
 const saveSettings = () => {
-    // 验证必填项
-    if (form.handlerType === 'designated' && form.handlers.length === 0) {
-        ElMessage.warning('请至少选择一名抄送人')
-        return false
-    }
-
-    if (form.handlerType === 'initiator_select' && form.initiatorSelectRangeType === 'specified' && form.initiatorSelectRange.length === 0) {
-        ElMessage.warning('请至少选择一名发起人自选范围人员')
-        return false
-    }
-
-    if (form.handlerType === 'role' && form.roles.length === 0) {
-        ElMessage.warning('请至少选择一个角色')
-        return false
-    }
-
     // 构建新的 props 对象
     const newProps = {
         handlerType: form.handlerType
@@ -201,7 +185,7 @@ const saveSettings = () => {
             break
     }
 
-    nodeProps.value = structuredClone(toRaw(newProps))
+    nodeProps.value = JSON.parse(JSON.stringify(newProps))
 
     return true
 }

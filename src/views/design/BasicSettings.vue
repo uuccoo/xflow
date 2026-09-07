@@ -7,10 +7,17 @@ import { useBasicSettingsStore } from '@/stores/basicSettingsStore'
 import { formGroupApi } from '@/api'
 import { ElMessage } from 'element-plus'
 import { FORM_ICON_WHITELIST } from '@/constants/formIcons'
+import {
+  BASIC_SETTINGS_FIELD,
+  getErrorMessage,
+  validateFormName,
+  validateGroupId,
+  validateSelectedInitiators,
+  validateSelectedAdmins,
+} from '@/validation/basicSettingsValidator'
 
 // 使用 Pinia store
 const basicStore = useBasicSettingsStore()
-// 直接使用 basicSettings 引用，简化访问（不要解构字段，避免丢失响应式）
 const basicSettings = basicStore.basicSettings
 
 // 预设的图标背景色，用户直接点击选择
@@ -82,7 +89,11 @@ onMounted(() => {
 <template>
   <div class="basic_container">
     <div class="content-wrapper">
-      <el-form class="form-container" label-position="top" label-width="100px">
+      <el-form
+        class="form-container"
+        label-position="top"
+        label-width="100px"
+      >
         <el-form-item label="表单图标">
           <div class="icon-selection">
             <div class="icon-box" :style="{ backgroundColor: basicSettings.iconColor }">
@@ -121,12 +132,24 @@ onMounted(() => {
             </div>
           </div>
         </el-form-item>
-        <el-form-item label="表单名称" required>
-          <el-input v-model="basicSettings.formName" placeholder="请输入" maxlength="50" show-word-limit></el-input>
+        <el-form-item label="表单名称" required :error="getErrorMessage(BASIC_SETTINGS_FIELD.FORM_NAME)">
+          <el-input
+            v-model="basicSettings.formName"
+            placeholder="请输入"
+            maxlength="50"
+            show-word-limit
+            @input="validateFormName(basicSettings.formName)"
+          ></el-input>
         </el-form-item>
-        <el-form-item label="所在分组" required>
+        <el-form-item label="所在分组" required :error="getErrorMessage(BASIC_SETTINGS_FIELD.GROUP_ID)">
           <div class="group-selection-container">
-            <el-select v-model="basicSettings.groupId" placeholder="请选择" size="large" class="group-select">
+            <el-select
+              v-model="basicSettings.groupId"
+              placeholder="请选择"
+              size="large"
+              class="group-select"
+              @change="validateGroupId(basicSettings.groupId)"
+            >
               <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <GroupCreator v-model:visible="newGroupDialogVisible" @group-created="handleGroupCreated" inline
@@ -140,33 +163,43 @@ onMounted(() => {
 
         <!-- 谁可以发起设置 -->
         <el-form-item label="谁可以发起">
-          <el-select v-model="basicSettings.initiatorScope" placeholder="请选择发起人范围" style="width: 100%">
+          <el-select
+            v-model="basicSettings.initiatorScope"
+            placeholder="请选择发起人范围"
+            style="width: 100%"
+          >
             <el-option label="所有人" value="all"></el-option>
             <el-option label="指定人员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicSettings.initiatorScope !== 'all'" required>
+        <el-form-item v-if="basicSettings.initiatorScope !== 'all'" required :error="getErrorMessage(BASIC_SETTINGS_FIELD.SELECTED_INITIATORS)">
           <designated-person-selector
             v-model="basicSettings.selectedInitiators"
             title="选择发起人范围"
             button-text="添加"
             :required="true"
+            @update:modelValue="validateSelectedInitiators(basicSettings.selectedInitiators, basicSettings.initiatorScope)"
           />
         </el-form-item>
 
         <!-- 模板管理员设置 -->
         <el-form-item label="模板管理员">
-          <el-select v-model="basicSettings.adminScope" placeholder="请选择模板管理员" style="width: 100%">
+          <el-select
+            v-model="basicSettings.adminScope"
+            placeholder="请选择模板管理员"
+            style="width: 100%"
+          >
             <el-option label="所有管理员" value="all"></el-option>
             <el-option label="指定管理员" value="specified"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="basicSettings.adminScope === 'specified'" required>
+        <el-form-item v-if="basicSettings.adminScope === 'specified'" required :error="getErrorMessage(BASIC_SETTINGS_FIELD.SELECTED_ADMINS)">
           <designated-person-selector
             v-model="basicSettings.selectedAdmins"
             title="选择管理员"
             button-text="添加"
             :required="true"
+            @update:modelValue="validateSelectedAdmins(basicSettings.selectedAdmins, basicSettings.adminScope)"
           />
         </el-form-item>
       </el-form>

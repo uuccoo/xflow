@@ -41,7 +41,9 @@
             <div class="drawer-content">
                 <!-- 根据节点类型动态加载不同的设置组件，添加ref引用 -->
                 <component :is="nodeComponent" v-if="nodeComponent"
-                    v-model="flowStore.selectedNode.node.props" ref="nodeComponentRef" />
+                    v-model="flowStore.selectedNode.node.props"
+                    :node-id="flowStore.selectedNode.node.id"
+                    ref="nodeComponentRef" />
                 <div v-else class="no-settings">
                     <p>未找到当前节点类型的设置项</p>
                 </div>
@@ -60,8 +62,10 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { Edit, Close } from '@element-plus/icons-vue'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { FlowNodeType } from '@/enums'
+import { validateNode } from '@/validation/flow'
+import { clearNodeErrors } from '@/validation/flow/error'
 
 // 导入各种节点设置组件
 import InitiatorSettings from './settings/InitiatorSettings.vue'
@@ -70,7 +74,6 @@ import CopyToSettings from './settings/CopyToSettings.vue'
 import ProcessSettings from './settings/ProcessSettings.vue'
 import ConditionSettings from './settings/ConditionSettings.vue'
 import InclusiveSettings from './settings/InclusiveSettings.vue'
-import AutomationSettings from './settings/AutomationSettings.vue'
 
 // 使用 Pinia store
 const flowStore = useFlowDesignStore()
@@ -92,7 +95,7 @@ const nodeComponentRef = ref(null)
 
 // 判断是否为条件节点中的分支
 const isConditionBranch = computed(() => {
-    return flowStore.selectedNode?.node?.type === FlowNodeType.CONDITION
+    return flowStore.selectedNode?.node?.type === FlowNodeType.CONDITION_BRANCH
 })
 
 // 获取非默认分支数量，动态生成优先级选项
@@ -122,7 +125,8 @@ const initFormData = () => {
         initialNodeName.value = localNodeName.value
         // 初始化优先级数据 - 只对条件分支设置优先级
         if (isConditionBranch.value) {
-            localPriority.value = flowStore.selectedNode.node.priority || 1
+            const conditionBranches = flowStore.selectedNode.parentNode.branches.filter(branch => !branch.isDefault)
+            localPriority.value = conditionBranches.indexOf(flowStore.selectedNode.node) + 1
             initialPriority.value = localPriority.value
         }
     }
@@ -134,22 +138,19 @@ const adjustBranchPosition = (currentBranch, newPriority) => {
     if (!parentNode || !parentNode.branches) return
 
     const branches = parentNode.branches
-    // 根据priority来计算当前分支在branches中的索引
-    const currentIndex = currentBranch.priority - 1
-    // 新的索引位置
-    let insertIndex = newPriority - 1
+    const conditionBranches = branches.filter(branch => !branch.isDefault)
+    const currentIndex = conditionBranches.indexOf(currentBranch)
+    const insertIndex = newPriority - 1
+
+    if (currentIndex === -1 || insertIndex < 0 || insertIndex >= conditionBranches.length) return
     // 如果当前位置和目标位置一样，无需调整
     if (currentIndex === insertIndex) return
 
-    // 先移除当前分支
-    branches.splice(currentIndex, 1)
-    // 再插入到新位置
-    branches.splice(insertIndex, 0, currentBranch)
+    conditionBranches.splice(currentIndex, 1)
+    conditionBranches.splice(insertIndex, 0, currentBranch)
 
-    // 重新为所有非默认分支赋优先级
-    flowStore.updateBranchesPriority(branches)
-
-    console.log('分支位置已调整，新的优先级顺序:', branches.filter(b => !b.isDefault).map(b => b.priority))
+    const defaultBranches = branches.filter(branch => branch.isDefault)
+    branches.splice(0, branches.length, ...conditionBranches, ...defaultBranches)
 }
 
 // 抽屉打开时初始化表单数据
@@ -171,9 +172,8 @@ const nodeComponent = computed(() => {
         case FlowNodeType.APPROVE: return ApproverSettings
         case FlowNodeType.CC: return CopyToSettings
         case FlowNodeType.HANDLE: return ProcessSettings
-        case FlowNodeType.CONDITION: return ConditionSettings
-        case FlowNodeType.INCLUSIVE: return InclusiveSettings
-        case FlowNodeType.AUTOMATION: return AutomationSettings
+        case FlowNodeType.CONDITION_BRANCH: return ConditionSettings
+        case FlowNodeType.INCLUSIVE_BRANCH: return InclusiveSettings
         default: return null
     }
 })
@@ -194,6 +194,16 @@ const finishEditName = () => {
     // 不再直接更新节点名称，而是等用户点击保存按钮时再更新
 }
 
+// 校验当前节点并返回错误列表
+const validateCurrentNode = () => {
+    if (!flowStore.selectedNode?.node) return []
+
+    const node = flowStore.selectedNode.node
+    clearNodeErrors(node.id)
+
+    return validateNode(node)
+}
+
 // 统一判断设置组件是否有未保存修改，并等待用户确认
 const confirmClose = async () => {
     const componentInstance = nodeComponentRef.value
@@ -210,11 +220,11 @@ const confirmClose = async () => {
         try {
             // 确认后丢弃组件内部草稿；取消则继续保留抽屉和编辑内容
             await ElMessageBox.confirm(
-                '当前配置尚未保存，确定要取消修改吗？',
+                '有未保存的修改，确定要放弃吗？',
                 '提示',
                 {
-                    confirmButtonText: '取消修改',
-                    cancelButtonText: '继续编辑',
+                    confirmButtonText: '放弃',
+                    cancelButtonText: '继续修改',
                     type: 'warning'
                 }
             )
@@ -229,17 +239,26 @@ const confirmClose = async () => {
 // 处理取消按钮和自定义关闭按钮
 const handleCancel = async () => {
     if (!await confirmClose()) return
+    validateCurrentNode()
     flowStore.closeDrawer()
 }
 
 // 处理抽屉自身的关闭事件（遮罩、ESC 等），done 执行后才真正关闭抽屉
 const handleBeforeClose = async (done) => {
-    if (await confirmClose()) done()
+    if (!await confirmClose()) return
+    validateCurrentNode()
+    done()
 }
 
 // 处理保存 - 使用ref获取组件实例
 const handleSave = () => {
     if (!flowStore.selectedNode) return
+
+    const nodeName = localNodeName.value.trim()
+    if (!nodeName) {
+        ElMessage.warning('节点名称不能为空')
+        return
+    }
 
     // 使用ref直接获取当前设置组件实例
     const componentInstance = nodeComponentRef.value
@@ -248,11 +267,11 @@ const handleSave = () => {
         // 调用组件的saveSettings方法
         const valid = componentInstance.saveSettings()
 
-        // 如果验证通过，则保存节点设置
+        // 保存节点设置后，由父组件统一校验当前节点
         if (valid) {
             // 将节点名称应用到原始节点
-            if (flowStore.selectedNode?.node && localNodeName.value) {
-                flowStore.selectedNode.node.name = localNodeName.value
+            if (flowStore.selectedNode?.node) {
+                flowStore.selectedNode.node.name = nodeName
             }
             // 保存优先级设置（仅条件分支）
             if (isConditionBranch.value) {
@@ -261,9 +280,8 @@ const handleSave = () => {
                 
                 // 调整分支位置
                 adjustBranchPosition(currentBranch, newPriority)
-                
-                console.log('已保存优先级:', localPriority.value)
             }
+            validateCurrentNode()
             ElMessage.success('节点设置已保存')
             flowStore.closeDrawer()
         }

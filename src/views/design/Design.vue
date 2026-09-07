@@ -7,8 +7,8 @@ import { useFormDesignStore } from '@/stores/formDesignStore'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import { useMoreSettingsStore } from '@/stores/moreSettingsStore'
 import { ArrowLeft } from '@element-plus/icons-vue'
-// 导入API
 import { formApi } from '@/api'
+import PublishValidationDialog from '@/components/validation/PublishValidationDialog.vue'
 
 // 导入各个组件
 import BasicSettings from './BasicSettings.vue'
@@ -31,10 +31,15 @@ const activeComponent = ref('basicSettings')
 
 // 是否显示预览
 const showPreview = ref(false)
+const validationDialog = ref(null)
 
 // 返回上一页的功能
 const handleBack = () => {
   router.push('/home/manage-forms')
+}
+
+const handleFixPublishError = (error) => {
+  activeComponent.value = error?.target?.tab || 'basicSettings'
 }
 
 // 是否正在发布
@@ -44,38 +49,23 @@ const loading = ref(false)
 
 // 加载已有数据
 const loadExistingData = (data) => {
-  if (!data) {
-    ElMessage.error('无效的数据结构')
-    return false
-  }
+  // 加载表单元信息（ID/编码/版本）
+  basicSettingsStore.loadFormMeta(data.id, data.formCode, data.formVersion)
 
-  loading.value = true
+  // 加载基础设置（全量覆盖，避免字段缺失导致旧数据残留）
+  basicSettingsStore.loadBasicSettings(data.basicSettings)
 
-  try {
-    // 加载表单元信息（ID/编码/版本）
-    basicSettingsStore.loadFormMeta(data.id, data.formCode, data.formVersion)
+  // 加载表单设计数据（全量覆盖）
+  formDesignStore.loadFormDesign(data.formDesign)
 
-    // 加载基础设置（全量覆盖，避免字段缺失导致旧数据残留）
-    basicSettingsStore.loadBasicSettings(data.basicSettings)
+  // 加载流程设计数据
+  flowDesignStore.loadFlowDesign(data.flowDesign)
 
-    // 加载表单设计数据（全量覆盖）
-    formDesignStore.loadFormDesign(data.formDesign)
+  // 加载更多设置数据
+  // 更多设置页面功能尚未实现，当前 loadMoreSettings 允许空对象兜底
+  moreSettingsStore.loadMoreSettings(data.moreSettings)
 
-    // 加载流程设计数据
-    flowDesignStore.loadFlowDesign(data.flowDesign)
-
-    // 加载更多设置数据
-    // 更多设置页面功能尚未实现，当前 loadMoreSettings 允许空对象兜底
-    moreSettingsStore.loadMoreSettings(data.moreSettings)
-
-    return true
-  } catch (error) {
-    console.error('加载数据失败:', error)
-    ElMessage.error('数据加载失败')
-    return false
-  } finally {
-    loading.value = false
-  }
+  return true
 }
 
 // 预览和发布功能
@@ -94,38 +84,31 @@ const publish = async () => {
   publishing.value = true
 
   try {
-    // 数据验证
-    if (!basicSettings.formName) {
-      ElMessage.error('请设置表单名称')
-      router.push('/design/basicSettings')
-      return
-    }
+    const pageErrors = await validationDialog.value?.check?.() || []
 
-    if (formDesignStore.toPayload().formItems.length === 0) {
-      ElMessage.error('表单内容不能为空')
-      router.push('/design/formDesign')
+    if (pageErrors.length > 0) {
       return
     }
 
     // 收集所有数据 - 直接使用扁平化的字段
     const finalData = {
-      // 基础设置数据
-      basicSettings: basicSettingsStore.toPayload(),
-
       // 表单编码（顶层字段）
       formCode: basicSettingsStore.formCode,
 
+      // 表单版本
+      formVersion: basicSettingsStore.formVersion,
+
+      // 基础设置数据
+      basicSettings: basicSettingsStore.toBasicSettingsPayload(),
+
       // 表单设计数据
-      formDesign: formDesignStore.toPayload(),
+      formDesign: formDesignStore.toFormDesignPayload(),
 
       // 流程设计数据
-      flowDesign: flowDesignStore.toPayload(),
+      flowDesign: flowDesignStore.toFlowDesignPayload(),
 
       // 更多设置数据
-      moreSettings: moreSettingsStore.toPayload(),
-
-      // 表单版本
-      formVersion: basicSettingsStore.formVersion
+      moreSettings: moreSettingsStore.toMoreSettingsPayload(),
     }
 
     // 使用API发布表单
@@ -253,6 +236,11 @@ onMounted(() => {
     <FlowDesign v-show="activeComponent === 'flowDesign'" />
     <MoreSettings v-show="activeComponent === 'moreSettings'" />
   </main>
+
+  <PublishValidationDialog
+    ref="validationDialog"
+    @fix="handleFixPublishError"
+  />
 
   <!-- 全屏预览组件 -->
   <div v-if="showPreview" class="preview-overlay">
