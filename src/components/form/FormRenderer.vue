@@ -39,6 +39,7 @@ import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
+import { validateRequired } from '@/validation/formRuntimeValidator'
 
 const fieldComponents = {
   [FormComponentType.INPUT]: InputField,
@@ -78,6 +79,9 @@ const currentField = computed(() => fieldComponents[props.component.type] || Tex
 const handleValueChange = (value) => {
   if (props.component.id) {
     updateValue(props.component.id, value);
+
+    const error = validateRequired(props.component, value)
+    updateError(props.component.id, error)
   }
 };
 

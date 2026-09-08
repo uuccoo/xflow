@@ -16,13 +16,7 @@
 </template>
 
 <script setup>
-
-// 身份证校验
-const validateIdCard = (val) => {
-  if (!val) return ''
-  const pattern = /^[1-9]\d{5}(?:19|20)?\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]?$/
-  return pattern.test(val) ? '' : '身份证号格式不正确'
-}
+import { validateIdCard } from '@/validation/formRuntimeValidator'
 
 const props = defineProps({
   component: {
@@ -52,7 +46,9 @@ const onChange = (value) => {
 
 const onBlur = () => {
   if (props.readonly) return
-  const error = validateIdCard(props.modelValue)
-  emit('update:error', error ? { message: error, label: props.component?.label } : null)
+
+  const error = validateIdCard(props.component, props.modelValue)
+  emit('update:error', error)
 }
+
 </script>

@@ -1,6 +1,6 @@
-import { reactive, provide } from 'vue'
-import { ElMessage } from 'element-plus'
-import { buildDefaultFormValues, collectRequiredFormItems, isRequiredValueEmpty } from '@/utils/formItems'
+import { reactive, ref, provide } from 'vue'
+import { buildDefaultFormValues, flattenFormItems } from '@/utils/formItems'
+import { validateFormData } from '@/validation/formRuntimeValidator'
 
 /**
  * 表单填写 composable。
@@ -11,7 +11,7 @@ import { buildDefaultFormValues, collectRequiredFormItems, isRequiredValueEmpty 
 export function useFormFill() {
   // ---- 状态 ----
   const formValues = reactive({})
-  const validationErrors = reactive({})
+  const validationErrors = ref({})
 
   // ---- 方法 ----
 
@@ -39,42 +39,24 @@ export function useFormFill() {
   const updateError = (id, error) => {
     if (!id) return
     if (error) {
-      validationErrors[id] = error
+      validationErrors.value[id] = error
     } else {
-      if (validationErrors[id] !== undefined) {
-        delete validationErrors[id]
+      if (validationErrors.value[id] !== undefined) {
+        delete validationErrors.value[id]
       }
     }
   }
 
   /**
-   * 校验表单：必填项检查 + 子组件上报的 validationErrors 检查。
+   * 全量校验表单并刷新字段错误。
    * @param {Array} formItems - 表单项列表
    * @returns {boolean} 校验是否通过
    */
   const validateForm = (formItems = []) => {
-    const requiredItems = collectRequiredFormItems(formItems)
+    const errors = validateFormData(flattenFormItems(formItems), formValues)
+    validationErrors.value = errors
 
-    // 1. 必填项校验
-    for (const item of requiredItems) {
-      if (!item.id) continue
-
-      const value = formValues[item.id]
-      if (isRequiredValueEmpty(item, value)) {
-        ElMessage.error(`${item.label || '未命名字段'} 为必填项`)
-        return false
-      }
-    }
-
-    // 2. 检查子组件上报的 validationErrors
-    for (const [id, err] of Object.entries(validationErrors)) {
-      if (err?.message) {
-        ElMessage.error(`${err.label || '字段'}: ${err.message}`)
-        return false
-      }
-    }
-
-    return true
+    return Object.keys(errors).length === 0
   }
 
   // ---- provide 注入，供递归子组件使用 ----

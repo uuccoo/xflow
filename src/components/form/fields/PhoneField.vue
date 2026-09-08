@@ -32,7 +32,8 @@
 </template>
 
 <script setup>
-// 电话区号常量
+import { validatePhone } from '@/validation/formRuntimeValidator'
+
 const PHONE_AREA_CODES = [
   // 中国大陆
   { label: '+86', value: '+86' },
@@ -43,19 +44,6 @@ const PHONE_AREA_CODES = [
   // 中国台湾
   { label: '+886', value: '+886' },
 ]
-
-// 手机号校验
-const validatePhone = (value) => {
-  const { areaCode, number } = value || {}
-
-  if (!number) return ''
-
-  if (areaCode === '+86') {
-    return /^1[3-9]\d{9}$/.test(number) ? '' : '手机号格式不正确'
-  }
-
-  return ''
-}
 
 const props = defineProps({
   component: {
@@ -89,31 +77,16 @@ const updateField = (field, value) => {
   return nextValue
 }
 
-const emitValidation = (value) => {
-  const error = validatePhone(value)
-
-  emit(
-    'update:error',
-    error
-      ? {
-          message: error,
-          label: props.component?.label,
-          type: props.component?.type,
-        }
-      : null
-  )
-}
-
 const onNumberChange = (value) => {
   updateField('number', value)
 }
 
 const onNumberBlur = () => {
-  emitValidation(props.modelValue)
+  const error = validatePhone(props.component, props.modelValue)
+  emit('update:error', error)
 }
 
 const onAreaCodeChange = (value) => {
-  const nextValue = updateField('areaCode', value)
-  emitValidation(nextValue)
+  updateField('areaCode', value)
 }
 </script>
