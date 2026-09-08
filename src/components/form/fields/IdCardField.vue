@@ -1,12 +1,18 @@
 <template>
-  <el-input
-    :model-value="props.modelValue"
-    :placeholder="props.component?.placeholder"
-    style="width: 100%"
-    @update:model-value="onChange"
-    @blur="onBlur"
-    :disabled="props.readonly"
-  />
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
+  >
+    <el-input
+      :model-value="modelValue"
+      :placeholder="component.placeholder"
+      style="width: 100%"
+      @update:model-value="onChange"
+      @blur="onBlur"
+      :disabled="readonly"
+    />
+  </el-form-item>
 </template>
 
 <script setup>
@@ -26,6 +32,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: '',
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,

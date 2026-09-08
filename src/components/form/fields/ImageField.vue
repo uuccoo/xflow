@@ -1,33 +1,39 @@
 <template>
-  <el-upload
-    class="avatar-uploader"
-    list-type="picture-card"
-    :multiple="true"
-    :auto-upload="true"
-    :http-request="handleHttpUpload"
-    :before-upload="handleBeforeUpload"
-    :on-remove="handleFileRemove"
-    :on-exceed="handleExceed"
-    :on-success="handleUploadSuccess"
-    :limit="maxCount"
-    v-model:file-list="displayFileList"
-    :disabled="readonly"
-    accept="image/*"
-    @preview="handlePreview"
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
   >
-    <template #default>
-      <el-icon>
-        <Plus />
-      </el-icon>
-    </template>
-  </el-upload>
+    <el-upload
+      class="avatar-uploader"
+      list-type="picture-card"
+      :multiple="true"
+      :auto-upload="true"
+      :http-request="handleHttpUpload"
+      :before-upload="handleBeforeUpload"
+      :on-remove="handleFileRemove"
+      :on-exceed="handleExceed"
+      :on-success="handleUploadSuccess"
+      :limit="maxCount"
+      v-model:file-list="displayFileList"
+      :disabled="readonly"
+      accept="image/*"
+      @preview="handlePreview"
+    >
+      <template #default>
+        <el-icon>
+          <Plus />
+        </el-icon>
+      </template>
+    </el-upload>
 
-  <el-image-viewer
-    v-if="previewVisible"
-    :url-list="previewUrlList"
-    :initial-index="previewIndex"
-    @close="previewVisible = false"
-  />
+    <el-image-viewer
+      v-if="previewVisible"
+      :url-list="previewUrlList"
+      :initial-index="previewIndex"
+      @close="previewVisible = false"
+    />
+  </el-form-item>
 </template>
 
 <script setup>
@@ -42,6 +48,10 @@ const props = defineProps({
   component: {
     type: Object,
     required: true,
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,

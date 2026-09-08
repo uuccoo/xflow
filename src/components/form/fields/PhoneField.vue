@@ -1,28 +1,34 @@
 <template>
-  <el-input
-    :model-value="props.modelValue.number"
-    :placeholder="props.component?.placeholder"
-    style="width: 100%"
-    @update:model-value="onNumberChange"
-    @blur="onNumberBlur"
-    :disabled="props.readonly"
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
   >
-    <template #prepend>
-      <el-select
-        :model-value="props.modelValue.areaCode || '+86'"
-        style="width: 100px"
-        @update:model-value="onAreaCodeChange"
-        :disabled="props.readonly"
-      >
-        <el-option
-          v-for="option in PHONE_AREA_CODES"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        ></el-option>
-      </el-select>
-    </template>
-  </el-input>
+    <el-input
+      :model-value="modelValue.number"
+      :placeholder="component.placeholder"
+      style="width: 100%"
+      @update:model-value="onNumberChange"
+      @blur="onNumberBlur"
+      :disabled="readonly"
+    >
+      <template #prepend>
+        <el-select
+          :model-value="modelValue.areaCode || '+86'"
+          style="width: 100px"
+          @update:model-value="onAreaCodeChange"
+          :disabled="readonly"
+        >
+          <el-option
+            v-for="option in PHONE_AREA_CODES"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          ></el-option>
+        </el-select>
+      </template>
+    </el-input>
+  </el-form-item>
 </template>
 
 <script setup>
@@ -59,6 +65,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     default: () => ({}),
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,

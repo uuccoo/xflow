@@ -1,35 +1,41 @@
 <template>
-  <el-select
-    v-if="!props.component.optionTile"
-    :model-value="props.modelValue"
-    :placeholder="props.component.placeholder || '请选择' + props.component.label"
-    style="width: 100%"
-    :disabled="props.readonly"
-    @update:model-value="onModelValueChange"
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
   >
-    <el-option
-      v-for="option in options"
-      :key="option.value"
-      :label="option.label"
-      :value="option.value"
-    />
-  </el-select>
-  <el-radio-group
-    v-else
-    class="vertical-option-group"
-    :model-value="props.modelValue"
-    :disabled="props.readonly"
-    @update:model-value="onModelValueChange"
-  >
-    <el-radio
-      v-for="option in options"
-      :key="option.value"
-      :label="option.value"
-      :disabled="props.readonly"
+    <el-select
+      v-if="!component.optionTile"
+      :model-value="modelValue"
+      :placeholder="component.placeholder || '请选择' + component.label"
+      style="width: 100%"
+      :disabled="readonly"
+      @update:model-value="onModelValueChange"
     >
-      {{ option.label }}
-    </el-radio>
-  </el-radio-group>
+      <el-option
+        v-for="option in options"
+        :key="option.value"
+        :label="option.label"
+        :value="option.value"
+      />
+    </el-select>
+    <el-radio-group
+      v-else
+      class="vertical-option-group"
+      :model-value="modelValue"
+      :disabled="readonly"
+      @update:model-value="onModelValueChange"
+    >
+      <el-radio
+        v-for="option in options"
+        :key="option.value"
+        :label="option.value"
+        :disabled="readonly"
+      >
+        {{ option.label }}
+      </el-radio>
+    </el-radio-group>
+  </el-form-item>
 </template>
 
 <script setup>
@@ -42,6 +48,10 @@ const props = defineProps({
   modelValue: {
     type: [String, Number],
     default: '',
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,

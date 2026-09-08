@@ -54,14 +54,16 @@
       </div>
       <div class="design-canvas">
         <div class="phone-frame" :class="{ 'pc-view': viewMode === 'pc' }">
-          <draggable :list="formStore.formItems" group="components" item-key="id" class="form-container"
-            @start="dragStart" @end="dragEnd" handle=".drag-handle" :animation="300" ghost-class="ghost-item"
-            chosen-class="chosen-item" drag-class="dragging-item">
-            <div v-if="formStore.formItems.length === 0" class="empty-tip">
-              拖拽左侧组件到此处进行表单设计
-            </div>
-            <component-renderer v-for="element in formStore.formItems" :key="element.id" :component="element" />
-          </draggable>
+          <el-form label-position="top" class="design-form">
+            <draggable :list="formStore.formItems" group="components" item-key="id" class="form-container"
+              @start="dragStart" @end="dragEnd" handle=".drag-handle" :animation="300" ghost-class="ghost-item"
+              chosen-class="chosen-item" drag-class="dragging-item">
+              <div v-if="formStore.formItems.length === 0" class="empty-tip">
+                拖拽左侧组件到此处进行表单设计
+              </div>
+              <component-renderer v-for="element in formStore.formItems" :key="element.id" :component="element" />
+            </draggable>
+          </el-form>
         </div>
       </div>
     </el-main>
@@ -257,6 +259,10 @@ const dragEnd = () => { }
   gap: 10px;
   padding: 10px 0;
   min-height: 100%;
+}
+
+.design-form :deep(.el-form-item) {
+  margin-bottom: 0;
 }
 
 /* 拖动动画相关样式 */

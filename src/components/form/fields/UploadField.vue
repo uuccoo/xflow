@@ -1,28 +1,34 @@
 <template>
-  <el-upload
-    class="upload-field-wrapper"
-    :auto-upload="true"
-    :multiple="true"
-    :http-request="handleHttpUpload"
-    :before-upload="handleBeforeUpload"
-    :on-remove="handleFileRemove"
-    :on-exceed="handleExceed"
-    :on-success="handleUploadSuccess"
-    :on-preview="handleFilePreview"
-    :limit="maxCount"
-    v-model:file-list="displayFileList"
-    :disabled="readonly"
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
   >
-    <el-button :disabled="readonly">
-      <el-icon style="margin-right: 4px"><Upload /></el-icon>
-      点击上传
-    </el-button>
-    <template #tip>
-      <div v-if="!readonly" class="el-upload__tip">
-        最多上传 {{ maxCount }} 个文件，单个不超过 {{ maxSizeMB }}MB
-      </div>
-    </template>
-  </el-upload>
+    <el-upload
+      class="upload-field-wrapper"
+      :auto-upload="true"
+      :multiple="true"
+      :http-request="handleHttpUpload"
+      :before-upload="handleBeforeUpload"
+      :on-remove="handleFileRemove"
+      :on-exceed="handleExceed"
+      :on-success="handleUploadSuccess"
+      :on-preview="handleFilePreview"
+      :limit="maxCount"
+      v-model:file-list="displayFileList"
+      :disabled="readonly"
+    >
+      <el-button :disabled="readonly">
+        <el-icon style="margin-right: 4px"><Upload /></el-icon>
+        点击上传
+      </el-button>
+      <template #tip>
+        <div v-if="!readonly" class="el-upload__tip">
+          最多上传 {{ maxCount }} 个文件，单个不超过 {{ maxSizeMB }}MB
+        </div>
+      </template>
+    </el-upload>
+  </el-form-item>
 </template>
 
 <script setup>
@@ -38,6 +44,10 @@ const props = defineProps({
   component: {
     type: Object,
     required: true,
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,

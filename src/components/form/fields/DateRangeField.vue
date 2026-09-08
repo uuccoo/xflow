@@ -1,25 +1,24 @@
 <template>
-  <div class="date-range-stack">
-    <div class="date-range-item">
-      <div class="date-range-label">
-        {{ props.component?.startLabel || '开始时间' }}
-        <span v-if="props.component?.required" class="required">*</span>
-      </div>
+  <el-form-item
+    :label="component.startLabel || '开始时间'"
+    :required="component.required"
+    :error="error?.message || ''"
+  >
       <div v-if="isAmPmDateType" class="date-range-ampm">
         <el-date-picker
-          :model-value="props.modelValue?.startDate?.date || ''"
-          :placeholder="props.component?.placeholder || '请选择'"
+          :model-value="modelValue?.startDate?.date || ''"
+          :placeholder="component.placeholder || '请选择'"
           type="date"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           style="flex: 1"
-          :disabled="props.readonly"
+          :disabled="readonly"
           @update:model-value="(value) => onStartAmPmDateChange(value)"
         />
         <el-select
           class="date-range-ampm-select"
-          :model-value="props.modelValue?.startDate?.meridiem || 'am'"
-          :disabled="props.readonly"
+          :model-value="modelValue?.startDate?.meridiem || 'am'"
+          :disabled="readonly"
           @update:model-value="(value) => onStartAmPmMeridiemChange(value)"
         >
           <el-option label="上午" value="am"></el-option>
@@ -28,36 +27,37 @@
       </div>
       <el-date-picker
         v-else
-        :model-value="props.modelValue?.startDate || ''"
-        :placeholder="props.component?.placeholder || '请选择'"
+        :model-value="modelValue?.startDate || ''"
+        :placeholder="component.placeholder || '请选择'"
         :type="dateConfig.type"
         :format="dateConfig.format"
         :value-format="dateConfig.valueFormat"
         style="width: 100%"
-        :disabled="props.readonly"
+        :disabled="readonly"
         @update:model-value="onStartDateChange"
       />
-    </div>
-    <div class="date-range-item">
-      <div class="date-range-label">
-        {{ props.component?.endLabel || '结束时间' }}
-        <span v-if="props.component?.required" class="required">*</span>
-      </div>
+  </el-form-item>
+
+    <el-form-item
+      :class="{ 'is-readonly-range-end': readonly }"
+      :label="component.endLabel || '结束时间'"
+      :required="component.required"
+    >
       <div v-if="isAmPmDateType" class="date-range-ampm">
         <el-date-picker
-          :model-value="props.modelValue?.endDate?.date || ''"
-          :placeholder="props.component?.placeholder || '请选择'"
+          :model-value="modelValue?.endDate?.date || ''"
+          :placeholder="component.placeholder || '请选择'"
           type="date"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           style="flex: 1"
-          :disabled="props.readonly"
+          :disabled="readonly"
           @update:model-value="(value) => onEndAmPmDateChange(value)"
         />
         <el-select
           class="date-range-ampm-select"
-          :model-value="props.modelValue?.endDate?.meridiem || 'am'"
-          :disabled="props.readonly"
+          :model-value="modelValue?.endDate?.meridiem || 'am'"
+          :disabled="readonly"
           @update:model-value="(value) => onEndAmPmMeridiemChange(value)"
         >
           <el-option label="上午" value="am"></el-option>
@@ -66,17 +66,16 @@
       </div>
       <el-date-picker
         v-else
-        :model-value="props.modelValue?.endDate || ''"
-        :placeholder="props.component?.placeholder || '请选择'"
+        :model-value="modelValue?.endDate || ''"
+        :placeholder="component.placeholder || '请选择'"
         :type="dateConfig.type"
         :format="dateConfig.format"
         :value-format="dateConfig.valueFormat"
         style="width: 100%"
-        :disabled="props.readonly"
+        :disabled="readonly"
         @update:model-value="onEndDateChange"
       />
-    </div>
-  </div>
+  </el-form-item>
 </template>
 
 <script setup>
@@ -90,6 +89,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     default: () => ({ startDate: '', endDate: '' }),
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,
@@ -182,17 +185,8 @@ const onEndAmPmMeridiemChange = (value) => {
 </script>
 
 <style scoped>
-.date-range-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
-.date-range-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.is-readonly-range-end {
+  margin-top: 10px;
 }
 
 .date-range-ampm {
@@ -205,12 +199,4 @@ const onEndAmPmMeridiemChange = (value) => {
   max-width: 100px;
 }
 
-.date-range-label {
-  color: #606266;
-}
-
-.required {
-  color: #f56c6c;
-  margin-left: 4px;
-}
 </style>

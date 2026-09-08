@@ -1,36 +1,42 @@
 <template>
-  <div v-if="isAmPmDateType" class="date-ampm">
+  <el-form-item
+    :label="component.label"
+    :required="component.required"
+    :error="error?.message || ''"
+  >
+    <div v-if="isAmPmDateType" class="date-ampm">
+      <el-date-picker
+        :model-value="modelValue?.date || ''"
+        :placeholder="component.placeholder || ''"
+        type="date"
+        format="YYYY-MM-DD"
+        value-format="YYYY-MM-DD"
+        style="flex: 1"
+        :disabled="readonly"
+        @update:model-value="onAmPmDateChange"
+      />
+      <el-select
+        class="date-ampm-select"
+        :model-value="modelValue?.meridiem || 'am'"
+        :disabled="readonly"
+        @update:model-value="onAmPmMeridiemChange"
+      >
+        <el-option label="上午" value="am"></el-option>
+        <el-option label="下午" value="pm"></el-option>
+      </el-select>
+    </div>
     <el-date-picker
-      :model-value="props.modelValue?.date || ''"
-      :placeholder="props.component?.placeholder || ''"
-      type="date"
-      format="YYYY-MM-DD"
-      value-format="YYYY-MM-DD"
-      style="flex: 1"
-      :disabled="props.readonly"
-      @update:model-value="onAmPmDateChange"
+      v-else
+      :model-value="modelValue"
+      :placeholder="component.placeholder || ''"
+      :type="dateConfig.type"
+      :format="dateConfig.format"
+      :value-format="dateConfig.valueFormat"
+      style="width: 100%"
+      :disabled="readonly"
+      @update:model-value="onModelValueChange"
     />
-    <el-select
-      class="date-ampm-select"
-      :model-value="props.modelValue?.meridiem || 'am'"
-      :disabled="props.readonly"
-      @update:model-value="onAmPmMeridiemChange"
-    >
-      <el-option label="上午" value="am"></el-option>
-      <el-option label="下午" value="pm"></el-option>
-    </el-select>
-  </div>
-  <el-date-picker
-    v-else
-    :model-value="props.modelValue"
-    :placeholder="props.component?.placeholder || ''"
-    :type="dateConfig.type"
-    :format="dateConfig.format"
-    :value-format="dateConfig.valueFormat"
-    style="width: 100%"
-    :disabled="props.readonly"
-    @update:model-value="onModelValueChange"
-  />
+  </el-form-item>
 </template>
 
 <script setup>
@@ -44,6 +50,10 @@ const props = defineProps({
   modelValue: {
     type: [String, Date, Object],
     default: '',
+  },
+  error: {
+    type: Object,
+    default: null,
   },
   readonly: {
     type: Boolean,
