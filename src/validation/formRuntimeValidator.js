@@ -1,8 +1,8 @@
 import { FormComponentType } from '@/enums'
 
-const createError = (component, code, message) => ({
-  code,
-  label: component?.label || '未命名字段',
+const createError = (code, valid, message = null) => ({
+  valid,  // 是否通过校验
+  code, // 错误码
   message,
 })
 
@@ -57,28 +57,30 @@ const isValueEmpty = (component, value) => {
 
 export const validatePhone = (component, value) => {
   const number = value?.number
-  if (!number || value?.areaCode !== '+86') return null
+  if (!number || value?.areaCode !== '+86') {
+    return createError('PHONE_FORMAT_INVALID', true)
+  }
 
   return /^1[3-9]\d{9}$/.test(number)
-    ? null
-    : createError(component, 'PHONE_FORMAT_INVALID', '手机号格式不正确')
+    ? createError('PHONE_FORMAT_INVALID', true)
+    : createError('PHONE_FORMAT_INVALID', false, '手机号格式不正确')
 }
 
 export const validateIdCard = (component, value) => {
-  if (!value) return null
+  if (!value) return createError('ID_CARD_FORMAT_INVALID', true)
 
   const pattern = /^[1-9]\d{5}(?:19|20)?\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]?$/
   return pattern.test(value)
-    ? null
-    : createError(component, 'ID_CARD_FORMAT_INVALID', '身份证号格式不正确')
+    ? createError('ID_CARD_FORMAT_INVALID', true)
+    : createError('ID_CARD_FORMAT_INVALID', false, '身份证号格式不正确')
 }
 
 export const validateRequired = (component, value) => {
   if (!component?.required || !isValueEmpty(component, value)) {
-    return null
+    return createError('FIELD_REQUIRED', true)
   }
 
-  return createError(component, 'FIELD_REQUIRED', `${component.label || '字段'} 为必填项`)
+  return createError('FIELD_REQUIRED', false, `${component.label || '字段'} 为必填项`)
 }
 
 export const validateFormData = (formItems = [], formValues = {}) => {
@@ -88,23 +90,23 @@ export const validateFormData = (formItems = [], formValues = {}) => {
     if (!component?.id || component.type === FormComponentType.TEXT) continue
 
     const value = formValues[component.id]
-    const requiredError = validateRequired(component, value)
-    let error = requiredError
+    const requiredResult = validateRequired(component, value)
+    let result = requiredResult
 
-    if (!error) {
+    if (requiredResult.valid) {
       switch (component.type) {
         case FormComponentType.PHONE:
-          error = validatePhone(component, value)
+          result = validatePhone(component, value)
           break
         case FormComponentType.IDCARD:
-          error = validateIdCard(component, value)
+          result = validateIdCard(component, value)
           break
         default:
           break
       }
     }
 
-    if (error) errors[component.id] = error
+    if (!result.valid) errors[component.id] = result
   }
 
   return errors

@@ -31,12 +31,15 @@ export function useFormFill(formItems) {
    */
   const updateError = (id, error) => {
     if (!id) return
-    if (error) {
+
+    if (!error?.valid) {
       validationErrors.value[id] = error
-    } else {
-      if (validationErrors.value[id] !== undefined) {
-        delete validationErrors.value[id]
-      }
+      return
+    }
+
+    const currentError = validationErrors.value[id]
+    if (currentError?.code === error.code) {
+      delete validationErrors.value[id]
     }
   }
 
