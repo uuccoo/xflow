@@ -73,20 +73,6 @@ export const validateIdCard = (component, value) => {
     : createError(component, 'ID_CARD_FORMAT_INVALID', '身份证号格式不正确')
 }
 
-export const validateNumber = (component, value) => {
-  if (value === undefined || value === null || value === '') return null
-
-  if (component.min !== undefined && value < component.min) {
-    return createError(component, 'NUMBER_MIN_INVALID', `数值不能小于 ${component.min}`)
-  }
-
-  if (component.max !== undefined && value > component.max) {
-    return createError(component, 'NUMBER_MAX_INVALID', `数值不能大于 ${component.max}`)
-  }
-
-  return null
-}
-
 export const validateRequired = (component, value) => {
   if (!component?.required || !isValueEmpty(component, value)) {
     return null
@@ -112,9 +98,6 @@ export const validateFormData = (formItems = [], formValues = {}) => {
           break
         case FormComponentType.IDCARD:
           error = validateIdCard(component, value)
-          break
-        case FormComponentType.NUMBER:
-          error = validateNumber(component, value)
           break
         default:
           break
