@@ -4,91 +4,81 @@
     :required="component.required"
     :error="error?.message || ''"
   >
-      <div v-if="isAmPmDateType" class="date-range-ampm">
-        <el-date-picker
-          :model-value="modelValue?.startDate?.date || ''"
-          :placeholder="component.placeholder || '请选择'"
-          type="date"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="flex: 1"
-          :disabled="readonly"
-          @update:model-value="(value) => onStartAmPmDateChange(value)"
-        />
-        <el-select
-          class="date-range-ampm-select"
-          :model-value="modelValue?.startDate?.meridiem || 'am'"
-          :disabled="readonly"
-          @update:model-value="(value) => onStartAmPmMeridiemChange(value)"
-        >
-          <el-option label="上午" value="am"></el-option>
-          <el-option label="下午" value="pm"></el-option>
-        </el-select>
-      </div>
+    <div v-if="isAmPmDateType" class="date-range-ampm">
       <el-date-picker
-        v-else
-        :model-value="modelValue?.startDate || ''"
+        v-model="component.defaultValue.startDate.date"
         :placeholder="component.placeholder || '请选择'"
-        :type="dateConfig.type"
-        :format="dateConfig.format"
-        :value-format="dateConfig.valueFormat"
-        style="width: 100%"
+        type="date"
+        format="YYYY-MM-DD"
+        value-format="YYYY-MM-DD"
+        style="flex: 1"
         :disabled="readonly"
-        @update:model-value="onStartDateChange"
       />
+      <el-select
+        class="date-range-ampm-select"
+        v-model="component.defaultValue.startDate.meridiem"
+        :disabled="readonly"
+      >
+        <el-option label="上午" value="am"></el-option>
+        <el-option label="下午" value="pm"></el-option>
+      </el-select>
+    </div>
+    <el-date-picker
+      v-else
+      v-model="component.defaultValue.startDate"
+      :placeholder="component.placeholder || '请选择'"
+      :type="dateConfig.type"
+      :format="dateConfig.format"
+      :value-format="dateConfig.valueFormat"
+      style="width: 100%"
+      :disabled="readonly"
+    />
   </el-form-item>
 
-    <el-form-item
-      :class="{ 'is-readonly-range-end': readonly }"
-      :label="component.endLabel || '结束时间'"
-      :required="component.required"
-    >
-      <div v-if="isAmPmDateType" class="date-range-ampm">
-        <el-date-picker
-          :model-value="modelValue?.endDate?.date || ''"
-          :placeholder="component.placeholder || '请选择'"
-          type="date"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="flex: 1"
-          :disabled="readonly"
-          @update:model-value="(value) => onEndAmPmDateChange(value)"
-        />
-        <el-select
-          class="date-range-ampm-select"
-          :model-value="modelValue?.endDate?.meridiem || 'am'"
-          :disabled="readonly"
-          @update:model-value="(value) => onEndAmPmMeridiemChange(value)"
-        >
-          <el-option label="上午" value="am"></el-option>
-          <el-option label="下午" value="pm"></el-option>
-        </el-select>
-      </div>
+  <el-form-item
+    :class="{ 'is-readonly-range-end': readonly }"
+    :label="component.endLabel || '结束时间'"
+    :required="component.required"
+  >
+    <div v-if="isAmPmDateType" class="date-range-ampm">
       <el-date-picker
-        v-else
-        :model-value="modelValue?.endDate || ''"
+        v-model="component.defaultValue.endDate.date"
         :placeholder="component.placeholder || '请选择'"
-        :type="dateConfig.type"
-        :format="dateConfig.format"
-        :value-format="dateConfig.valueFormat"
-        style="width: 100%"
+        type="date"
+        format="YYYY-MM-DD"
+        value-format="YYYY-MM-DD"
+        style="flex: 1"
         :disabled="readonly"
-        @update:model-value="onEndDateChange"
       />
+      <el-select
+        class="date-range-ampm-select"
+        v-model="component.defaultValue.endDate.meridiem"
+        :disabled="readonly"
+      >
+        <el-option label="上午" value="am"></el-option>
+        <el-option label="下午" value="pm"></el-option>
+      </el-select>
+    </div>
+    <el-date-picker
+      v-else
+      v-model="component.defaultValue.endDate"
+      :placeholder="component.placeholder || '请选择'"
+      :type="dateConfig.type"
+      :format="dateConfig.format"
+      :value-format="dateConfig.valueFormat"
+      style="width: 100%"
+      :disabled="readonly"
+    />
   </el-form-item>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch, onBeforeMount } from 'vue'
 
 const props = defineProps({
   component: {
     type: Object,
     required: true,
-  },
-  modelValue: {
-    type: Object,
-    default: () => ({ startDate: '', endDate: '' }),
   },
   error: {
     type: Object,
@@ -99,8 +89,6 @@ const props = defineProps({
     default: false,
   },
 })
-
-const emit = defineEmits(['update:modelValue'])
 
 const dateTypeMap = {
   date: {
@@ -120,68 +108,41 @@ const dateTypeMap = {
   },
 }
 
-const dateConfig = computed(() => {
-  const key = props.component?.dateType || 'date'
-  return dateTypeMap[key] || dateTypeMap.date
-})
-
+const dateConfig = computed(() => dateTypeMap[props.component?.dateType] || dateTypeMap.date)
 const isAmPmDateType = computed(() => props.component?.dateType === 'datetimeAmPm')
 
-const onStartDateChange = (value) => {
-  const nextValue = {
-    startDate: value || '',
-    endDate: props.modelValue?.endDate || '',
-  }
-  emit('update:modelValue', nextValue)
+const initDefaultValue = () => {
+  const defaultValue = props.component.defaultValue
+
+  props.component.defaultValue = isAmPmDateType.value
+    ? {
+        startDate: {
+          date: defaultValue?.startDate?.date || '',
+          meridiem: defaultValue?.startDate?.meridiem || 'am',
+        },
+        endDate: {
+          date: defaultValue?.endDate?.date || '',
+          meridiem: defaultValue?.endDate?.meridiem || 'am',
+        },
+      }
+    : {
+        startDate: defaultValue?.startDate || '',
+        endDate: defaultValue?.endDate || '',
+      }
 }
 
-const onEndDateChange = (value) => {
-  const nextValue = {
-    startDate: props.modelValue?.startDate || '',
-    endDate: value || '',
+watch(
+  () => props.component.dateType,
+  () => {
+    // 当日期类型变化时，重置默认值并初始化
+    props.component.defaultValue = {}
+    initDefaultValue()
   }
-  emit('update:modelValue', nextValue)
-}
+)
 
-const onStartAmPmDateChange = (value) => {
-  const currentValue = props.modelValue?.startDate
-  const meridiem = currentValue?.meridiem || 'am'
-  const nextValue = {
-    startDate: { date: value || '', meridiem },
-    endDate: props.modelValue?.endDate || '',
-  }
-  emit('update:modelValue', nextValue)
-}
-
-const onStartAmPmMeridiemChange = (value) => {
-  const currentValue = props.modelValue?.startDate
-  const date = currentValue?.date || ''
-  const nextValue = {
-    startDate: { date, meridiem: value },
-    endDate: props.modelValue?.endDate || '',
-  }
-  emit('update:modelValue', nextValue)
-}
-
-const onEndAmPmDateChange = (value) => {
-  const currentValue = props.modelValue?.endDate
-  const meridiem = currentValue?.meridiem || 'am'
-  const nextValue = {
-    startDate: props.modelValue?.startDate || '',
-    endDate: { date: value || '', meridiem },
-  }
-  emit('update:modelValue', nextValue)
-}
-
-const onEndAmPmMeridiemChange = (value) => {
-  const currentValue = props.modelValue?.endDate
-  const date = currentValue?.date || ''
-  const nextValue = {
-    startDate: props.modelValue?.startDate || '',
-    endDate: { date, meridiem: value },
-  }
-  emit('update:modelValue', nextValue)
-}
+onBeforeMount(() => {
+  initDefaultValue()
+})
 </script>
 
 <style scoped>

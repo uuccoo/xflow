@@ -6,12 +6,11 @@
   >
     <el-select
       v-if="!component.optionTile"
-      :model-value="modelValue"
+      v-model="component.defaultValue"
       multiple
       :placeholder="component.placeholder || '请选择' + component.label"
       style="width: 100%"
       :disabled="readonly"
-      @update:model-value="onModelValueChange"
     >
       <el-option
         v-for="option in options"
@@ -23,9 +22,8 @@
     <el-checkbox-group
       v-else
       class="vertical-option-group"
-      :model-value="modelValue"
+      v-model="component.defaultValue"
       :disabled="readonly"
-      @update:model-value="onModelValueChange"
     >
       <el-checkbox
         v-for="option in options"
@@ -46,10 +44,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  modelValue: {
-    type: Array,
-    default: () => [],
-  },
   error: {
     type: Object,
     default: null,
@@ -60,14 +54,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
-
 const options = computed(() => props.component.options || [])
-
-const onModelValueChange = (value) => {
-  if (props.readonly) return
-  emit('update:modelValue', value)
-}
 </script>
 
 <style scoped>

@@ -6,20 +6,18 @@
   >
     <div v-if="isAmPmDateType" class="date-ampm">
       <el-date-picker
-        :model-value="modelValue?.date || ''"
+        v-model="component.defaultValue.date"
         :placeholder="component.placeholder || ''"
         type="date"
         format="YYYY-MM-DD"
         value-format="YYYY-MM-DD"
         style="flex: 1"
         :disabled="readonly"
-        @update:model-value="onAmPmDateChange"
       />
       <el-select
         class="date-ampm-select"
-        :model-value="modelValue?.meridiem || 'am'"
+        v-model="component.defaultValue.meridiem"
         :disabled="readonly"
-        @update:model-value="onAmPmMeridiemChange"
       >
         <el-option label="上午" value="am"></el-option>
         <el-option label="下午" value="pm"></el-option>
@@ -27,29 +25,24 @@
     </div>
     <el-date-picker
       v-else
-      :model-value="modelValue"
+      v-model="component.defaultValue"
       :placeholder="component.placeholder || ''"
       :type="dateConfig.type"
       :format="dateConfig.format"
       :value-format="dateConfig.valueFormat"
       style="width: 100%"
       :disabled="readonly"
-      @update:model-value="onModelValueChange"
     />
   </el-form-item>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeMount, watch } from 'vue'
 
 const props = defineProps({
   component: {
     type: Object,
     required: true,
-  },
-  modelValue: {
-    type: [String, Date, Object],
-    default: '',
   },
   error: {
     type: Object,
@@ -60,8 +53,6 @@ const props = defineProps({
     default: false,
   },
 })
-
-const emit = defineEmits(['update:modelValue'])
 
 const dateTypeMap = {
   date: {
@@ -88,21 +79,29 @@ const dateConfig = computed(() => {
 
 const isAmPmDateType = computed(() => props.component?.dateType === 'datetimeAmPm')
 
-// 不再使用中间计算变量，直接使用 props.modelValue
+const initDefaultValue = () => {
+  if (!isAmPmDateType.value) return
 
-const onAmPmDateChange = (value) => {
-  const meridiem = props.modelValue?.meridiem || 'am'
-  emit('update:modelValue', { date: value, meridiem })
+  const defaultValue = props.component.defaultValue
+
+  props.component.defaultValue = {
+    date: defaultValue?.date || '',
+    meridiem: defaultValue?.meridiem || 'am',
+  }
 }
 
-const onAmPmMeridiemChange = (value) => {
-  const date = props.modelValue?.date || ''
-  emit('update:modelValue', { date, meridiem: value })
-}
+watch(
+  () => props.component.dateType,
+  () => {
+    // 当日期类型变化时，重置默认值并初始化
+    props.component.defaultValue = undefined
+    initDefaultValue()
+  }
+)
 
-const onModelValueChange = (value) => {
-  emit('update:modelValue', value)
-}
+onBeforeMount(() => {
+  initDefaultValue()
+})
 </script>
 
 <style scoped>

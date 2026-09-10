@@ -16,16 +16,14 @@
       :is="currentField"
       v-else
       :component="component"
-      :model-value="getValue"
       :error="validationErrors[component.id]"
-      @update:model-value="handleValueChange"
       @update:error="handleFieldErrorChange"
     />
   </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, inject } from 'vue';
+import { computed, defineAsyncComponent, inject, watch } from 'vue';
 import { FormComponentType } from '@/enums';
 import InputField from './fields/InputField.vue'
 import TextareaField from './fields/TextareaField.vue'
@@ -60,10 +58,8 @@ const fieldComponents = {
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
 
 // 通过 inject 从祖先组件（FormPreview）获取共享数据和事件处理函数
-const formValues = inject('formValues', {});
 const validationErrors = inject('validationErrors', {});
 const viewMode = inject('viewMode', 'pc');
-const updateValue = inject('updateValue');
 const updateError = inject('updateError');
 
 const props = defineProps({
@@ -73,17 +69,18 @@ const props = defineProps({
   }
 });
 
+watch(
+  () => props.component.defaultValue,
+  (value) => {
+    if (props.component.id) {
+      const error = validateRequired(props.component, value)
+      updateError(props.component.id, error)
+    }
+  },
+  { deep: true }
+)
+
 const currentField = computed(() => fieldComponents[props.component.type] || TextField)
-
-// 处理值变化
-const handleValueChange = (value) => {
-  if (props.component.id) {
-    updateValue(props.component.id, value);
-
-    const error = validateRequired(props.component, value)
-    updateError(props.component.id, error)
-  }
-};
 
 const handleFieldErrorChange = (error) => {
   if (!props.component.id) return
@@ -102,14 +99,6 @@ const getGridTemplateColumns = (layoutValue) => {
   const parts = layoutValue.split(':').map(Number);
   return parts.map(part => `${part}fr`).join(' ');
 };
-
-// 获取当前组件的值
-const getValue = computed(() => {
-  const componentId = props.component.id;
-  return componentId && formValues
-    ? formValues[componentId]
-    : undefined;
-});
 
 </script>
 

@@ -5,18 +5,16 @@
     :error="error?.message || ''"
   >
     <el-input
-      :model-value="modelValue.number"
+      v-model="component.defaultValue.number"
       :placeholder="component.placeholder"
       style="width: 100%"
-      @update:model-value="onNumberChange"
       @blur="onNumberBlur"
       :disabled="readonly"
     >
       <template #prepend>
         <el-select
-          :model-value="modelValue.areaCode || '+86'"
+          v-model="component.defaultValue.areaCode"
           style="width: 100px"
-          @update:model-value="onAreaCodeChange"
           :disabled="readonly"
         >
           <el-option
@@ -32,6 +30,7 @@
 </template>
 
 <script setup>
+import { onBeforeMount } from 'vue'
 import { validatePhone } from '@/validation/formRuntimeValidator'
 
 const PHONE_AREA_CODES = [
@@ -50,10 +49,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  modelValue: {
-    type: Object,
-    default: () => ({}),
-  },
   error: {
     type: Object,
     default: null,
@@ -64,29 +59,23 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:error'])
+const emit = defineEmits(['update:error'])
 
-const updateField = (field, value) => {
-  const nextValue = {
-    ...props.modelValue,
-    [field]: value,
+const initDefaultValue = () => {
+  const defaultValue = props.component.defaultValue
+
+  props.component.defaultValue = {
+    number: defaultValue?.number || '',
+    areaCode: defaultValue?.areaCode || '+86',
   }
-  nextValue.areaCode = nextValue.areaCode || '+86'
-
-  emit('update:modelValue', nextValue)
-  return nextValue
 }
 
-const onNumberChange = (value) => {
-  updateField('number', value)
-}
+onBeforeMount(() => {
+  initDefaultValue()
+})
 
 const onNumberBlur = () => {
-  const error = validatePhone(props.component, props.modelValue)
+  const error = validatePhone(props.component, props.component.defaultValue)
   emit('update:error', error)
-}
-
-const onAreaCodeChange = (value) => {
-  updateField('areaCode', value)
 }
 </script>

@@ -5,14 +5,13 @@
     :error="error?.message || ''"
   >
     <el-input-number
-      :model-value="modelValue"
+      v-model="component.defaultValue"
       :placeholder="component.placeholder || '请输入数字'"
       :min="component.min"
       :max="component.max"
       :precision="component.precision"
       :disabled="readonly"
       class="number-field"
-      @update:model-value="emit('update:modelValue', $event)"
       @blur="onBlur"
     />
   </el-form-item>
@@ -23,17 +22,16 @@ import { validateNumber } from '@/validation/formRuntimeValidator'
 
 const props = defineProps({
   component: { type: Object, required: true },
-  modelValue: { type: Number, default: undefined },
   error: { type: Object, default: null },
   readonly: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:error'])
+const emit = defineEmits(['update:error'])
 
 const onBlur = () => {
   if (props.readonly) return
 
-  const error = validateNumber(props.component, props.modelValue)
+  const error = validateNumber(props.component, props.component.defaultValue)
   emit('update:error', error)
 }
 </script>

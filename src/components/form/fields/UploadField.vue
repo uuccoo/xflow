@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { uploadApi } from '@/api'
@@ -55,7 +55,12 @@ const props = defineProps({
   },
 })
 
-const fileList = defineModel({ type: Array, default: () => [] })
+const fileList = computed({
+  get: () => props.component.defaultValue || [],
+  set: (value) => {
+    props.component.defaultValue = value
+  },
+})
 
 // ========== 配置 ==========
 const maxCount = 10

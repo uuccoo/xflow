@@ -32,8 +32,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeMount } from 'vue';
-import { storeToRefs } from 'pinia';
+import { computed, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
@@ -47,10 +46,11 @@ const emit = defineEmits(['close-preview']);
 // 引入 store
 const basicSettingsStore = useBasicSettingsStore();
 const formDesignStore = useFormDesignStore();
-const { formItems } = storeToRefs(formDesignStore);
+// 深拷贝表单项，避免直接修改 store 中的数据
+const formItems = ref(JSON.parse(JSON.stringify(formDesignStore.formItems)));
 
 // 表单状态（状态、provide 注入均由 composable 处理）
-const { formValues, validateForm, initFormValues } = useFormFill();
+const { formValues, validateForm } = useFormFill(formItems);
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
@@ -63,7 +63,7 @@ const goBack = () => {
 // 提交表单
 const submitForm = async () => {
     // 表单验证
-    if (!validateForm(formItems.value)) {
+    if (!validateForm()) {
         return;
     }
     ElMessage({
@@ -72,10 +72,6 @@ const submitForm = async () => {
     });
 };
 
-// 组件挂载时初始化表单默认值
-onBeforeMount(() => {
-    initFormValues(formItems.value);
-});
 </script>
 
 <style scoped lang="scss">

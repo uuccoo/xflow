@@ -5,10 +5,9 @@
     :error="error?.message || ''"
   >
     <el-input
-      :model-value="modelValue"
+      v-model="component.defaultValue"
       :placeholder="component.placeholder"
       style="width: 100%"
-      @update:model-value="onChange"
       @blur="onBlur"
       :disabled="readonly"
     />
@@ -23,10 +22,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  modelValue: {
-    type: String,
-    default: '',
-  },
   error: {
     type: Object,
     default: null,
@@ -37,17 +32,12 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:error'])
-
-const onChange = (value) => {
-  if (props.readonly) return
-  emit('update:modelValue', value)
-}
+const emit = defineEmits(['update:error'])
 
 const onBlur = () => {
   if (props.readonly) return
 
-  const error = validateIdCard(props.component, props.modelValue)
+  const error = validateIdCard(props.component, props.component.defaultValue)
   emit('update:error', error)
 }
 
