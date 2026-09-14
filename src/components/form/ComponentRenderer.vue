@@ -18,9 +18,10 @@
           :animation="300" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="dragging-item">
 
           <!-- 多列布局渲染区域 - 仅用于显示，不参与拖拽 -->
-          <template v-for="element in component.children" :key="element.id">
+          <div v-for="element in component.children" :key="element.id">
+            <!-- component-renderer 组件外面需要用div包裹 -->
             <component-renderer :component="element" />
-          </template>
+          </div>
         </draggable>
       </div>
     </div>

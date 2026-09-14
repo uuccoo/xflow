@@ -61,7 +61,10 @@
               <div v-if="formStore.formItems.length === 0" class="empty-tip">
                 拖拽左侧组件到此处进行表单设计
               </div>
-              <component-renderer v-for="element in formStore.formItems" :key="element.id" :component="element" />
+              <div v-for="element in formStore.formItems" :key="element.id">
+                <!-- component-renderer 组件外面需要用div包裹 -->
+                <component-renderer :component="element" />
+              </div>
             </draggable>
           </el-form>
         </div>
