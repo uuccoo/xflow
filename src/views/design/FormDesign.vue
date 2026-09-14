@@ -264,6 +264,10 @@ const dragEnd = () => { }
   min-height: 100%;
 }
 
+.design-form {
+  height: 100%;
+}
+
 .design-form :deep(.el-form-item) {
   margin-bottom: 0;
 }
