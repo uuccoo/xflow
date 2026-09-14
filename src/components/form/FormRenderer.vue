@@ -1,36 +1,35 @@
 <template>
   <div class="form-renderer">
-    <!-- 分栏容器组件 -->
-    <div v-if="component.type === FormComponentType.COLUMNS" class="form-item column-container">
-      <div class="form-item-control columns-grid"
-        :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }">
-        <!-- 子组件直接放入grid布局中 -->
-        <form-renderer v-for="element in component.children" :key="element.id" :component="element" />
+    <div v-if="component.type === FormComponentType.COLUMNS" class="column-container">
+      <div
+        class="columns-grid"
+        :style="{ gridTemplateColumns: getGridTemplateColumns(component.layoutValue) }"
+      >
+        <FormRenderer
+          v-for="element in component.children || []"
+          :key="element.id"
+          :component="element"
+        />
       </div>
     </div>
-
-    <!-- 普通表单组件 -->
-    <div v-else class="form-item">
-      <div v-if="component.type !== FormComponentType.DATERANGE && component.type !== FormComponentType.TEXT" class="form-item-label">
-        {{ component.label }}
-        <span v-if="component.required" class="required">*</span>
-      </div>
-      <div class="form-item-control">
-        <!-- 根据组件类型渲染不同的表单控件 -->
-        <component :is="renderField()" />
-        <div v-if="validationErrors[component.id]" class="validation-error">
-          {{ validationErrors[component.id]?.message }}
-        </div>
-      </div>
-    </div>
+    <component
+      :is="currentField"
+      v-else
+      :component="component"
+      :error="validationErrors[component.id]"
+      @update:error="handleFieldErrorChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue';
-import { computed, defineAsyncComponent, h, inject } from 'vue';
-import IdCardField from './fields/IdCardField.vue'
+import { computed, defineAsyncComponent, inject, watch } from 'vue';
 import { FormComponentType } from '@/enums';
+import InputField from './fields/InputField.vue'
+import TextareaField from './fields/TextareaField.vue'
+import NumberField from './fields/NumberField.vue'
+import TextField from './fields/TextField.vue'
+import IdCardField from './fields/IdCardField.vue'
 import PhoneField from './fields/PhoneField.vue'
 import DateField from './fields/DateField.vue'
 import DateRangeField from './fields/DateRangeField.vue'
@@ -38,15 +37,29 @@ import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
+import { validateRequired } from '@/validation/formRuntimeValidator'
+
+const fieldComponents = {
+  [FormComponentType.INPUT]: InputField,
+  [FormComponentType.TEXTAREA]: TextareaField,
+  [FormComponentType.NUMBER]: NumberField,
+  [FormComponentType.RADIO]: RadioField,
+  [FormComponentType.IDCARD]: IdCardField,
+  [FormComponentType.PHONE]: PhoneField,
+  [FormComponentType.CHECKBOX]: CheckboxField,
+  [FormComponentType.DATE]: DateField,
+  [FormComponentType.UPLOAD]: UploadField,
+  [FormComponentType.IMAGE]: ImageField,
+  [FormComponentType.DATERANGE]: DateRangeField,
+  [FormComponentType.TEXT]: TextField,
+}
 
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
 
 // 通过 inject 从祖先组件（FormPreview）获取共享数据和事件处理函数
-const formValues = inject('formValues', {});
 const validationErrors = inject('validationErrors', {});
 const viewMode = inject('viewMode', 'pc');
-const updateValue = inject('updateValue');
 const updateError = inject('updateError');
 
 const props = defineProps({
@@ -56,12 +69,18 @@ const props = defineProps({
   }
 });
 
-// 处理值变化
-const handleValueChange = (value) => {
-  if (props.component.id) {
-    updateValue(props.component.id, value);
-  }
-};
+watch(
+  () => props.component.defaultValue,
+  (value) => {
+    if (props.component.id) {
+      const error = validateRequired(props.component, value)
+      updateError(props.component.id, error)
+    }
+  },
+  { deep: true }
+)
+
+const currentField = computed(() => fieldComponents[props.component.type] || TextField)
 
 const handleFieldErrorChange = (error) => {
   if (!props.component.id) return
@@ -81,166 +100,11 @@ const getGridTemplateColumns = (layoutValue) => {
   return parts.map(part => `${part}fr`).join(' ');
 };
 
-// 获取当前组件的值
-const getValue = computed(() => {
-  let componentId = props.component.id;
-  // 从 formValues 中获取当前组件的值，如果没有则使用组件的默认值
-  if (componentId && formValues && formValues.hasOwnProperty(componentId)) {
-    return formValues[componentId];
-  }
-  return props.component.defaultValue || '';
-});
-
-// 渲染表单控件
-const renderField = () => {
-  switch (props.component.type) {
-    case FormComponentType.INPUT:
-      return h(ElInput, {
-        modelValue: getValue.value,
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        'onUpdate:modelValue': handleValueChange
-      });
-
-    case FormComponentType.TEXTAREA:
-      return h(ElInput, {
-        modelValue: getValue.value,
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        'onUpdate:modelValue': handleValueChange,
-        type: 'textarea',
-        rows: 3
-      });
-
-    case FormComponentType.RADIO:
-      return h(RadioField, {
-        component: props.component,
-        modelValue: getValue.value,
-        'onUpdate:modelValue': handleValueChange,
-      })
-
-    case FormComponentType.IDCARD:
-      return h(IdCardField, {
-        component: props.component,
-        modelValue: getValue.value,
-        'onUpdate:modelValue': handleValueChange,
-        'onUpdate:error': handleFieldErrorChange
-      })
-
-    case FormComponentType.PHONE: {
-      return h(PhoneField, {
-        component: props.component,
-        modelValue: getValue.value,
-        'onUpdate:modelValue': handleValueChange,
-        'onUpdate:error': handleFieldErrorChange,
-      })
-    }
-
-    case FormComponentType.CHECKBOX:
-      return h(CheckboxField, {
-        component: props.component,
-        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:modelValue': handleValueChange,
-      })
-
-    case 'select':
-      return h(ElSelect,
-        {
-          modelValue: getValue.value,
-          placeholder: props.component.placeholder || '请选择' + props.component.label,
-          style: { width: '100%' },
-          'onUpdate:modelValue': handleValueChange
-        },
-        () => props.component.options?.map(option =>
-          h(ElOption, { label: option.label, value: option.value })
-        ) || []
-      );
-
-    case FormComponentType.DATE:
-      return h(DateField, {
-        component: props.component,
-        modelValue: getValue.value,
-        'onUpdate:modelValue': handleValueChange
-      });
-
-    case FormComponentType.UPLOAD:
-      return h(UploadField, {
-        component: props.component,
-        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:modelValue': handleValueChange,
-      })
-
-    case FormComponentType.IMAGE:
-      return h(ImageField, {
-        component: props.component,
-        modelValue: Array.isArray(getValue.value) ? getValue.value : [],
-        'onUpdate:modelValue': handleValueChange,
-      })
-
-    case FormComponentType.NUMBER:
-      return h(ElInputNumber, {
-        modelValue: getValue.value,
-        placeholder: props.component.placeholder || '请输入数字',
-        min: props.component.min,
-        max: props.component.max,
-        precision: props.component.precision,
-        style: { width: '100%', "max-width": '220px' },
-        'onUpdate:modelValue': handleValueChange
-      });
-
-    case FormComponentType.DATERANGE:
-      return h(DateRangeField, {
-        component: props.component,
-        modelValue: getValue.value || { startDate: '', endDate: '' },
-        'onUpdate:modelValue': handleValueChange
-      });
-
-    case FormComponentType.TEXT:
-      return h('div', {
-        style: {
-          fontSize: '14px',
-          color: '#606266',
-          padding: '10px',
-          backgroundColor: '#f8f8f8',
-          borderRadius: '4px',
-          border: '1px solid #ebeef5'
-        }
-      }, props.component.content || '');
-
-    default:
-      return h('div', {}, '未知组件类型');
-  }
-};
 </script>
 
 <style scoped lang="scss">
 .form-renderer {
   width: 100%;
-}
-
-.form-item:not(.column-container) {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.form-item-label {
-  color: #606266;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-
-  .required {
-    color: #f56c6c;
-    margin-left: 4px;
-  }
-}
-
-.form-item-control {
-  width: 100%;
-}
-
-.validation-error {
-  color: #f56c6c;
-  font-size: 12px;
-  margin-top: 6px;
 }
 
 .columns-grid {

@@ -18,22 +18,22 @@
           :animation="300" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="dragging-item">
 
           <!-- 多列布局渲染区域 - 仅用于显示，不参与拖拽 -->
-          <template v-for="element in component.children" :key="element.id">
+          <div v-for="element in component.children" :key="element.id">
+            <!-- component-renderer 组件外面需要用div包裹 -->
             <component-renderer :component="element" />
-          </template>
+          </div>
         </draggable>
       </div>
     </div>
 
     <!-- 普通表单组件 -->
     <div v-else class="form-item">
-      <div v-if="component.type !== FormComponentType.DATERANGE && component.type !== FormComponentType.TEXT" class="form-item-label">
-        {{ component.label }}
-        <span v-if="component.required" class="required">*</span>
-      </div>
-      <div class="form-item-control">
-        <component :is="renderField()" />
-      </div>
+      <component
+        :is="currentField"
+        :component="component"
+        :model-value="component.defaultValue"
+        readonly
+      />
     </div>
 
     <!-- 操作按钮区域 - 分栏容器和普通组件共用，只在组件被选中时显示 -->
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { h, defineAsyncComponent, computed } from 'vue';
+import { defineAsyncComponent, computed } from 'vue';
 import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { Delete, CopyDocument } from '@element-plus/icons-vue';
 import { useFormDesignStore } from '@/stores/formDesignStore';
@@ -62,6 +62,10 @@ import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
+import InputField from './fields/InputField.vue'
+import TextareaField from './fields/TextareaField.vue'
+import NumberField from './fields/NumberField.vue'
+import TextField from './fields/TextField.vue'
 
 // 获取 formDesignStore
 const formStore = useFormDesignStore();
@@ -92,94 +96,22 @@ const getGridTemplateColumns = (layoutValue) => {
   return parts.map(part => `${part}fr`).join(' ');
 };
 
-// 渲染表单控件
-const renderField = () => {
-  switch (props.component.type) {
-    case FormComponentType.INPUT:
-      return h(ElInput, {
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        modelValue: props.component.defaultValue,
-        disabled: true
-      });
-    case FormComponentType.TEXTAREA:
-      return h(ElInput, {
-        type: 'textarea',
-        placeholder: props.component.placeholder || '请输入' + props.component.label,
-        modelValue: props.component.defaultValue,
-        disabled: true
-      });
-    case FormComponentType.NUMBER:
-      return h(ElInputNumber, {
-        placeholder: props.component.placeholder || '请输入数字',
-        modelValue: props.component.defaultValue,
-        disabled: true,
-        min: props.component.min,
-        max: props.component.max,
-        precision: props.component.precision,
-        style: { width: '100%', "max-width": '220px' }
-      });
-    case FormComponentType.RADIO:
-      return h(RadioField, {
-        component: props.component,
-        modelValue: props.component.defaultValue,
-        readonly: true,
-      })
-    case FormComponentType.IDCARD:
-      return h(IdCardField, {
-        component: props.component,
-        modelValue: props.component.defaultValue || '',
-        readonly: true,
-      })
-    case FormComponentType.PHONE:
-      return h(PhoneField, {
-        component: props.component,
-        modelValue: props.component.defaultValue || {},
-        readonly: true,
-      })
-    case FormComponentType.CHECKBOX:
-      return h(CheckboxField, {
-        component: props.component,
-        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
-        readonly: true,
-      })
-    case FormComponentType.DATE:
-      return h(DateField, {
-        component: props.component,
-        modelValue: props.component.defaultValue || '',
-        readonly: true,
-      });
-    case FormComponentType.DATERANGE:
-      return h(DateRangeField, {
-        component: props.component,
-        modelValue: props.component.defaultValue || { startDate: '', endDate: '' },
-        readonly: true,
-      });
-    case FormComponentType.UPLOAD:
-      return h(UploadField, {
-        component: props.component,
-        modelValue: Array.isArray(props.component.defaultValue) ? props.component.defaultValue : [],
-        readonly: true,
-      })
-    case FormComponentType.IMAGE:
-        return h(ImageField, {
-          component: props.component,
-          modelValue: props.component.defaultValue || [],
-          readonly: true,
-        })
-    case FormComponentType.TEXT:
-      return h('div', {
-        style: {
-          color: '#606266',
-          padding: '10px',
-          backgroundColor: '#f8f8f8',
-          borderRadius: '4px',
-          border: '1px solid #ebeef5'
-        }
-      }, props.component.content || '');
-    default:
-      return h('div', {}, '未知组件类型');
-  }
-};
+const fieldComponents = {
+  [FormComponentType.INPUT]: InputField,
+  [FormComponentType.TEXTAREA]: TextareaField,
+  [FormComponentType.NUMBER]: NumberField,
+  [FormComponentType.RADIO]: RadioField,
+  [FormComponentType.IDCARD]: IdCardField,
+  [FormComponentType.PHONE]: PhoneField,
+  [FormComponentType.CHECKBOX]: CheckboxField,
+  [FormComponentType.DATE]: DateField,
+  [FormComponentType.DATERANGE]: DateRangeField,
+  [FormComponentType.UPLOAD]: UploadField,
+  [FormComponentType.IMAGE]: ImageField,
+  [FormComponentType.TEXT]: TextField,
+}
+
+const currentField = computed(() => fieldComponents[props.component.type] || TextField)
 </script>
 
 <style scoped lang="scss">

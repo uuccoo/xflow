@@ -1,6 +1,6 @@
-import { reactive, provide } from 'vue'
-import { ElMessage } from 'element-plus'
-import { buildDefaultFormValues, collectRequiredFormItems, isRequiredValueEmpty } from '@/utils/formItems'
+import { computed, ref, provide } from 'vue'
+import { flattenFormItems } from '@/utils/formItems'
+import { validateFormData } from '@/validation/formRuntimeValidator'
 
 /**
  * 表单填写 composable。
@@ -8,87 +8,60 @@ import { buildDefaultFormValues, collectRequiredFormItems, isRequiredValueEmpty 
  * 负责表单值的初始化、读写、校验错误的收集与校验，并通过 provide 向下注入，
  * 供 FormRenderer 等递归子组件直接使用。
  */
-export function useFormFill() {
+export function useFormFill(formItems) {
   // ---- 状态 ----
-  const formValues = reactive({})
-  const validationErrors = reactive({})
+  const validationErrors = ref({})
+
+  const formValues = computed(() => {
+    const values = {}
+
+    for (const item of flattenFormItems(formItems.value)) {
+      if (item?.id) {
+        values[item.id] = item.defaultValue
+      }
+    }
+
+    return values
+  })
 
   // ---- 方法 ----
-
-  /**
-   * 根据 formItems 构建默认值并写入 formValues。
-   * @param {Array} formItems - 表单项列表
-   */
-  const initFormValues = (formItems = []) => {
-    const defaultValues = buildDefaultFormValues(formItems)
-    Object.assign(formValues, defaultValues)
-  }
-
-  /**
-   * 更新单个字段值。
-   */
-  const updateValue = (id, value) => {
-    if (id) {
-      formValues[id] = value
-    }
-  }
 
   /**
    * 更新或清除单个字段的校验错误。
    */
   const updateError = (id, error) => {
     if (!id) return
-    if (error) {
-      validationErrors[id] = error
-    } else {
-      if (validationErrors[id] !== undefined) {
-        delete validationErrors[id]
-      }
+
+    if (!error?.valid) {
+      validationErrors.value[id] = error
+      return
+    }
+
+    const currentError = validationErrors.value[id]
+    if (currentError?.code === error.code) {
+      delete validationErrors.value[id]
     }
   }
 
   /**
-   * 校验表单：必填项检查 + 子组件上报的 validationErrors 检查。
-   * @param {Array} formItems - 表单项列表
+   * 全量校验表单并刷新字段错误。
    * @returns {boolean} 校验是否通过
    */
-  const validateForm = (formItems = []) => {
-    const requiredItems = collectRequiredFormItems(formItems)
+  const validateForm = () => {
+    const errors = validateFormData(flattenFormItems(formItems.value), formValues.value)
+    validationErrors.value = errors
 
-    // 1. 必填项校验
-    for (const item of requiredItems) {
-      if (!item.id) continue
-
-      const value = formValues[item.id]
-      if (isRequiredValueEmpty(item, value)) {
-        ElMessage.error(`${item.label || '未命名字段'} 为必填项`)
-        return false
-      }
-    }
-
-    // 2. 检查子组件上报的 validationErrors
-    for (const [id, err] of Object.entries(validationErrors)) {
-      if (err?.message) {
-        ElMessage.error(`${err.label || '字段'}: ${err.message}`)
-        return false
-      }
-    }
-
-    return true
+    return Object.keys(errors).length === 0
   }
 
   // ---- provide 注入，供递归子组件使用 ----
-  provide('formValues', formValues)
   provide('validationErrors', validationErrors)
-  provide('updateValue', updateValue)
   provide('updateError', updateError)
 
   return {
     formValues,
     validationErrors,
-    updateValue,
     updateError,
-    initFormValues,
     validateForm,
   }
 }

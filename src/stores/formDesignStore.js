@@ -73,8 +73,6 @@ export const useFormDesignStore = defineStore('formDesign', () => {
           placeholder: '请输入数字',
           required: false,
           defaultValue: undefined,
-          min: undefined,
-          max: undefined,
           precision: undefined, // 小数位数限制
         },
         {
