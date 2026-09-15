@@ -3,6 +3,7 @@ import { FlowNodeType } from '@/enums'
 import { validateApprover, validateCopyTo, validateHandler } from './handlerValidator'
 import { validateInitiator } from './initiatorValidator'
 import { validateCondition } from './conditionValidator'
+import { createError, saveError } from './error'
 
 // 验证单个流程节点
 export function validateNode(node = {}) {
@@ -24,6 +25,14 @@ export function validateNode(node = {}) {
     default:
       return []
   }
+}
+
+const validateFlowNodesRequired = (nodes = []) => {
+  const error = nodes.length === 0
+    ? createError('flowNodes', 'flowNodes', 'FLOW_NODE_REQUIRED', '请至少添加一个流程节点')
+    : null
+
+  return saveError('flowNodes', 'flowNodes', error)
 }
 
 // 验证整个流程设计
@@ -48,6 +57,11 @@ export function validateFlowDesign(flowData = {}) {
         node.branches?.forEach((branch) => validateNodes(branch.nodes))
       }
     })
+  }
+
+  const flowNodeError = validateFlowNodesRequired(flowData.nodes)
+  if (flowNodeError) {
+    errors.push(flowNodeError)
   }
 
   if (flowData.initiator) {
