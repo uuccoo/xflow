@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { computed, ref, onBeforeMount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
@@ -59,7 +59,8 @@ const submitting = ref(false);
 const formRef = ref(null);
 
 // 表单填写状态（状态、provide 注入均由 composable 处理）
-const { formValues, validateForm, initFormValues } = useFormFill();
+const formItems = computed(() => formFillData.value?.formItems || []);
+const { formValues, validateForm } = useFormFill(formItems);
 
 // 获取表单详情
 const loadForm = async () => {
@@ -85,8 +86,6 @@ const loadForm = async () => {
         if (fillData) {
             formFillData.value = fillData;
             formName.value = fillData.formName || '表单填写';
-            // 初始化表单字段和默认值
-            initFormValues(fillData.formItems);
         } else {
             ElMessage.error('表单数据获取失败');
         }
@@ -111,7 +110,7 @@ const goToInitiateApproval = () => {
 // 提交表单
 const submitForm = async () => {
     // 表单验证
-    if (!validateForm(formFillData.value?.formItems)) {
+    if (!validateForm()) {
         return;
     }
 
