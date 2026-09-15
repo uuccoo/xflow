@@ -117,6 +117,7 @@ const currentField = computed(() => fieldComponents[props.component.type] || Tex
 <style scoped lang="scss">
 .form-item {
   width: 100%;
+  pointer-events: none;
 }
 
 .form-item-wrapper {

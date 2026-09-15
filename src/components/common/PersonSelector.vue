@@ -1,6 +1,6 @@
 <template>
     <!-- 人员选择弹窗 -->
-    <el-dialog v-model="visible" :title="title" width="600" :close-on-click-modal="false" align-center
+    <el-dialog v-model="visible" :title="title" width="600" :close-on-click-modal="false" align-center append-to-body
         @closed="handleDialogClosed">
         <div class="person-selector-container" v-loading="loading">
             <!-- 显示加载错误提示 -->
