@@ -1,8 +1,9 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <div v-if="isAmPmDateType" class="date-ampm">
       <el-date-picker
@@ -44,10 +45,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
@@ -78,6 +75,23 @@ const dateConfig = computed(() => {
 })
 
 const isAmPmDateType = computed(() => props.component?.dateType === 'datetimeAmPm')
+
+const validateDateRequired = (value) => {
+  if (!props.component.required) return { valid: true, message: null }
+
+  const dateValue = isAmPmDateType.value ? value?.date : value
+  return dateValue
+    ? { valid: true, message: null }
+    : { valid: false, message: `${props.component.label || '字段'} 为必填项` }
+}
+
+const rules = computed(() => [{
+  trigger: ['blur', 'change'],
+  validator(_, value, callback) {
+    const result = validateDateRequired(value)
+    callback(result.valid ? undefined : new Error(result.message))
+  },
+}])
 
 const initDefaultValue = () => {
   if (!isAmPmDateType.value) return

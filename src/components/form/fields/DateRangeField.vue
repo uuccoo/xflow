@@ -1,8 +1,9 @@
 <template>
   <el-form-item
+    :prop="startProp"
+    :rules="rules.start"
     :label="component.startLabel || '开始时间'"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <div v-if="isAmPmDateType" class="date-range-ampm">
       <el-date-picker
@@ -36,6 +37,8 @@
   </el-form-item>
 
   <el-form-item
+    :prop="endProp"
+    :rules="rules.end"
     :class="{ 'is-readonly-range-end': readonly }"
     :label="component.endLabel || '结束时间'"
     :required="component.required"
@@ -80,10 +83,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
@@ -110,6 +109,49 @@ const dateTypeMap = {
 
 const dateConfig = computed(() => dateTypeMap[props.component?.dateType] || dateTypeMap.date)
 const isAmPmDateType = computed(() => props.component?.dateType === 'datetimeAmPm')
+const startProp = computed(() => (
+  isAmPmDateType.value
+    ? `${props.component.id}.startDate.date`
+    : `${props.component.id}.startDate`
+))
+const endProp = computed(() => (
+  isAmPmDateType.value
+    ? `${props.component.id}.endDate.date`
+    : `${props.component.id}.endDate`
+))
+
+const validateDateRangePart = (component, value, label) => {
+  if (!component.required || (typeof value === 'string' ? value.trim() : value)) {
+    return { valid: true, message: null }
+  }
+
+  return { valid: false, message: `${label || '日期'} 为必填项` }
+}
+
+const rules = computed(() => ({
+  start: [{
+    trigger: ['blur', 'change'],
+    validator(_, value, callback) {
+      const result = validateDateRangePart(
+        props.component,
+        value,
+        props.component.startLabel || '开始时间',
+      )
+      callback(result.valid ? undefined : new Error(result.message))
+    },
+  }],
+  end: [{
+    trigger: ['blur', 'change'],
+    validator(_, value, callback) {
+      const result = validateDateRangePart(
+        props.component,
+        value,
+        props.component.endLabel || '结束时间',
+      )
+      callback(result.valid ? undefined : new Error(result.message))
+    },
+  }],
+}))
 
 const initDefaultValue = () => {
   const defaultValue = props.component.defaultValue

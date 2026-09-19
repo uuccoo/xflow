@@ -1,8 +1,9 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <el-upload
       class="upload-field-wrapper"
@@ -45,15 +46,27 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
   },
 })
+
+const validateRequired = (component, value) => {
+  if (!component.required || (Array.isArray(value) && value.length > 0)) {
+    return { valid: true, message: null }
+  }
+
+  return { valid: false, message: `${component.label || '字段'} 为必填项` }
+}
+
+const rules = computed(() => [{
+  trigger: ['blur', 'change'],
+  validator(_, value, callback) {
+    const result = validateRequired(props.component, value)
+    callback(result.valid ? undefined : new Error(result.message))
+  },
+}])
 
 const fileList = computed({
   get: () => props.component.defaultValue || [],
