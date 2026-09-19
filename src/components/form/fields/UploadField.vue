@@ -1,5 +1,6 @@
 <template>
   <el-form-item
+    ref="formItemRef"
     :prop="component.id"
     :rules="rules"
     :label="component.label"
@@ -33,7 +34,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { uploadApi } from '@/api'
@@ -51,6 +52,8 @@ const props = defineProps({
     default: false,
   },
 })
+
+const formItemRef = ref(null)
 
 const validateRequired = (component, value) => {
   if (!component.required || (Array.isArray(value) && value.length > 0)) {
@@ -97,11 +100,14 @@ const mapToUploadFile = (file) => {
 const displayFileList = ref(fileList.value.map(mapToUploadFile))
 
 // ========== 从 uploadFiles 反向同步到 fileList ==========
-const syncFileList = (uploadFiles) => {
+const syncFileList = async (uploadFiles) => {
   const files = uploadFiles
     .filter((f) => f.status === 'success')
     .map((f) => f.response)
   fileList.value = files
+
+  await nextTick()
+  await formItemRef.value?.validate('change').catch(() => {})
 }
 
 // ========== 上传前校验 ==========
@@ -142,16 +148,16 @@ const handleHttpUpload = async (options) => {
 }
 
 // ========== 上传成功回调 ==========
-const handleUploadSuccess = (response, uploadFile, uploadFiles) => {
+const handleUploadSuccess = async (response, uploadFile, uploadFiles) => {
   // 将后端返回的 url 转为完整地址，用于显示和预览
   uploadFile.url = getFileUrl(response.url)
   // 同步到 fileList
-  syncFileList(uploadFiles)
+  await syncFileList(uploadFiles)
 }
 
 // ========== 删除 ==========
-const handleFileRemove = (uploadFile, uploadFiles) => {
-  syncFileList(uploadFiles)
+const handleFileRemove = async (uploadFile, uploadFiles) => {
+  await syncFileList(uploadFiles)
 }
 </script>
 
