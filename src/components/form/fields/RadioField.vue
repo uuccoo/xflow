@@ -7,7 +7,7 @@
   >
     <el-select
       v-if="!component.optionTile"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || '请选择' + component.label"
       style="width: 100%"
       :disabled="readonly"
@@ -22,7 +22,7 @@
     <el-radio-group
       v-else
       class="vertical-option-group"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :disabled="readonly"
     >
       <el-radio
@@ -50,6 +50,8 @@ const { component, readonly } = defineProps({
     default: false,
   },
 })
+
+const componentValue = defineModel()
 
 const options = computed(() => component.options || [])
 const rules = computed(() => [{

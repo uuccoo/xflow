@@ -6,7 +6,7 @@
     :required="component.required"
   >
     <el-input-number
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || '请输入数字'"
       :precision="component.precision"
       :disabled="readonly"
@@ -22,6 +22,8 @@ const { component, readonly } = defineProps({
   component: { type: Object, required: true },
   readonly: { type: Boolean, default: false },
 })
+
+const componentValue = defineModel()
 
 const rules = computed(() => [{
   required: component.required,

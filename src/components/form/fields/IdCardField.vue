@@ -6,7 +6,7 @@
     :required="component.required"
   >
     <el-input
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder"
       style="width: 100%"
       :disabled="readonly"
@@ -27,6 +27,8 @@ const props = defineProps({
     default: false,
   },
 })
+
+const componentValue = defineModel()
 
 const createValidationResult = (valid, message = null) => ({ valid, message })
 

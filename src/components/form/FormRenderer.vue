@@ -9,6 +9,7 @@
           v-for="element in component.children || []"
           :key="element.id"
           :component="element"
+          :form-values="formValues"
         />
       </div>
     </div>
@@ -16,6 +17,7 @@
       :is="currentField"
       v-else
       :component="component"
+      v-model="formValues[component.id]"
     />
   </div>
 </template>
@@ -58,6 +60,10 @@ const viewMode = inject('viewMode', 'pc');
 
 const props = defineProps({
   component: {
+    type: Object,
+    required: true
+  },
+  formValues: {
     type: Object,
     required: true
   }

@@ -57,6 +57,8 @@ const props = defineProps({
   },
 })
 
+const componentValue = defineModel()
+
 const formItemRef = ref(null)
 
 const validateRequired = (component, value) => {
@@ -76,9 +78,9 @@ const rules = computed(() => [{
 }])
 
 const fileList = computed({
-  get: () => props.component.defaultValue || [],
+  get: () => componentValue.value || [],
   set: (value) => {
-    props.component.defaultValue = value
+    componentValue.value = value
   },
 })
 

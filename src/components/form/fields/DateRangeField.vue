@@ -7,7 +7,7 @@
   >
     <div v-if="isAmPmDateType" class="date-range-ampm">
       <el-date-picker
-        v-model="component.defaultValue.startDate.date"
+        v-model="componentValue.startDate.date"
         :placeholder="component.placeholder || '请选择'"
         type="date"
         format="YYYY-MM-DD"
@@ -17,7 +17,7 @@
       />
       <el-select
         class="date-range-ampm-select"
-        v-model="component.defaultValue.startDate.meridiem"
+        v-model="componentValue.startDate.meridiem"
         :disabled="readonly"
       >
         <el-option label="上午" value="am"></el-option>
@@ -26,7 +26,7 @@
     </div>
     <el-date-picker
       v-else
-      v-model="component.defaultValue.startDate"
+      v-model="componentValue.startDate"
       :placeholder="component.placeholder || '请选择'"
       :type="dateConfig.type"
       :format="dateConfig.format"
@@ -45,7 +45,7 @@
   >
     <div v-if="isAmPmDateType" class="date-range-ampm">
       <el-date-picker
-        v-model="component.defaultValue.endDate.date"
+        v-model="componentValue.endDate.date"
         :placeholder="component.placeholder || '请选择'"
         type="date"
         format="YYYY-MM-DD"
@@ -55,7 +55,7 @@
       />
       <el-select
         class="date-range-ampm-select"
-        v-model="component.defaultValue.endDate.meridiem"
+        v-model="componentValue.endDate.meridiem"
         :disabled="readonly"
       >
         <el-option label="上午" value="am"></el-option>
@@ -64,7 +64,7 @@
     </div>
     <el-date-picker
       v-else
-      v-model="component.defaultValue.endDate"
+      v-model="componentValue.endDate"
       :placeholder="component.placeholder || '请选择'"
       :type="dateConfig.type"
       :format="dateConfig.format"
@@ -88,6 +88,8 @@ const props = defineProps({
     default: false,
   },
 })
+
+const componentValue = defineModel()
 
 const dateTypeMap = {
   date: {
@@ -154,9 +156,9 @@ const rules = computed(() => ({
 }))
 
 const initDefaultValue = () => {
-  const defaultValue = props.component.defaultValue
+  const defaultValue = componentValue.value
 
-  props.component.defaultValue = isAmPmDateType.value
+  componentValue.value = isAmPmDateType.value
     ? {
         startDate: {
           date: defaultValue?.startDate?.date || '',
@@ -177,7 +179,7 @@ watch(
   () => props.component.dateType,
   () => {
     // 当日期类型变化时，重置默认值并初始化
-    props.component.defaultValue = {}
+    componentValue.value = {}
     initDefaultValue()
   }
 )

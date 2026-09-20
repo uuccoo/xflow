@@ -5,6 +5,8 @@
 </template>
 
 <script setup>
+defineModel()
+
 defineProps({
   component: { type: Object, required: true },
 })

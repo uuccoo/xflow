@@ -8,7 +8,7 @@
     <el-input
       type="textarea"
       :rows="3"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || `请输入${component.label}`"
       :disabled="readonly"
     />
@@ -22,6 +22,8 @@ const { component, readonly } = defineProps({
   component: { type: Object, required: true },
   readonly: { type: Boolean, default: false },
 })
+
+const componentValue = defineModel()
 
 const rules = computed(() => [{
   required: component.required,

@@ -31,7 +31,7 @@
       <component
         :is="currentField"
         :component="component"
-        :model-value="component.defaultValue"
+        v-model="component.defaultValue"
         readonly
       />
     </div>

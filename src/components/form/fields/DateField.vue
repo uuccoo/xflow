@@ -7,7 +7,7 @@
   >
     <div v-if="isAmPmDateType" class="date-ampm">
       <el-date-picker
-        v-model="component.defaultValue.date"
+        v-model="componentValue.date"
         :placeholder="component.placeholder || ''"
         type="date"
         format="YYYY-MM-DD"
@@ -17,7 +17,7 @@
       />
       <el-select
         class="date-ampm-select"
-        v-model="component.defaultValue.meridiem"
+        v-model="componentValue.meridiem"
         :disabled="readonly"
       >
         <el-option label="上午" value="am"></el-option>
@@ -26,7 +26,7 @@
     </div>
     <el-date-picker
       v-else
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || ''"
       :type="dateConfig.type"
       :format="dateConfig.format"
@@ -50,6 +50,8 @@ const props = defineProps({
     default: false,
   },
 })
+
+const componentValue = defineModel()
 
 const dateTypeMap = {
   date: {
@@ -96,9 +98,9 @@ const rules = computed(() => [{
 const initDefaultValue = () => {
   if (!isAmPmDateType.value) return
 
-  const defaultValue = props.component.defaultValue
+  const defaultValue = componentValue.value
 
-  props.component.defaultValue = {
+  componentValue.value = {
     date: defaultValue?.date || '',
     meridiem: defaultValue?.meridiem || 'am',
   }
@@ -108,7 +110,7 @@ watch(
   () => props.component.dateType,
   () => {
     // 当日期类型变化时，重置默认值并初始化
-    props.component.defaultValue = undefined
+    componentValue.value = undefined
     initDefaultValue()
   }
 )

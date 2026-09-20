@@ -17,7 +17,12 @@
                 <!-- 表单填写部分 -->
                 <div class="form-content">
                     <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
-                        <form-renderer v-for="item in formItems" :key="item.id" :component="item" />
+                        <form-renderer
+                            v-for="item in formItems"
+                            :key="item.id"
+                            :component="item"
+                            :form-values="formValues"
+                        />
                     </el-form>
                 </div>
 
@@ -32,13 +37,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
 import { useFormDesignStore } from '@/stores/formDesignStore';
-import { flattenFormItems } from '@/utils/formItems';
+import { buildDefaultFormValues } from '@/utils/formItems';
 
 // 定义emits
 const emit = defineEmits(['close-preview']);
@@ -49,19 +54,9 @@ const formDesignStore = useFormDesignStore();
 // 深拷贝表单项，避免直接修改 store 中的数据
 const formItems = ref(JSON.parse(JSON.stringify(formDesignStore.formItems)));
 
-// 构造 el-form 使用的表单模型
+// 预览使用独立的运行时表单模型，避免修改设计器中的默认值
 const formRef = ref(null);
-const formValues = computed(() => {
-    const values = {};
-
-    for (const item of flattenFormItems(formItems.value)) {
-        if (item?.id) {
-            values[item.id] = item.defaultValue;
-        }
-    }
-
-    return values;
-});
+const formValues = reactive(buildDefaultFormValues(formItems.value));
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');

@@ -6,14 +6,14 @@
     :required="component.required"
   >
     <el-input
-      v-model="component.defaultValue.number"
+      v-model="componentValue.number"
       :placeholder="component.placeholder"
       style="width: 100%"
       :disabled="readonly"
     >
       <template #prepend>
         <el-select
-          v-model="component.defaultValue.areaCode"
+          v-model="componentValue.areaCode"
           style="width: 100px"
           :disabled="readonly"
         >
@@ -54,6 +54,8 @@ const props = defineProps({
   },
 })
 
+const componentValue = defineModel()
+
 const createValidationResult = (valid, message = null) => ({ valid, message })
 
 const validateRequired = (component, value) => {
@@ -92,9 +94,9 @@ const rules = computed(() => [
 ])
 
 const initDefaultValue = () => {
-  const defaultValue = props.component.defaultValue
+  const defaultValue = componentValue.value
 
-  props.component.defaultValue = {
+  componentValue.value = {
     number: defaultValue?.number || '',
     areaCode: defaultValue?.areaCode || '+86',
   }
