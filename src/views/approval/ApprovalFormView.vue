@@ -20,7 +20,12 @@
                 <!-- 表单填写部分 -->
                 <div class="form-content">
                     <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
-                        <form-renderer v-for="item in formFillData.formItems" :key="item.id" :component="item" />
+                        <form-renderer
+                            v-for="item in formItems"
+                            :key="item.id"
+                            :component="item"
+                            :form-values="formValues"
+                        />
                     </el-form>
                 </div>
 
@@ -46,7 +51,7 @@ import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import { formApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
-import { useFormFill } from '@/composables/useFormFill';
+import { buildDefaultFormValues } from '@/utils/formItems';
 
 const route = useRoute();
 const router = useRouter();
@@ -58,9 +63,9 @@ const loading = ref(true);
 const submitting = ref(false);
 const formRef = ref(null);
 
-// 表单填写状态（状态、provide 注入均由 composable 处理）
+// 表单项配置和运行时填写值
 const formItems = computed(() => formFillData.value?.formItems || []);
-const { formValues, validateForm } = useFormFill(formItems);
+const formValues = ref({});
 
 // 获取表单详情
 const loadForm = async () => {
@@ -86,6 +91,7 @@ const loadForm = async () => {
         if (fillData) {
             formFillData.value = fillData;
             formName.value = fillData.formName || '表单填写';
+            formValues.value = buildDefaultFormValues(formItems.value);
         } else {
             ElMessage.error('表单数据获取失败');
         }
@@ -110,7 +116,8 @@ const goToInitiateApproval = () => {
 // 提交表单
 const submitForm = async () => {
     // 表单验证
-    if (!validateForm()) {
+    const valid = await formRef.value?.validate().catch(() => false);
+    if (!valid) {
         return;
     }
 
