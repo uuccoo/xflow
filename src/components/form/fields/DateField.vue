@@ -1,12 +1,13 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <div v-if="isAmPmDateType" class="date-ampm">
       <el-date-picker
-        v-model="component.defaultValue.date"
+        v-model="componentValue.date"
         :placeholder="component.placeholder || ''"
         type="date"
         format="YYYY-MM-DD"
@@ -16,7 +17,7 @@
       />
       <el-select
         class="date-ampm-select"
-        v-model="component.defaultValue.meridiem"
+        v-model="componentValue.meridiem"
         :disabled="readonly"
       >
         <el-option label="上午" value="am"></el-option>
@@ -25,7 +26,7 @@
     </div>
     <el-date-picker
       v-else
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || ''"
       :type="dateConfig.type"
       :format="dateConfig.format"
@@ -44,15 +45,13 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
   },
 })
+
+const componentValue = defineModel()
 
 const dateTypeMap = {
   date: {
@@ -79,12 +78,29 @@ const dateConfig = computed(() => {
 
 const isAmPmDateType = computed(() => props.component?.dateType === 'datetimeAmPm')
 
+const validateDateRequired = (value) => {
+  if (!props.component.required) return { valid: true, message: null }
+
+  const dateValue = isAmPmDateType.value ? value?.date : value
+  return dateValue
+    ? { valid: true, message: null }
+    : { valid: false, message: `${props.component.label || '字段'} 为必填项` }
+}
+
+const rules = computed(() => [{
+  trigger: ['blur', 'change'],
+  validator(_, value, callback) {
+    const result = validateDateRequired(value)
+    callback(result.valid ? undefined : new Error(result.message))
+  },
+}])
+
 const initDefaultValue = () => {
   if (!isAmPmDateType.value) return
 
-  const defaultValue = props.component.defaultValue
+  const defaultValue = componentValue.value
 
-  props.component.defaultValue = {
+  componentValue.value = {
     date: defaultValue?.date || '',
     meridiem: defaultValue?.meridiem || 'am',
   }
@@ -94,7 +110,7 @@ watch(
   () => props.component.dateType,
   () => {
     // 当日期类型变化时，重置默认值并初始化
-    props.component.defaultValue = undefined
+    componentValue.value = undefined
     initDefaultValue()
   }
 )

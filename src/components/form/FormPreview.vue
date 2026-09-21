@@ -16,8 +16,13 @@
 
                 <!-- 表单填写部分 -->
                 <div class="form-content">
-                    <el-form :model="formValues" label-position="top" class="custom-form">
-                        <form-renderer v-for="item in formItems" :key="item.id" :component="item" />
+                    <el-form ref="formRef" :model="formValues" label-position="top" class="custom-form">
+                        <form-renderer
+                            v-for="item in formItems"
+                            :key="item.id"
+                            :component="item"
+                            :form-values="formValues"
+                        />
                     </el-form>
                 </div>
 
@@ -32,13 +37,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
 import FormRenderer from '@/components/form/FormRenderer.vue';
 import { useBasicSettingsStore } from '@/stores/basicSettingsStore';
 import { useFormDesignStore } from '@/stores/formDesignStore';
-import { useFormFill } from '@/composables/useFormFill';
+import { buildDefaultFormValues } from '@/utils/formItems';
 
 // 定义emits
 const emit = defineEmits(['close-preview']);
@@ -49,8 +54,9 @@ const formDesignStore = useFormDesignStore();
 // 深拷贝表单项，避免直接修改 store 中的数据
 const formItems = ref(JSON.parse(JSON.stringify(formDesignStore.formItems)));
 
-// 表单状态（状态、provide 注入均由 composable 处理）
-const { formValues, validateForm } = useFormFill(formItems);
+// 预览使用独立的运行时表单模型，避免修改设计器中的默认值
+const formRef = ref(null);
+const formValues = reactive(buildDefaultFormValues(formItems.value));
 
 // 从 store 读取表单标题
 const formTitle = computed(() => basicSettingsStore.basicSettings.formName || '表单预览');
@@ -62,8 +68,8 @@ const goBack = () => {
 
 // 提交表单
 const submitForm = async () => {
-    // 表单验证
-    if (!validateForm()) {
+    const valid = await formRef.value?.validate().catch(() => false)
+    if (!valid) {
         return;
     }
     ElMessage({

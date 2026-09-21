@@ -5,7 +5,7 @@ import { CircleCheck, EditPen, Promotion, Share, UserFilled, Connection } from '
 export const flowNodeOptions = [
   { type: FlowNodeType.INITIATE, label: '发起人', icon: UserFilled, color: '#409eff', headerBg: '#ecf5ff' },
   { type: FlowNodeType.APPROVE, label: '审批人', icon: CircleCheck, color: '#67c23a', headerBg: '#f0f9eb' },
-  { type: FlowNodeType.CC, label: '抄送人', icon: Promotion, color: '#409eff', headerBg: '#ecf5ff' },
+  { type: FlowNodeType.CC, label: '抄送人', icon: Promotion, color: '#8764B8', headerBg: '#f3eef8' },
   { type: FlowNodeType.HANDLE, label: '办理', icon: EditPen, color: '#e6a23c', headerBg: '#fdf6ec' },
   {
     type: FlowNodeType.CONDITION,
@@ -18,8 +18,8 @@ export const flowNodeOptions = [
     type: FlowNodeType.INCLUSIVE,
     label: '包容分支',
     icon: Connection,
-    color: '#0ea5e9',
-    headerBg: '#f0f9ff',
+    color: '#00B7C3',
+    headerBg: '#e6f8fa',
   },
 ]
 

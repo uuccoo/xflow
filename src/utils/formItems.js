@@ -65,7 +65,7 @@ export const buildDefaultFormValues = (items = []) => {
   const flatItems = flattenFormItems(items)
 
   for (const item of flatItems) {
-    if (item?.id && item.defaultValue !== undefined) {
+    if (item?.id) {
       defaultValues[item.id] = item.defaultValue
     }
   }

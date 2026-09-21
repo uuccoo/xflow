@@ -9,6 +9,7 @@
           v-for="element in component.children || []"
           :key="element.id"
           :component="element"
+          :form-values="formValues"
         />
       </div>
     </div>
@@ -16,14 +17,13 @@
       :is="currentField"
       v-else
       :component="component"
-      :error="validationErrors[component.id]"
-      @update:error="handleFieldErrorChange"
+      v-model="formValues[component.id]"
     />
   </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, inject, watch } from 'vue';
+import { computed, defineAsyncComponent, inject } from 'vue';
 import { FormComponentType } from '@/enums';
 import InputField from './fields/InputField.vue'
 import TextareaField from './fields/TextareaField.vue'
@@ -37,7 +37,6 @@ import ImageField from './fields/ImageField.vue'
 import UploadField from './fields/UploadField.vue'
 import RadioField from './fields/RadioField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
-import { validateRequired } from '@/validation/formRuntimeValidator'
 
 const fieldComponents = {
   [FormComponentType.INPUT]: InputField,
@@ -57,35 +56,20 @@ const fieldComponents = {
 // 自引用组件（递归组件）
 const FormRenderer = defineAsyncComponent(() => import('./FormRenderer.vue'));
 
-// 通过 inject 从祖先组件（FormPreview）获取共享数据和事件处理函数
-const validationErrors = inject('validationErrors', {});
 const viewMode = inject('viewMode', 'pc');
-const updateError = inject('updateError');
 
 const props = defineProps({
   component: {
     type: Object,
     required: true
+  },
+  formValues: {
+    type: Object,
+    required: true
   }
 });
 
-watch(
-  () => props.component.defaultValue,
-  (value) => {
-    if (props.component.id) {
-      const error = validateRequired(props.component, value)
-      updateError(props.component.id, error)
-    }
-  },
-  { deep: true }
-)
-
 const currentField = computed(() => fieldComponents[props.component.type] || TextField)
-
-const handleFieldErrorChange = (error) => {
-  if (!props.component.id) return
-  updateError(props.component.id, error)
-};
 
 // 根据布局值计算列数和列宽比例
 const getGridTemplateColumns = (layoutValue) => {

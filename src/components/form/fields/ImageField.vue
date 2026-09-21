@@ -1,8 +1,10 @@
 <template>
   <el-form-item
+    ref="formItemRef"
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <el-upload
       class="avatar-uploader"
@@ -37,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { uploadApi } from '@/api'
@@ -49,20 +51,36 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
   },
 })
 
+const componentValue = defineModel()
+
+const formItemRef = ref(null)
+
+const validateRequired = (component, value) => {
+  if (!component.required || (Array.isArray(value) && value.length > 0)) {
+    return { valid: true, message: null }
+  }
+
+  return { valid: false, message: `${component.label || '字段'} 为必填项` }
+}
+
+const rules = computed(() => [{
+  trigger: ['blur', 'change'],
+  validator(_, value, callback) {
+    const result = validateRequired(props.component, value)
+    callback(result.valid ? undefined : new Error(result.message))
+  },
+}])
+
 const fileList = computed({
-  get: () => props.component.defaultValue || [],
+  get: () => componentValue.value || [],
   set: (value) => {
-    props.component.defaultValue = value
+    componentValue.value = value
   },
 })
 
@@ -85,11 +103,14 @@ const mapToUploadFile = (file) => {
 const displayFileList = ref(fileList.value.map(mapToUploadFile))
 
 // ========== 从 uploadFiles 反向同步到 fileList ==========
-const syncFileList = (uploadFiles) => {
+const syncFileList = async (uploadFiles) => {
   const files = uploadFiles
     .filter((f) => f.status === 'success')
     .map((f) => f.response)
   fileList.value = files
+
+  await nextTick()
+  await formItemRef.value?.validate('change').catch(() => {})
 }
 
 // ========== 预览 ==========
@@ -146,13 +167,13 @@ const handleHttpUpload = async (options) => {
 }
 
 // ========== 上传成功回调 ==========
-const handleUploadSuccess = (response, uploadFile, uploadFiles) => {
+const handleUploadSuccess = async (response, uploadFile, uploadFiles) => {
   // 同步到 fileList
-  syncFileList(uploadFiles)
+  await syncFileList(uploadFiles)
 }
 
 // ========== 用户手动删除列表中的图 ==========
-const handleFileRemove = (uploadFile, uploadFiles) => {
-  syncFileList(uploadFiles)
+const handleFileRemove = async (uploadFile, uploadFiles) => {
+  await syncFileList(uploadFiles)
 }
 </script>

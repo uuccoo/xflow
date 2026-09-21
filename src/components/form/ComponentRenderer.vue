@@ -31,7 +31,7 @@
       <component
         :is="currentField"
         :component="component"
-        :model-value="component.defaultValue"
+        v-model="component.defaultValue"
         readonly
       />
     </div>
@@ -117,6 +117,7 @@ const currentField = computed(() => fieldComponents[props.component.type] || Tex
 <style scoped lang="scss">
 .form-item {
   width: 100%;
+  pointer-events: none;
 }
 
 .form-item-wrapper {

@@ -1,12 +1,13 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <el-select
       v-if="!component.optionTile"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || '请选择' + component.label"
       style="width: 100%"
       :disabled="readonly"
@@ -21,7 +22,7 @@
     <el-radio-group
       v-else
       class="vertical-option-group"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :disabled="readonly"
     >
       <el-radio
@@ -38,14 +39,11 @@
 
 <script setup>
 import { computed } from 'vue'
-const props = defineProps({
+
+const { component, readonly } = defineProps({
   component: {
     type: Object,
     required: true,
-  },
-  error: {
-    type: Object,
-    default: null,
   },
   readonly: {
     type: Boolean,
@@ -53,7 +51,14 @@ const props = defineProps({
   },
 })
 
-const options = computed(() => props.component.options || [])
+const componentValue = defineModel()
+
+const options = computed(() => component.options || [])
+const rules = computed(() => [{
+  required: component.required,
+  message: `${component.label || '字段'} 为必填项`,
+  trigger: ['blur', 'change'],
+}])
 </script>
 
 <style scoped>

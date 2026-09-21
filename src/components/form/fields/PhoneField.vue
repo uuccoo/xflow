@@ -1,19 +1,19 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <el-input
-      v-model="component.defaultValue.number"
+      v-model="componentValue.number"
       :placeholder="component.placeholder"
       style="width: 100%"
-      @blur="onNumberBlur"
       :disabled="readonly"
     >
       <template #prepend>
         <el-select
-          v-model="component.defaultValue.areaCode"
+          v-model="componentValue.areaCode"
           style="width: 100px"
           :disabled="readonly"
         >
@@ -30,8 +30,7 @@
 </template>
 
 <script setup>
-import { onBeforeMount } from 'vue'
-import { validatePhone } from '@/validation/formRuntimeValidator'
+import { computed, onBeforeMount } from 'vue'
 
 const PHONE_AREA_CODES = [
   // 中国大陆
@@ -49,22 +48,55 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  error: {
-    type: Object,
-    default: null,
-  },
   readonly: {
     type: Boolean,
     default: false,
   },
 })
 
-const emit = defineEmits(['update:error'])
+const componentValue = defineModel()
+
+const createValidationResult = (valid, message = null) => ({ valid, message })
+
+const validateRequired = (component, value) => {
+  if (!component.required || (value?.number && value.number.trim())) {
+    return createValidationResult(true)
+  }
+
+  return createValidationResult(false, `${component.label || '字段'} 为必填项`)
+}
+
+const validatePhone = (value) => {
+  if (!value?.number || value.areaCode !== '+86') {
+    return createValidationResult(true)
+  }
+
+  return /^1[3-9]\d{9}$/.test(value.number)
+    ? createValidationResult(true)
+    : createValidationResult(false, '手机号格式不正确')
+}
+
+const rules = computed(() => [
+  {
+    trigger: ['blur', 'change'],
+    validator(_, value, callback) {
+      const result = validateRequired(props.component, value)
+      callback(result.valid ? undefined : new Error(result.message))
+    },
+  },
+  {
+    trigger: 'blur',
+    validator(_, value, callback) {
+      const result = validatePhone(value)
+      callback(result.valid ? undefined : new Error(result.message))
+    },
+  },
+])
 
 const initDefaultValue = () => {
-  const defaultValue = props.component.defaultValue
+  const defaultValue = componentValue.value
 
-  props.component.defaultValue = {
+  componentValue.value = {
     number: defaultValue?.number || '',
     areaCode: defaultValue?.areaCode || '+86',
   }
@@ -74,8 +106,4 @@ onBeforeMount(() => {
   initDefaultValue()
 })
 
-const onNumberBlur = () => {
-  const error = validatePhone(props.component, props.component.defaultValue)
-  emit('update:error', error)
-}
 </script>

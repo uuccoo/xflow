@@ -76,6 +76,14 @@ const validateEndLabel = (component) => {
   saveError(component.id, field, error)
 }
 
+const validateFormItemsRequired = (components) => {
+  const error = components.length === 0
+    ? createError('formItems', 'formItems', 'FORM_ITEM_REQUIRED', '请至少添加一个表单项')
+    : null
+
+  return saveError('formItems', 'formItems', error)
+}
+
 export const validateFormComponent = (component) => {
   if (!component?.id) {
     return
@@ -104,6 +112,9 @@ export const validateFormDesign = (formItems = []) => {
   const formStore = useFormDesignStore()
   formStore.errors = {}
 
-  flattenFormItems(formItems).forEach(validateFormComponent)
+  const components = flattenFormItems(formItems)
+  validateFormItemsRequired(components)
+
+  components.forEach(validateFormComponent)
   return Object.values(formStore.errors)
 }

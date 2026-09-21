@@ -1,13 +1,14 @@
 <template>
   <el-form-item
+    :prop="component.id"
+    :rules="rules"
     :label="component.label"
     :required="component.required"
-    :error="error?.message || ''"
   >
     <el-input
       type="textarea"
       :rows="3"
-      v-model="component.defaultValue"
+      v-model="componentValue"
       :placeholder="component.placeholder || `请输入${component.label}`"
       :disabled="readonly"
     />
@@ -15,10 +16,18 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const { component, readonly } = defineProps({
   component: { type: Object, required: true },
-  error: { type: Object, default: null },
   readonly: { type: Boolean, default: false },
 })
 
+const componentValue = defineModel()
+
+const rules = computed(() => [{
+  required: component.required,
+  message: `${component.label || '字段'} 为必填项`,
+  trigger: ['blur', 'change'],
+}])
 </script>
