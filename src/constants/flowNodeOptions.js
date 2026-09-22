@@ -16,7 +16,7 @@ export const flowNodeOptions = [
   },
   {
     type: FlowNodeType.INCLUSIVE,
-    label: '包容分支',
+    label: '并行分支',
     icon: Connection,
     color: '#00B7C3',
     headerBg: '#e6f8fa',

@@ -741,7 +741,6 @@ onMounted(() => {
 .list-item {
   display: flex;
   padding: 15px;
-  border-top: 1px solid #e0e0e0;
   transition: background 0.2s;
   font-size: 14px;
   align-items: center;

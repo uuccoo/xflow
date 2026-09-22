@@ -116,7 +116,7 @@ const getNodeConfigs = () => ({
   [FlowNodeType.INCLUSIVE]: {
     id: generatePrefixedId('node'),
     type: FlowNodeType.INCLUSIVE,
-    name: '包容分支',
+    name: '并行分支',
     props: {},
     branches: [
       getInclusiveBranch(1),
@@ -146,7 +146,7 @@ export const getConditionBranch = (sequence, isDefault = false) => ({
 export const getInclusiveBranch = (sequence, isDefault = false) => ({
   id: generatePrefixedId('branch'),
   type: FlowNodeType.INCLUSIVE_BRANCH,
-  name: isDefault ? '默认条件' : `包容条件${sequence}`,
+  name: isDefault ? '默认条件' : `并行条件${sequence}`,
   props: {
     conditionGroups: [],
   },
