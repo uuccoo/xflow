@@ -2,7 +2,7 @@
   <div class="home-container">
     <!-- 左侧菜单 -->
     <div class="sidebar">
-      <div class="menu-title">xflow 开源版</div>
+      <div class="menu-title">xflow 工作流</div>
 
       <!-- 常规菜单项 -->
       <ul class="menu-list regular-menu">

@@ -1,6 +1,6 @@
 <template>
   <div class="project-info">
-    <div class="project-name">xflow 流程审批系统</div>
+    <div class="project-name">xflow 工作流</div>
     <a class="project-link" href="https://xflow.uuccoo.com" target="_blank" rel="noopener">
       <el-icon :size="14"><Link /></el-icon>
       <div class="link-text">
