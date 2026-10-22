@@ -1,2 +1,6 @@
 export * from './flowNodeTypeEnum'
 export * from './formComponentTypeEnum'
+export * from './approvalCenterTab'
+export * from './flowNodeStatus'
+export * from './flowNodeOperationType'
+export * from './formInstanceStatus'

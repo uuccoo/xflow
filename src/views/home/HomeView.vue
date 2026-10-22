@@ -11,7 +11,14 @@
           <el-icon class="menu-icon" :size="18">
             <component :is="item.icon" />
           </el-icon>
-          <span>{{ item.name }}</span>
+          <el-badge
+            :value="getMenuBadgeValue(item.route)"
+            :is-dot="menuBadgeIsDot()"
+            :offset="[8, 0]"
+            :max="99"
+            :show-zero="false">
+            <span>{{ item.name }}</span>
+          </el-badge>
         </li>
       </ul>
 
@@ -46,16 +53,21 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { EditPen, Tickets } from '@element-plus/icons-vue';
+import { EditPen, Stamp, Tickets } from '@element-plus/icons-vue';
 import UserInfoPanel from '@/components/common/UserInfoPanel.vue';
 import ProjectInfo from '@/components/common/ProjectInfo.vue';
+import { useApprovalBadgeStore } from '@/stores/approvalBadgeStore';
 
 const router = useRouter();
 const route = useRoute();
 const activeMenu = ref('');
 
+// 审批徽章 store
+const approvalBadgeStore = useApprovalBadgeStore();
+
 const menuItems = [
   { name: '发起审批', route: '/home/initiate', icon: EditPen },
+  { name: '审批中心', route: '/home/approvals', icon: Stamp },
 ];
 
 // 管理相关的菜单项
@@ -63,12 +75,29 @@ const adminMenuItems = [
   { name: '表单管理', route: '/home/manage-forms', icon: Tickets }
 ];
 
+// 获取菜单徽章值
+const getMenuBadgeValue = (routePath) => {
+  if (routePath === '/home/approvals') {
+    return approvalBadgeStore.pendingApprovalCount;
+  }
+  return 0;
+};
+
+// 判断菜单徽章是否显示为小圆点
+// 当待我审批为0且抄送我的不为0时，显示小圆点
+const menuBadgeIsDot = () => {
+  return approvalBadgeStore.pendingApprovalCount === 0 && approvalBadgeStore.ccToMeCount > 0;
+};
+
 onMounted(() => {
   // 根据当前路由设置活动菜单项
   const currentPath = route.path;
   // 检查普通菜单和管理菜单
   const allMenuItems = [...menuItems, ...adminMenuItems];
   activeMenu.value = allMenuItems.find(item => currentPath.startsWith(item.route))?.route || menuItems[0].route;
+
+  // 加载徽章数量
+  approvalBadgeStore.fetchBadgeCounts();
 });
 
 const navigateTo = (route) => {
