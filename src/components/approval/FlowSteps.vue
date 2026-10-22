@@ -148,7 +148,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import { Plus, Loading, InfoFilled } from '@element-plus/icons-vue';
 import { FlowNodeStatus } from '@/enums/flowNodeStatus';
-import { FlowNodeType } from '@/enums/flowNodeTypeEnum';
+import { FlowNodeType } from '@/enums/flowNodeType';
 import { NodeOperationType } from '@/enums/flowNodeOperationType';
 import { flowStepsApi } from '@/api';
 import UserAvatar from '@/components/common/UserAvatar.vue';
