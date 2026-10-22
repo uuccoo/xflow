@@ -75,7 +75,7 @@
 <script setup>
 import { Edit, QuestionFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { useFlowDesignStore } from '@/stores/flowDesignStore'
 import NodeAddButton from '../NodeAddButton.vue'
 import FlowNodeShell from './FlowNodeShell.vue'
@@ -135,24 +135,33 @@ const addBranch = () => {
 }
 
 // 删除分支
-const deleteBranch = (branchIndex) => {
-    if (props.node.branches.length <= 2) {
-        flowStore.deleteNode(props.node, props.index, props.branch);
-        return;
+const deleteBranch = async (branchIndex) => {
+    // 如果是最后一个条件分支，删除时需要删除整个节点
+    const isLastConditionBranch = props.node.branches.length <= 2
+    const branch = props.node.branches[branchIndex]
+
+    try {
+        await ElMessageBox.confirm(
+            isLastConditionBranch
+                ? '删除当前分支和默认分支，是否继续？'
+                : `删除“${branch.name}”分支，是否继续？`,
+            '确认删除分支',
+            {
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+    } catch {
+        return
     }
 
-    // 收集被删除分支中的所有节点，转移到默认分支
-    const orphanedNodes = props.node.branches[branchIndex].nodes;
-    if (orphanedNodes.length > 0) {
-        const defaultIndex = props.node.branches.findIndex(b => b.isDefault);
-        if (defaultIndex !== -1) {
-            props.node.branches[defaultIndex].nodes.push(...orphanedNodes);
-            ElMessage.info('已将分支中的节点转移到默认条件');
-        }
+    if (isLastConditionBranch) {
+        flowStore.deleteNode(props.node, props.index, props.branch)
+        return
     }
 
-    props.node.branches.splice(branchIndex, 1);
-
+    props.node.branches.splice(branchIndex, 1)
 }
 
 // 编辑分支
