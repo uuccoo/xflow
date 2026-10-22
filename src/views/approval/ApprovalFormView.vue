@@ -2,7 +2,9 @@
     <div class="approval-form-bg">
         <!-- 悬浮返回按钮（使用 el-tooltip 显示提示） -->
         <el-tooltip content="返回" placement="top">
-            <el-button :icon="ArrowLeft" class="floating-back-button" size="large" circle @click="goToInitiateApproval" />
+            <div class="floating-back-button" @click="goToInitiateApproval">
+                <el-icon><arrow-left /></el-icon>
+            </div>
         </el-tooltip>
 
         <div v-if="loading" class="loading-container">
@@ -28,6 +30,17 @@
                         />
                     </el-form>
                 </div>
+            </div>
+
+            <!-- 流程步骤区域 -->
+            <div class="flow-process-section">
+                <flow-steps-preview
+                    ref="flowStepsRef"
+                    :form-id="formFillData?.id"
+                    :form-version="formFillData?.formVersion"
+                    :form-values="formValues"
+                    :form-items="formFillData?.formItems || []"
+                />
 
                 <!-- 提交按钮 -->
                 <div class="form-actions">
@@ -45,26 +58,29 @@
 </template>
 
 <script setup>
-import { computed, ref, onBeforeMount } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
 import { ArrowLeft } from '@element-plus/icons-vue';
-import { formApi } from '@/api';
+import { formApi, flowProcessApi } from '@/api';
 import FormRenderer from '@/components/form/FormRenderer.vue';
+import FlowStepsPreview from '@/components/flow/FlowStepsPreview.vue';
 import { buildDefaultFormValues } from '@/utils/formItems';
 
 const route = useRoute();
 const router = useRouter();
 
-// 填写页表单数据（后端 FormFillResp）
+// 表单相关状态
+// 填写页表单数据（后端返回 FormFillResp 的 data 部分）
 const formFillData = ref(null);
+const formItems = ref([]);
 const formName = ref('表单填写');
 const loading = ref(true);
 const submitting = ref(false);
 const formRef = ref(null);
+// 流程步骤组件引用
+const flowStepsRef = ref(null);
 
-// 表单项配置和运行时填写值
-const formItems = computed(() => formFillData.value?.formItems || []);
+// 表单运行时值，与设计时的 defaultValue 分离
 const formValues = ref({});
 
 // 获取表单详情
@@ -90,14 +106,13 @@ const loadForm = async () => {
 
         if (fillData) {
             formFillData.value = fillData;
+            formItems.value = fillData.formItems || [];
             formName.value = fillData.formName || '表单填写';
+            // 加载表单项的默认值
             formValues.value = buildDefaultFormValues(formItems.value);
-        } else {
-            ElMessage.error('表单数据获取失败');
         }
     } catch (error) {
         console.error('加载表单失败:', error);
-        ElMessage.error('加载表单失败: ' + (error.message || '未知错误'));
     } finally {
         loading.value = false;
     }
@@ -121,6 +136,11 @@ const submitForm = async () => {
         return;
     }
 
+    // 验证用户是否已选择所有需要选择的审批人
+    if (!flowStepsRef.value?.validateApproverSelection()) {
+        return;
+    }
+
     submitting.value = true;
 
     try {
@@ -131,18 +151,21 @@ const submitForm = async () => {
             type: 'info'
         });
 
-        // 提交表单数据
-        // 这里需要添加调用提交审批API的代码
-        // 假设API为 submitApproval(formFillData, formValues)
+        // 提交表单数据到接口
+        const submitData = {
+            formId: formFillData.value.id,
+            formVersion: formFillData.value.formVersion,
+            formData: formValues.value,
+            flowStepSelections: flowStepsRef.value?.buildFlowStepSelections()
+        };
 
+        await flowProcessApi.startFlow(submitData);
         ElMessage.success('表单已提交成功');
 
-        // 提交成功后返回到发起审批
-        router.push('/home/initiate');
+        router.push('/home/approvals');
     } catch (error) {
         if (error !== 'cancel') {
             console.error('提交表单失败:', error);
-            ElMessage.error('提交表单失败: ' + (error.message || '未知错误'));
         }
     } finally {
         submitting.value = false;
@@ -150,7 +173,7 @@ const submitForm = async () => {
 };
 
 // 组件挂载时加载表单数据
-onBeforeMount(() => {
+onMounted(() => {
     loadForm();
 });
 </script>
@@ -160,7 +183,7 @@ onBeforeMount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: var(--x-bg-color-page);
+    background-color: #f5f6f6;
     width: 100%;
     min-height: 100vh;
     padding: 20px 0;
@@ -173,8 +196,23 @@ onBeforeMount(() => {
     top: 25px;
     /* 计算位置：(页面宽度 - 表单宽度) / 2 - 按钮宽度 - 间距 */
     left: calc(50% - 400px - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%; /* 圆形按钮 */
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    cursor: pointer;
     z-index: 999; /* 确保按钮在最上层 */
+    color: #606266;
+    transition: all 0.3s ease;
+}
+
+.floating-back-button:hover {
+    color: #409EFF;
+    background-color: #f5f7fa;
 }
 
 .approval-sections {
@@ -184,9 +222,8 @@ onBeforeMount(() => {
     gap: 20px; /* 两个区域之间的间距 */
 }
 
-.form-section {
+.form-section, .flow-process-section {
     background-color: #fff;
-    border: var(--x-border-base);
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     padding: 0 20px;
@@ -223,8 +260,8 @@ onBeforeMount(() => {
 .loading-container,
 .error-container {
     width: 800px;
+    margin-top: 20px;
     background-color: #fff;
-    border: var(--x-border-base);
     border-radius: 8px;
     padding: 40px 20px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);

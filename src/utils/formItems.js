@@ -57,6 +57,30 @@ export const collectRequiredFormItems = (items = []) => {
   return result
 }
 
+const isBlank = (value) => (
+  value === undefined
+  || value === null
+  || (typeof value === 'string' && !value.trim())
+)
+
+export const isRequiredValueEmpty = (component, value) => {
+  if (!component?.required) return false
+
+  if (component.type === FormComponentType.RADIO) {
+    return isBlank(value)
+  }
+
+  if (component.type === FormComponentType.CHECKBOX) {
+    return !Array.isArray(value) || value.length === 0
+  }
+
+  if (component.type === FormComponentType.NUMBER) {
+    return isBlank(value) || Number.isNaN(value)
+  }
+
+  return false
+}
+
 /**
  * 构建默认表单值（结构：{ [id]: defaultValue }）。
  */
