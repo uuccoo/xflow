@@ -16,31 +16,23 @@ const persisted = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEF
 // 用户信息存储（唯一数据源）
 export const useUserStore = defineStore('user', () => {
   // state
-  const id = ref(persisted.id)
-  const username = ref(persisted.username)
-  const realName = ref(persisted.realName)
+  const user = ref(persisted)
   
   const orgId = ref('org01') // 固定组织
 
   // getters
-  const displayName = computed(() => realName.value || username.value || '未登录')
-  const isLoggedIn = computed(() => !!id.value)
+  const displayName = computed(() => user.value.realName || user.value.username || '未登录')
+  const isLoggedIn = computed(() => !!user.value.id)
 
   // actions
   function updateUser(userData) {
     if (!userData) return
 
-    id.value = userData.id || ''
-    username.value = userData.username || ''
-    realName.value = userData.realName || ''
+    user.value = userData
 
     // write-through 持久化
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      id: id.value,
-      username: username.value,
-      realName: realName.value,
-    }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
   }
 
-  return { id, username, realName, orgId, displayName, isLoggedIn, updateUser }
+  return { user, orgId, displayName, isLoggedIn, updateUser }
 })

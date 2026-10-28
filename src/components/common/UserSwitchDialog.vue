@@ -33,7 +33,7 @@
           :aria-pressed="selectedUser?.id === user.id"
           @click="selectedUser = user"
         >
-          <span class="user-avatar">{{ user.name.charAt(0) || 'U' }}</span>
+          <UserAvatar :user="user" :size="36" :show-name="false" layout="horizontal" />
           <span class="user-details">
             <span class="user-heading">
               <span class="user-name">{{ user.name }}</span>
@@ -68,6 +68,7 @@
 import { computed, ref, watch } from 'vue'
 import { Check, Search } from '@element-plus/icons-vue'
 import { userApi } from '@/api'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const props = defineProps({
   modelValue: {
@@ -206,19 +207,6 @@ watch(visible, (isVisible) => {
 
 .user-option.selected {
   background: var(--el-color-primary-light-9);
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--el-color-primary-light-8);
-  color: var(--el-color-primary);
-  font-size: 15px;
-  font-weight: 600;
 }
 
 .user-details {

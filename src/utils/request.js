@@ -18,8 +18,8 @@ service.interceptors.request.use(
     const userStore = useUserStore();
 
     // 添加用户ID和组织ID到请求头
-    if (userStore.id) {
-      config.headers['X-User-Id'] = userStore.id
+    if (userStore.user.id) {
+      config.headers['X-User-Id'] = userStore.user.id
     }
     if (userStore.orgId) {
       config.headers['X-Org-Id'] = userStore.orgId

@@ -1,7 +1,13 @@
 <template>
   <div class="user-info-container">
     <div class="user-info">
-      <div class="avatar">{{ userStore.displayName.charAt(0) || 'U' }}</div>
+      <UserAvatar
+        class="sidebar-avatar"
+        :user="userStore.user"
+        :size="32"
+        :show-name="false"
+        layout="horizontal"
+      />
       <div class="user-name">{{ userStore.displayName }}</div>
       <el-tooltip content="切换用户" placement="top">
         <el-button text type="primary" @click="showUserSelector">切换</el-button>
@@ -11,7 +17,7 @@
   
   <UserSwitchDialog
     v-model="userSelectorVisible"
-    :current-user-id="userStore.id"
+    :current-user-id="userStore.user.id"
     @confirm="handleUserSelectConfirm"
   />
 </template>
@@ -21,6 +27,7 @@ import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 import UserSwitchDialog from '@/components/common/UserSwitchDialog.vue';
 
 // 使用用户状态
@@ -69,16 +76,7 @@ const handleUserSelectConfirm = (data) => {
   padding: 0 5px 0 20px;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #1677ff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
+.sidebar-avatar {
   margin-right: 8px;
 }
 
