@@ -9,13 +9,9 @@
     </div>
   </div>
   
-  <!-- 用户选择器组件 -->
-  <PersonSelector
+  <UserSwitchDialog
     v-model="userSelectorVisible"
-    title="选择登录用户"
-    :selectedIds="selectedUserIds"
-    :singleMode="true"
-    :selectableTypes="['user']"
+    :current-user-id="userStore.id"
     @confirm="handleUserSelectConfirm"
   />
 </template>
@@ -25,7 +21,7 @@ import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
-import PersonSelector from '@/components/common/PersonSelector.vue';
+import UserSwitchDialog from '@/components/common/UserSwitchDialog.vue';
 
 // 使用用户状态
 const userStore = useUserStore();
@@ -33,11 +29,9 @@ const router = useRouter();
 
 // 用户选择器显示状态
 const userSelectorVisible = ref(false);
-const selectedUserIds = ref([]);
 
 // 显示用户选择器
 const showUserSelector = () => {
-  selectedUserIds.value = userStore.id ? [userStore.id] : [];
   userSelectorVisible.value = true;
 };
 
