@@ -37,7 +37,7 @@
       <div class="flex-spacer"></div>
 
       <!-- 项目信息区域 -->
-      <ProjectInfo />
+      <!-- <ProjectInfo /> -->
 
       <!-- 用户信息区域 -->
       <UserInfoPanel />
